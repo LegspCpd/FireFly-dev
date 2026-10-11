@@ -24,7 +24,7 @@
         },
         {
           "key": "Cache-Control",
-          "value": "no-store, must-revalidate"
+          "value": "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
         }
       ]
     },
@@ -216,18 +216,6 @@
       "source": "/posts/:path*/:file((?!index\\.html$)[^/]+\\.html)",
       "destination": "/posts/:path*/:file",
       "permanent": true
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/:path*",
-      "destination": "https://anubis-blog.legspcpd.top/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "blog.legspcpd.top"
-        }
-      ]
     }
   ]
 }
