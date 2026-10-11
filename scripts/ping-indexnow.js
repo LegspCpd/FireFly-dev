@@ -116,8 +116,17 @@ async function main() {
 			`[IndexNow] ✅ 成功提交 ${submitted}/${urls.length} 个 URL 到 Bing IndexNow`,
 		);
 	} catch (error) {
-		console.error("[IndexNow] ❌ 提交失败:", error.message);
-		process.exit(1);
+		// A failed notification must never fail the build.
+		//
+		// The site is already built by this point and IndexNow only asks Bing to
+		// re-crawl, so a network hiccup here should cost one notification, not
+		// the whole deployment. This used to exit(1), which took the Vercel
+		// build down whenever the sitemap could not be fetched, leaving the
+		// previous deployment serving.
+		console.warn(
+			`[IndexNow] ⚠️  提交失败，跳过（不影响构建）: ${error.message}`,
+		);
+		process.exit(0);
 	}
 }
 
