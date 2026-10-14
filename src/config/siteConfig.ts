@@ -9,7 +9,8 @@ export const siteConfig: SiteConfig = {
 	title: "LegspCpd Blog",
 
 	// 站点副标题
-	subtitle: "LegspCpd Blog",
+	// 会出现在：首页标题后缀「主标题 | 副标题」、JSON-LD 的 alternateName、RSS/Atom 的 feed 描述
+	subtitle: "记录技术折腾与生活点滴",
 
 	// 站点 URL
 	site_url: "https://blog.legspcpd.top",

@@ -5,8 +5,9 @@ export const profileConfig: ProfileConfig = {
 	// 图片路径支持三种格式：
 	// 1. public 目录（以 "/" 开头，不优化）："/assets/images/avatar.webp"
 	// 2. src 目录（不以 "/" 开头，自动优化但会增加构建时间，推荐）："assets/images/avatar.webp"
-	// 3. 远程 URL："https://imghub.2xgh.qzz.io/file/image/Image_1775995211463.jpg"
-	avatar: "assets/images/ico.png",
+	// 3. 远程 URL："https://hub.legspcpd.top/file/1787274091485_ico.png"
+	// 说明：改用远端头像，本地那张 ico 有问题（不再使用本地图）
+	avatar: "https://hub.legspcpd.top/file/1787274091485_ico.png",
 
 	// 名字
 	name: "LegspCpd",
