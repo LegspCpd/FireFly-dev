@@ -206,6 +206,7 @@ const seriesData = await getSeriesPosts(entry);
   lang={entry.data.lang}
   setOGTypeArticle={true}
   postSlug={entry.id}
+  skipBreadcrumbStructuredData
   postCoverImage={coverImage?.url}
   postCategory={entry.data.category || undefined}
   ogImageWidth={coverImage?.width}

@@ -59,6 +59,8 @@ interface Props {
 	ogImageHeight?: number;
 	ogImageAlt?: string;
 	hasWallpaper?: boolean;
+	// 页面自身已在 JSON-LD 里输出 BreadcrumbList 时置 true，避免重复注入
+	skipBreadcrumbStructuredData?: boolean;
 }
 
 let {
@@ -72,6 +74,7 @@ let {
 	ogImageHeight: propsOgImageHeight,
 	ogImageAlt: propsOgImageAlt,
 	hasWallpaper = false,
+	skipBreadcrumbStructuredData = false,
 } = Astro.props;
 
 // apply a class to the body element to decide the height of the banner, only used for initial page load
@@ -596,7 +599,9 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
     )}
 
     <!-- ========== 本地定制：BreadcrumbList 结构化数据 ========== -->
-    <script is:inline type="application/ld+json" set:html={breadcrumbStructuredData} />
+    {!skipBreadcrumbStructuredData && (
+      <script is:inline type="application/ld+json" set:html={breadcrumbStructuredData} />
+    )}
 
     <slot name="head" />
 

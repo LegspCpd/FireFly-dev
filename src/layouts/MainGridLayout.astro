@@ -49,6 +49,8 @@ interface Props {
 		minutes?: number;
 	};
 	heading?: string;
+	// 透传给 Layout：页面已自带 BreadcrumbList 结构化数据
+	skipBreadcrumbStructuredData?: boolean;
 }
 
 const backgroundImages = getBackgroundImages();
@@ -68,6 +70,7 @@ const {
 	encrypted = false,
 	bannerPostMeta,
 	heading,
+	skipBreadcrumbStructuredData = false,
 } = Astro.props;
 
 const isHomePageCheck = isHomePage(Astro.url.pathname);
@@ -98,7 +101,7 @@ const {
 } = sidebar;
 ---
 
-<Layout title={title} description={description || routeMeta.description} lang={lang} setOGTypeArticle={setOGTypeArticle ?? routeMeta.ogType === "article"} postSlug={postSlug} postCoverImage={postCoverImage} ogImageWidth={ogImageWidth} ogImageHeight={ogImageHeight} ogImageAlt={ogImageAlt} hasWallpaper={hasWallpaper}>
+<Layout title={title} description={description || routeMeta.description} lang={lang} setOGTypeArticle={setOGTypeArticle ?? routeMeta.ogType === "article"} postSlug={postSlug} postCoverImage={postCoverImage} ogImageWidth={ogImageWidth} ogImageHeight={ogImageHeight} ogImageAlt={ogImageAlt} hasWallpaper={hasWallpaper} skipBreadcrumbStructuredData={skipBreadcrumbStructuredData}>
 
 <slot slot="head" name="head" />
 <HeaderTopRow navbarMode={navbarMode} navbarWidthFull={navbarWidthFull} />
