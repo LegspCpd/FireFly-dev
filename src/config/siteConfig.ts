@@ -155,7 +155,7 @@ export const siteConfig: SiteConfig = {
 		// 随机文章推荐
 		randomPosts: false,
 		// OpenGraph 图片功能，开启后构建时间较长，不建议本地调试时开启
-		generateOgImages: false,
+		generateOgImages: true,
 	},
 
 	// bangumi 配置
@@ -201,7 +201,7 @@ export const siteConfig: SiteConfig = {
 	// 默认 OG 分享图（本地定制）
 	// 注：当前为 640×640，可满足基本分享需求；
 	// 若要最佳效果建议替换为 1200×630 的专用图，否则部分平台会退化为小尺寸卡片
-	defaultOgImage: "/assets/images/me.jpg",
+	defaultOgImage: "/og/site.png",
 
 	// 站点语言
 	lang: SITE_LANG,

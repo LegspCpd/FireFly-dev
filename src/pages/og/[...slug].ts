@@ -18,7 +18,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 	const allPosts = await getCollection("posts");
 	const publishedPosts = allPosts.filter((post) => !post.data.draft);
 
-	return publishedPosts.map((post) => {
+	const entries = publishedPosts.map((post) => {
 		// 将 id 转换为 slug（移除扩展名）以匹配路由参数
 		const slug = removeFileExtension(post.id);
 		return {
@@ -26,6 +26,25 @@ export const getStaticPaths: GetStaticPaths = async () => {
 			props: { post },
 		};
 	});
+
+	// 站点级分享图（本地定制）：供首页 / 归档 / 标签等非文章页做社交分享兜底。
+	// 复用同一套卡片模板 —— 该模板只读取 data.title / data.published / data.description。
+	entries.push({
+		params: { slug: "site.png" },
+		props: {
+			post: {
+				id: "site",
+				data: {
+					title: siteConfig.title,
+					description: siteConfig.description ?? siteConfig.subtitle ?? "",
+					// 用站点起始日而非构建日期：保证卡片内容稳定，不会每次构建都变
+					published: new Date(siteConfig.siteStartDate ?? "2025-01-01"),
+				},
+			} as unknown as CollectionEntry<"posts">,
+		},
+	});
+
+	return entries;
 };
 
 // OG 图用的中文字体从 @fontsource 包本地读取，构建期不再请求 Google Fonts。
