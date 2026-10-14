@@ -37,8 +37,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
       
-      - name: Build site
-        run: pnpm run build
+      # GitHub Pages 是纯静态托管：必须走 build:static。
+      # 默认的 pnpm build 使用 @astrojs/vercel adapter，Astro 7 下静态产物落在 dist/client，
+      # 直接上传 dist 会导致 Pages 根目录没有 index.html（404）。
+      # build:static 会临时移出 prerender=false 的动态路由、以 DEPLOY_TARGET=static 输出到 dist 根，并在结束后恢复。
+      - name: Build site (static)
+        run: pnpm run build:static
 
       - name: Create .nojekyll file
         run: touch dist/.nojekyll

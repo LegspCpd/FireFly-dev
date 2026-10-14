@@ -194,7 +194,7 @@ export const siteConfig: SiteConfig = {
 		files: {
 			"baidu_verify_codeva-c6BGWLznvm": "6e88638317ee7601beb7322f583b149d",
 			"baidu_verify_codeva-lvaCPPAXmk": "6afe8bc6bdd87aa34a69ce3b3cbeb5aa",
-			"yandex_8100d571090b9d7d": "Verification: 8100d571090b9d7d",
+			yandex_8100d571090b9d7d: "Verification: 8100d571090b9d7d",
 		},
 	},
 

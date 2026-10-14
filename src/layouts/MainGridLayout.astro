@@ -17,12 +17,12 @@ import {
 	sidebarLayoutConfig,
 	siteConfig,
 } from "@/config";
+// 本地定制：集中式路由元数据（SEO 自救指南）
+import { resolveRouteMeta } from "@/lib/seo/route-meta";
 import { getBannerVisibilityState } from "@/utils/banner-visibility-utils";
 import { getBackgroundImages, isHomePage } from "@/utils/layout-utils";
 import { resolveNavMenuLinks } from "@/utils/nav-menu-utils";
 import { getEffectiveSidebarState } from "@/utils/sidebar-effective-utils";
-// 本地定制：集中式路由元数据（SEO 自救指南）
-import { resolveRouteMeta } from "@/lib/seo/route-meta";
 import Layout from "./Layout.astro";
 
 import "@/styles/expressive-code.css";

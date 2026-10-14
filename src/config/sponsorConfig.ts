@@ -29,15 +29,11 @@ export const sponsorConfig: SponsorConfig = {
 			link: "",
 			description: "使用 支付宝 扫码赞助",
 			enabled: true,
-				},
+		},
 	],
-
 
 	// 赞助者列表（可选）
 	sponsors: [
 		// 示例：已实名赞助者
-		
-
-
 	],
 };

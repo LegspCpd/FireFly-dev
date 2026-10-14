@@ -34,8 +34,7 @@ export const friendsConfig: FriendLink[] = [
 	},
 	{
 		title: "二叉树树",
-		imgurl:
-			"https://img.legspcpd.de5.net/file/image/image.webp",
+		imgurl: "https://img.legspcpd.de5.net/file/image/image.webp",
 		desc: "二叉树树的博客",
 		siteurl: "https://2x.nz",
 		tags: ["Blog"],
@@ -44,8 +43,7 @@ export const friendsConfig: FriendLink[] = [
 	},
 	{
 		title: "ENA-QAQ",
-		imgurl:
-			"https://avatars.githubusercontent.com/u/178663977?v=4",
+		imgurl: "https://avatars.githubusercontent.com/u/178663977?v=4",
 		desc: "Guess I'm a poet as well — my code's full of line breaks",
 		siteurl: "https://enashpinal.pages.dev/",
 		tags: ["Blog"],
@@ -54,8 +52,7 @@ export const friendsConfig: FriendLink[] = [
 	},
 	{
 		title: "Bai21357",
-		imgurl:
-			"https://img.legspcpd.de5.net/file/image/image(1).webp",
+		imgurl: "https://img.legspcpd.de5.net/file/image/image(1).webp",
 		desc: "Actions speak louder than words.",
 		siteurl: "https://baiblog.vip/",
 		tags: ["Blog"],

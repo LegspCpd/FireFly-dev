@@ -11,6 +11,7 @@
     "start": "astro dev",
     "check": "astro check",
     "build": "npx tsx scripts/generate-github-card-data.ts && npx tsx scripts/generate-lqips.ts && npx tsx scripts/generate-vndb-covers.ts && astro build && npx tsx scripts/prune-pio-assets.ts && npx tsx scripts/subset-fonts.ts && npx tsx scripts/minify-inline-scripts.ts && npx tsx scripts/run-pagefind.ts && node scripts/ping-indexnow.js",
+    "build:static": "node scripts/build-edgeone.js",
     "build:vercel": "cross-env DEPLOY_TARGET=vercel pnpm build",
     "build:cloudflare": "cross-env DEPLOY_TARGET=cloudflare pnpm build",
     "build:edgeone": "node scripts/build-edgeone.js",

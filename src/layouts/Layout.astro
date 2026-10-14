@@ -32,17 +32,16 @@ import {
 	PAGE_WIDTH,
 } from "@/constants/constants";
 import { defaultFavicons } from "@/constants/icon";
+import { getHreflangTags } from "@/lib/seo/hreflang";
+// 本地定制：SEO 结构化数据 / hreflang / 路由索引策略
+import { getBreadcrumbStructuredData } from "@/lib/seo/json-ld";
+import { resolveRouteMeta } from "@/lib/seo/route-meta";
 import type { Favicon } from "@/types/config";
 import { isHomePage } from "@/utils/layout-utils";
 import { getAuthorAvatarUrl, getSiteLogo } from "@/utils/schema-image";
 import { buildSiteGraph, toAbsoluteUrl } from "@/utils/schema-utils";
 import { getOgLocale } from "@/utils/site-config-utils";
 import { getCanonicalUrl, url } from "@/utils/url-utils";
-
-// 本地定制：SEO 结构化数据 / hreflang / 路由索引策略
-import { getBreadcrumbStructuredData } from "@/lib/seo/json-ld";
-import { getHreflangTags } from "@/lib/seo/hreflang";
-import { resolveRouteMeta } from "@/lib/seo/route-meta";
 
 import "@/styles/main.css";
 import "@/styles/immersive-reading.css";
@@ -140,7 +139,9 @@ const canonicalUrl = getCanonicalUrl(Astro.url);
 // ========== SEO（本地定制）：hreflang / 路由索引策略 / 面包屑结构化数据 ==========
 const hreflangTags = getHreflangTags(canonicalUrl);
 const routeMeta = resolveRouteMeta(Astro.url.pathname);
-const breadcrumbStructuredData = getBreadcrumbStructuredData(Astro.url.pathname);
+const breadcrumbStructuredData = getBreadcrumbStructuredData(
+	Astro.url.pathname,
+);
 
 // ========== 本地定制：DNS 预取 / 预连接（提升外部资源加载性能） ==========
 const toExternalOrigin = (value?: string): string | null => {
@@ -155,12 +156,20 @@ const connectionHintOrigins = Array.from(
 	new Set(
 		[
 			...(analyticsConfig?.googleAnalyticsId
-				? ["https://www.googletagmanager.com", "https://www.google-analytics.com"]
+				? [
+						"https://www.googletagmanager.com",
+						"https://www.google-analytics.com",
+					]
 				: []),
 			...(analyticsConfig?.googleAdsenseClientId
-				? ["https://pagead2.googlesyndication.com", "https://googleads.g.doubleclick.net"]
+				? [
+						"https://pagead2.googlesyndication.com",
+						"https://googleads.g.doubleclick.net",
+					]
 				: []),
-			...(analyticsConfig?.microsoftClarityId ? ["https://www.clarity.ms"] : []),
+			...(analyticsConfig?.microsoftClarityId
+				? ["https://www.clarity.ms"]
+				: []),
 			analyticsConfig?.umamiAnalytics?.websiteId
 				? toExternalOrigin(analyticsConfig.umamiAnalytics.scriptUrl)
 				: null,

@@ -47,7 +47,7 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 	// lrc: "[00:00.00]歌词内容...",
 	local: {
 		playlist: [
-		   {
+			{
 				name: "Higher",
 				artist: "Tobu",
 				url: "/assets/music/Higher-Tobu.mp3",
@@ -79,7 +79,8 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 				name: "world.execute(me);",
 				artist: "Miracle Milk",
 				url: "/assets/music/world-execute-me.wav",
-				cover: "/assets/music/cover/ab67616d00001e02de2f0ff77da06e2bb0fda6d2.jpg",
+				cover:
+					"/assets/music/cover/ab67616d00001e02de2f0ff77da06e2bb0fda6d2.jpg",
 				lrc: "",
 			},
 			{
@@ -110,7 +111,7 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 				cover: "/assets/music/cover/A_Moment_Alone_Cover.jpg",
 				lrc: "",
 			},
-				{
+			{
 				name: "使一颗心免于哀伤",
 				artist: "知更鸟 / HOYO-MiX / Chevy",
 				url: "/assets/music/使一颗心免于哀伤-哼唱.mp3",
