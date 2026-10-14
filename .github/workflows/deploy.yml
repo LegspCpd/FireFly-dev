@@ -42,6 +42,23 @@ jobs:
 
       - name: Create .nojekyll file
         run: touch dist/.nojekyll
+
+      # pages 是「构建产物分支」，里面没有 package.json。Vercel 已连接本仓库并对每个分支
+      # 自动触发部署，因此每次 pages 更新都会以 ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND 失败。
+      # 这里往产物里放一份 vercel.json，使 Vercel 评估 pages 分支的提交时读到
+      # git.deploymentEnabled.pages=false 并跳过构建（Production 的 master 构建不受影响）。
+      - name: Mark this branch as non-deployable on Vercel
+        run: |
+          cat > dist/vercel.json <<'JSON'
+          {
+            "$schema": "https://openapi.vercel.sh/vercel.json",
+            "git": {
+              "deploymentEnabled": {
+                "pages": false
+              }
+            }
+          }
+          JSON
       
       - name: Deploy to pages branch
         uses: JamesIves/github-pages-deploy-action@v4
