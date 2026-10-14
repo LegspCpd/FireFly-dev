@@ -275,4 +275,8 @@ export type SiteConfig = {
 		// 文件验证: key=文件名, value=文件内容, 自动在 /{key}.html 路由输出
 		files?: Record<string, string>;
 	};
+
+	// 站点级默认 OG 分享图（本地定制）：用于无封面文章与普通页面的社交分享兜底。
+	// 建议使用 1200×630 的图片，否则分享卡片会退化为小尺寸缩略图。
+	defaultOgImage?: string;
 };

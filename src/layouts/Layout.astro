@@ -108,9 +108,12 @@ let pageTitle: string;
 if (title) {
 	pageTitle = `${title} | ${siteConfig.title}`;
 } else {
-	pageTitle = siteConfig.subtitle
-		? `${siteConfig.title} | ${siteConfig.subtitle}`
-		: siteConfig.title;
+	// 站点标题与副标题相同时不要重复拼接，否则搜索结果标题会出现「X | X」
+	const subtitleText = siteConfig.subtitle?.trim();
+	pageTitle =
+		subtitleText && subtitleText !== siteConfig.title
+			? siteConfig.title + " | " + subtitleText
+			: siteConfig.title;
 }
 
 const favicons: Favicon[] =
@@ -196,6 +199,10 @@ if (isGeneratedOg) {
 	ogImageUrl = postCoverImage; // 已由文章页算成绝对 URL
 	ogImageWidth = propsOgImageWidth;
 	ogImageHeight = propsOgImageHeight;
+} else if (siteConfig.defaultOgImage) {
+	// 站点级兜底图优先于导航栏 logo：logo 多为小尺寸图标，
+	// 直接当 og:image 会让分享卡片退化成小图
+	ogImageUrl = new URL(siteConfig.defaultOgImage, Astro.site).toString();
 } else if (siteLogo?.url) {
 	ogImageUrl = siteLogo.url;
 	ogImageWidth = siteLogo.width;
@@ -578,7 +585,15 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
     {hreflangTags.map((tag) => <link rel={tag.rel} hreflang={tag.hreflang} href={tag.href} />)}
 
     <!-- ========== 本地定制：按路由元数据设置索引策略 ========== -->
-    {routeMeta.indexable === false && <meta name="robots" content="noindex, nofollow" />}
+    {/* 可索引页显式声明抓取与摘要策略；max-image-preview:large 是 Google Discover / 大图缩略图的必要条件 */}
+    {routeMeta.indexable === false ? (
+      <meta name="robots" content="noindex, nofollow" />
+    ) : (
+      <meta
+        name="robots"
+        content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+      />
+    )}
 
     <!-- ========== 本地定制：BreadcrumbList 结构化数据 ========== -->
     <script is:inline type="application/ld+json" set:html={breadcrumbStructuredData} />
