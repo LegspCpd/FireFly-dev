@@ -2,46 +2,58 @@
 // 核心：告诉Astro这个页面动态渲染，不静态生成
 export const prerender = false;
 // 适配Vercel边缘运行时
-export const runtime = 'edge';
+export const runtime = "edge";
 
 // 你的博客域名，不要改
-const YOUR_DOMAIN = 'blog.legspcpd.indevs.in';
+const YOUR_DOMAIN = "blog.legspcpd.indevs.in";
 // GitHub目标地址，不要改
-const GITHUB_BASE = 'https://github.com';
+const GITHUB_BASE = "https://github.com";
 
 // 正确获取访问的路径（适配你的 trailingSlash: "always"）
-const fullPath = Array.isArray(Astro.params.path) 
-  ? Astro.params.path.join('/') 
-  : Astro.params.path || '';
+const fullPath = Array.isArray(Astro.params.path)
+	? Astro.params.path.join("/")
+	: Astro.params.path || "";
 
 // 构建GitHub目标链接，保留查询参数
 const targetUrl = new URL(`/${fullPath}`, GITHUB_BASE);
 targetUrl.search = Astro.url.search;
 
-let pageHtml = '';
+let pageHtml = "";
 try {
-  // 转发请求到GitHub
-  const githubResponse = await fetch(targetUrl.toString(), {
-    method: Astro.request.method,
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Accept': Astro.request.headers.get('accept') || 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    },
-    redirect: 'follow',
-  });
+	// 转发请求到GitHub
+	const githubResponse = await fetch(targetUrl.toString(), {
+		method: Astro.request.method,
+		headers: {
+			"User-Agent":
+				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+			Accept:
+				Astro.request.headers.get("accept") ||
+				"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+		},
+		redirect: "follow",
+	});
 
-  // 处理页面内容，替换链接，保证点击后还在你的域名下
-  pageHtml = await githubResponse.text();
-  pageHtml = pageHtml.replaceAll('https://github.com', `https://${YOUR_DOMAIN}/gh`);
-  pageHtml = pageHtml.replaceAll('https://raw.githubusercontent.com', `https://${YOUR_DOMAIN}/gh/raw`);
+	// 处理页面内容，替换链接，保证点击后还在你的域名下
+	pageHtml = await githubResponse.text();
+	pageHtml = pageHtml.replaceAll(
+		"https://github.com",
+		`https://${YOUR_DOMAIN}/gh`,
+	);
+	pageHtml = pageHtml.replaceAll(
+		"https://raw.githubusercontent.com",
+		`https://${YOUR_DOMAIN}/gh/raw`,
+	);
 
-  // 设置响应状态和头
-  Astro.response.status = githubResponse.status;
-  Astro.response.headers.set('Content-Type', githubResponse.headers.get('content-type') || 'text/html; charset=utf-8');
+	// 设置响应状态和头
+	Astro.response.status = githubResponse.status;
+	Astro.response.headers.set(
+		"Content-Type",
+		githubResponse.headers.get("content-type") || "text/html; charset=utf-8",
+	);
 } catch (error) {
-  // 出错时显示错误信息
-  Astro.response.status = 500;
-  pageHtml = `<h1>代理出错: ${(error as Error).message}</h1>`;
+	// 出错时显示错误信息
+	Astro.response.status = 500;
+	pageHtml = `<h1>代理出错: ${(error as Error).message}</h1>`;
 }
 ---
 

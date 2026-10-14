@@ -10,8 +10,8 @@
  * - DiscussionForumPosting：论坛帖子富媒体结果
  */
 
-import { siteConfig } from "@/config/siteConfig";
 import { profileConfig } from "@/config/profileConfig";
+import { siteConfig } from "@/config/siteConfig";
 
 const SITE_URL = siteConfig.site_url.replace(/\/+$/, "");
 const SITE_NAME = siteConfig.title;
@@ -60,17 +60,20 @@ export function getSiteStructuredData(): string {
 					? AUTHOR_AVATAR
 					: `${SITE_URL}/${AUTHOR_AVATAR}`,
 				description: profileConfig.bio,
-				sameAs: profileConfig.links
-					?.filter((link: { url: string; external?: boolean }) => {
-						try {
-							const parsed = new URL(link.url);
-							return parsed.protocol === "http:" || parsed.protocol === "https:";
-						} catch {
-							return false;
-						}
-					})
-					.map((link: { url: string }) => link.url)
-					.filter(Boolean) || undefined,
+				sameAs:
+					profileConfig.links
+						?.filter((link: { url: string; external?: boolean }) => {
+							try {
+								const parsed = new URL(link.url);
+								return (
+									parsed.protocol === "http:" || parsed.protocol === "https:"
+								);
+							} catch {
+								return false;
+							}
+						})
+						.map((link: { url: string }) => link.url)
+						.filter(Boolean) || undefined,
 			},
 		],
 	};
@@ -225,8 +228,7 @@ export function getBlogPostStructuredData(params: {
 export function getCanonicalUrl(pathname: string): string {
 	const cleanPath = pathname.replace(/\/{2,}/g, "/");
 	// 确保以 / 结尾（除了根路径 /）
-	const normalizedPath = cleanPath !== "/" && !cleanPath.endsWith("/")
-		? `${cleanPath}/`
-		: cleanPath;
+	const normalizedPath =
+		cleanPath !== "/" && !cleanPath.endsWith("/") ? `${cleanPath}/` : cleanPath;
 	return `${SITE_URL}${normalizedPath}`;
 }

@@ -28,7 +28,8 @@ export interface RouteMeta {
 export const STATIC_ROUTE_META: Record<string, RouteMeta> = {
 	"/": {
 		title: "首页",
-		description: "LegspCpd 的个人博客，记录我的学习和生活点滴，分享技术经验和见解。",
+		description:
+			"LegspCpd 的个人博客，记录我的学习和生活点滴，分享技术经验和见解。",
 		ogType: "website",
 	},
 	"/archive/": {
