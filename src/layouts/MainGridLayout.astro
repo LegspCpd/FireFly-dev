@@ -1,820 +1,193 @@
 ---
 import Live2DWidget from "@components/features/Live2DWidget.astro";
+
 import SpineModel from "@components/features/SpineModel.astro";
 import Footer from "@components/layout/Footer.astro";
-import Navbar from "@components/layout/Navbar.astro";
+import HeaderTopRow from "@components/layout/HeaderTopRow.astro";
+import NavMenuPanel from "@components/layout/NavMenuPanel.astro";
 import SideBar from "@components/layout/SideBar.astro";
 import type { MarkdownHeading } from "astro";
-import { Icon } from "astro-icon/components";
-import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import FloatingControls from "@/components/controls/FloatingControls.astro";
-import TypewriterText from "@/components/features/TypewriterText.astro";
 import CategoryBar from "@/components/layout/CategoryBar.astro";
+import SidebarColumn from "@/components/layout/SidebarColumn.astro";
+import WallpaperSection from "@/components/layout/WallpaperSection.astro";
 import {
-	backgroundWallpaper,
-	live2dModelConfig,
+	live2dWidgetConfig,
+	navbarMode,
 	sidebarLayoutConfig,
 	siteConfig,
 } from "@/config";
-import {
-	BANNER_HEIGHT,
-	BANNER_HEIGHT_EXTEND,
-	MAIN_PANEL_OVERLAPS_BANNER_HEIGHT,
-} from "@/constants/constants";
-import { resolveRouteMeta } from "@/lib/seo/route-meta";
-import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
-import { formatDateToYYYYMMDD } from "@/utils/date-utils";
-import { getImageQuality } from "@/utils/image-utils";
+import { getBannerVisibilityState } from "@/utils/banner-visibility-utils";
 import { getBackgroundImages, isHomePage } from "@/utils/layout-utils";
-import {
-	generateGridClasses,
-	generateMainContentClasses,
-	generateRightSidebarClasses,
-	generateSidebarClasses,
-	getResponsiveSidebarConfig,
-	type ResponsiveSidebarConfig,
-} from "@/utils/responsive-utils";
-import { url } from "@/utils/url-utils";
+import { resolveNavMenuLinks } from "@/utils/nav-menu-utils";
+import { getEffectiveSidebarState } from "@/utils/sidebar-effective-utils";
+// 本地定制：集中式路由元数据（SEO 自救指南）
+import { resolveRouteMeta } from "@/lib/seo/route-meta";
 import Layout from "./Layout.astro";
-import "@/styles/markdown.css";
+
 import "@/styles/expressive-code.css";
 
 interface Props {
 	title?: string;
-	banner?: string;
 	description?: string;
 	lang?: string;
 	setOGTypeArticle?: boolean;
 	postSlug?: string;
-	ogImage?: string;
+	postCoverImage?: string;
+	ogImageWidth?: number;
+	ogImageHeight?: number;
+	ogImageAlt?: string;
+	postCategory?: string;
 	headings?: MarkdownHeading[];
+	encrypted?: boolean;
 	bannerPostMeta?: {
 		title: string;
+		description?: string;
 		published: Date;
 		updated?: Date;
 		words?: number;
 		minutes?: number;
 	};
+	heading?: string;
 }
 
-// ========== 定义站点基础信息 ==========
-const SITE_BASE_URL = siteConfig.site_url || "https://blog.legspcpd.top";
-const SITE_NAME = new URL(SITE_BASE_URL).hostname;
-const SITE_FULL_TITLE = siteConfig.title || "LegspCpd Blog";
-
-// 处理props
 const backgroundImages = getBackgroundImages();
+
 const {
 	title,
-	banner,
 	description,
 	lang,
 	setOGTypeArticle,
 	postSlug,
-	ogImage,
+	postCoverImage,
+	ogImageWidth,
+	ogImageHeight,
+	ogImageAlt,
+	postCategory,
 	headings = [],
+	encrypted = false,
 	bannerPostMeta,
+	heading,
 } = Astro.props;
 
-// ========== 生成规范的页面标题 ==========
-const fullPageTitle = title
-  ? `${title} | ${SITE_FULL_TITLE} - ${SITE_NAME}`
-  : `${SITE_FULL_TITLE} - ${SITE_NAME} | ${siteConfig.description || "LegspCpd 的个人博客"}`;
-
-// ========== 解析路由元数据（用于Layout props） ==========
-const currentPath = Astro.url.pathname;
-const routeMeta = resolveRouteMeta(currentPath);
-
-// 原有的业务逻辑保持不变
-const isBannerMode = backgroundWallpaper.mode === "banner";
-const isOverlayMode = backgroundWallpaper.mode === "overlay";
-const isBackgroundEnabled = backgroundWallpaper.mode !== "none";
-const isWallpaperSwitchable = backgroundWallpaper.switchable ?? true;
-const wavesConfig = backgroundWallpaper.banner?.waves?.enable;
-const wavesSwitchable = backgroundWallpaper.banner?.waves?.switchable ?? false;
-const wavesEnabledOnDesktop =
-	typeof wavesConfig === "object" ? wavesConfig.desktop : wavesConfig;
-const wavesEnabledOnMobile =
-	typeof wavesConfig === "object" ? wavesConfig.mobile : wavesConfig;
-const shouldRenderWaves =
-	wavesEnabledOnDesktop || wavesEnabledOnMobile || wavesSwitchable;
-const creditEnableConfig = backgroundWallpaper.banner?.credit?.enable;
-const creditEnabledOnDesktop =
-	typeof creditEnableConfig === "object"
-		? creditEnableConfig.desktop
-		: creditEnableConfig;
-const creditEnabledOnMobile =
-	typeof creditEnableConfig === "object"
-		? creditEnableConfig.mobile
-		: creditEnableConfig;
-const hasBannerCredit =
-	isBannerMode && isBackgroundEnabled && creditEnableConfig;
-const creditTextConfig = backgroundWallpaper.banner?.credit?.text;
-const creditTextDesktop =
-	typeof creditTextConfig === "object"
-		? creditTextConfig.desktop
-		: creditTextConfig;
-const creditTextMobile =
-	typeof creditTextConfig === "object"
-		? creditTextConfig.mobile
-		: creditTextConfig;
-const creditUrlConfig = backgroundWallpaper.banner?.credit?.url;
-const creditUrlDesktop =
-	typeof creditUrlConfig === "object"
-		? creditUrlConfig.desktop
-		: creditUrlConfig;
-const creditUrlMobile =
-	typeof creditUrlConfig === "object"
-		? creditUrlConfig.mobile
-		: creditUrlConfig;
 const isHomePageCheck = isHomePage(Astro.url.pathname);
-const currentPathname = Astro.url.pathname.replace(/\/$/, "");
-const homePath = url("/").replace(/\/$/, "");
-const archivePath = url("/archive/").replace(/\/$/, "");
-const escapedHomePath = homePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const isHomeRoute =
-	currentPathname === homePath ||
-	currentPathname === "" ||
-	currentPathname === "/";
-const isArchiveRoute = currentPathname === archivePath;
-const isHomePaginationRoute =
-	/^\/\d+$/.test(currentPathname) ||
-	(homePath !== "" &&
-		new RegExp(`^${escapedHomePath}\\/\\d+$`).test(currentPathname));
-const shouldRenderCategoryBar = !!siteConfig.categoryBar;
-const isPostPage = !!postSlug;
-const getRandomSubtitle = () => {
-	const subtitle = backgroundWallpaper.banner?.homeText?.subtitle;
-	if (Array.isArray(subtitle)) {
-		const randomIndex = Math.floor(Math.random() * subtitle.length);
-		return subtitle[randomIndex];
-	}
-	return subtitle;
-};
-const randomSubtitle = getRandomSubtitle();
-const homeTextEnable = backgroundWallpaper.banner?.homeText?.enable;
-const showHomeText = isBannerMode && !!homeTextEnable && isHomePageCheck;
-const showBannerPostMeta =
-	isBannerMode &&
-	isBackgroundEnabled &&
-	!isHomePageCheck &&
-	isPostPage &&
-	!!bannerPostMeta;
-const showBannerDim = isBannerMode && isBackgroundEnabled;
-const showBannerPageTitle =
-	isBannerMode &&
-	isBackgroundEnabled &&
-	!isHomePageCheck &&
-	!isPostPage &&
-	!!title;
-const mobileNonHomeBannerClass = !isHomePageCheck ? "mobile-hide-banner" : "";
-const mainPanelTop =
-	isBannerMode && isBackgroundEnabled
-		? `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)`
-		: "5.5rem";
-const finalMainPanelTop =
-	isBannerMode && isBackgroundEnabled ? mainPanelTop : "5.5rem";
-const sidebarConfig = getResponsiveSidebarConfig();
-const shouldShowBothSidebarsOnPostPage: boolean =
-	isPostPage &&
-	sidebarLayoutConfig.position !== "both" &&
-	!!sidebarLayoutConfig.showBothSidebarsOnPostPage;
-const shouldAddRightSidebar: boolean =
-	shouldShowBothSidebarsOnPostPage && sidebarLayoutConfig.position === "left";
-const shouldAddLeftSidebar: boolean =
-	shouldShowBothSidebarsOnPostPage && sidebarLayoutConfig.position === "right";
-const effectiveIsBothSidebars: boolean =
-	sidebarConfig.isBothSidebars || shouldShowBothSidebarsOnPostPage;
-const effectiveHasRightComponents: boolean =
-	sidebarConfig.hasRightComponents ||
-	(shouldAddRightSidebar &&
-		sidebarLayoutConfig.rightComponents.some((comp) => comp.enable));
-const effectiveHasLeftComponents: boolean =
-	sidebarConfig.hasLeftComponents ||
-	(shouldAddLeftSidebar &&
-		sidebarLayoutConfig.leftComponents.some((comp) => comp.enable));
-const effectiveTabletSidebar = shouldAddLeftSidebar
-	? ("right" as const)
-	: sidebarConfig.tabletSidebar;
-const updatedGridConfig: ResponsiveSidebarConfig = {
-	...sidebarConfig,
-	isBothSidebars: effectiveIsBothSidebars,
-	hasLeftComponents: effectiveHasLeftComponents,
-	hasRightComponents: effectiveHasRightComponents,
-	tabletSidebar: effectiveTabletSidebar,
-};
-const { gridCols } = generateGridClasses(updatedGridConfig);
-const sidebarClass = generateSidebarClasses(updatedGridConfig);
-const rightSidebarClass =
-	effectiveIsBothSidebars || sidebarLayoutConfig.position === "right"
-		? generateRightSidebarClasses(updatedGridConfig)
-		: "";
-const mainContentClass = generateMainContentClasses(updatedGridConfig);
-const staticBarClass = mainContentClass.replace("transition-main", "").trim();
-const footerClass = ["footer", "col-span-1", "onload-animation"];
-if (
-	updatedGridConfig.isBothSidebars &&
-	updatedGridConfig.hasLeftComponents &&
-	updatedGridConfig.hasRightComponents
-) {
-	if (updatedGridConfig.tabletSidebar === "right") {
-		footerClass.push(
-			"md:col-start-1 md:col-span-1 xl:col-start-2 xl:col-span-1",
-		);
-	} else {
-		footerClass.push(
-			"md:col-start-2 md:col-span-1 xl:col-start-2 xl:col-span-1",
-		);
-	}
-} else if (
-	updatedGridConfig.hasLeftComponents &&
-	!updatedGridConfig.hasRightComponents
-) {
-	footerClass.push("md:col-start-2 md:col-span-1 xl:col-start-2 xl:col-span-1");
-} else if (
-	!updatedGridConfig.hasLeftComponents &&
-	updatedGridConfig.hasRightComponents
-) {
-	footerClass.push("md:col-start-1 md:col-span-1 xl:col-start-1 xl:col-span-1");
-} else {
-	footerClass.push("md:col-start-1 md:col-span-1 xl:col-start-1 xl:col-span-1");
-}
-const footerClassName = footerClass.join(" ");
-const shouldEnableTransparency = isOverlayMode && isBackgroundEnabled;
-const transparentClass = shouldEnableTransparency
-	? "wallpaper-transparent"
-	: "";
-const navbarWidthFull = siteConfig.navbar.widthFull ?? false;
-const stickyNavbar = siteConfig.navbar.stickyNavbar ?? false;
-const configQuality = getImageQuality();
-const mobileQuality = Math.round(configQuality * 0.9);
-const bannerCarouselEnabledDefault =
-	backgroundWallpaper.banner?.carousel?.enable ?? false;
-const bannerCarouselSwitchable =
-	backgroundWallpaper.banner?.carousel?.switchable ?? false;
-const bannerCarouselInterval = Math.max(
-	backgroundWallpaper.banner?.carousel?.interval ?? 5000,
-	3000,
-);
----
-<!-- 传递title等信息给Layout组件 -->
-<Layout 
-  title={title || siteConfig.title} 
-  banner={banner} 
-  description={description || siteConfig.description || routeMeta.description} 
-  lang={lang} 
-  setOGTypeArticle={setOGTypeArticle || routeMeta.ogType === "article"} 
-  postSlug={postSlug}
-  ogImage={ogImage}
->
-<!-- ========== 传递head插槽内容给Layout ========== -->
-<slot slot="head" name="head" />
 
-<!-- ========== 传递页面默认内容 ========== -->
-{shouldEnableTransparency && (
-	<script>
-		document.body.classList.add('wallpaper-transparent');
-	</script>
-)}
-<div
-    id="top-row"
-    class="z-50 pointer-events-none relative transition-all duration-700 mx-auto"
-    class:list={[
-        stickyNavbar ? "h-18 fixed top-0 left-0 right-0 z-80" : "",
-        navbarWidthFull ? "" : "w-full xl:w-[92vw] max-w-(--page-width) px-0 md:px-4",
-    ]}
->
-    <div
-        id="navbar-wrapper"
-        class:list={[
-            "pointer-events-auto transition-all",
-            stickyNavbar ? "" : "sticky top-0",
-        ]}
-    >
-        <Navbar></Navbar>
-    </div>
-</div>
-{(isWallpaperSwitchable || isBannerMode || isOverlayMode) && (
-<div id="wallpaper-wrapper" class:list={[
-	`absolute z-10 w-full transition duration-700 overflow-hidden ${mobileNonHomeBannerClass}`,
-	(isOverlayMode && !isWallpaperSwitchable) || (isWallpaperSwitchable && !isBannerMode) ? 'wallpaper-overlay' : ''
-]} style={
-	isWallpaperSwitchable
-		? `top: -${BANNER_HEIGHT_EXTEND}vh; display: none; --overlay-opacity: ${backgroundWallpaper.overlay?.opacity ?? 0.8}; --overlay-z-index: ${backgroundWallpaper.overlay?.zIndex ?? -1}; --overlay-blur: ${backgroundWallpaper.overlay?.blur ?? 0}px;`
-		: isOverlayMode
-			? `--overlay-opacity: ${backgroundWallpaper.overlay?.opacity ?? 0.8}; --overlay-z-index: ${backgroundWallpaper.overlay?.zIndex ?? -1}; --overlay-blur: ${backgroundWallpaper.overlay?.blur ?? 0}px;`
-			: `top: -${BANNER_HEIGHT_EXTEND}vh`
-}>
-    <div class="relative h-full w-full" id="banner-images-container"
-         data-mobile-count={backgroundImages.mobile.length}
-         data-desktop-count={backgroundImages.desktop.length}
-         data-carousel-enabled={bannerCarouselEnabledDefault}
-         data-carousel-switchable={bannerCarouselSwitchable}
-         data-carousel-interval={bannerCarouselInterval}>
-        {backgroundImages.mobile.length > 0 && (
-            <div class="banner-image-slot-mobile absolute inset-0 block lg:hidden">
-                <ImageWrapper
-                    alt="Mobile background image of the blog"
-                    class="object-cover h-full w-full"
-                    src={backgroundImages.mobile[0]}
-                    position={backgroundWallpaper.banner?.position}
-                    widths={[640, 750, 1080]}
-                    sizes="100vw"
-                    loading="eager"
-                    fetchpriority="high"
-                    quality={mobileQuality}
-                />
-            </div>
-        )}
-        {backgroundImages.mobile.slice(1).map((src) => (
-            <template class="banner-tpl-mobile">
-                <ImageWrapper
-                    alt="Mobile background image of the blog"
-                    class="object-cover h-full w-full"
-                    src={src}
-                    position={backgroundWallpaper.banner?.position}
-                    widths={[640, 750, 1080]}
-                    sizes="100vw"
-                    loading="eager"
-                    fetchpriority="high"
-                    quality={mobileQuality}
-                />
-            </template>
-        ))}
-        {backgroundImages.desktop.length > 0 && (
-            <div class="banner-image-slot-desktop absolute inset-0 hidden lg:block">
-                <ImageWrapper
-                    id="banner"
-                    alt="Desktop background image of the blog"
-                    class="object-cover h-full"
-                    src={backgroundImages.desktop[0]}
-                    position={backgroundWallpaper.banner?.position}
-                    widths={[1280, 1920, 2560]}
-                    sizes="100vw"
-                    loading="eager"
-                    fetchpriority="high"
-                    quality={configQuality}
-                />
-            </div>
-        )}
-        {backgroundImages.desktop.slice(1).map((src) => (
-            <template class="banner-tpl-desktop">
-                <ImageWrapper
-                    id="banner"
-                    alt="Desktop background image of the blog"
-                    class="object-cover h-full"
-                    src={src}
-                    position={backgroundWallpaper.banner?.position}
-                    widths={[1280, 1920, 2560]}
-                    sizes="100vw"
-                    loading="eager"
-                    fetchpriority="high"
-                    quality={configQuality}
-                />
-            </template>
-        ))}
-    </div>
-    <script is:inline data-swup-ignore-script>
-        (function randomizeBannerImage() {
-            var container = document.getElementById('banner-images-container');
-            if (!container) return;
-            var mobileCount = parseInt(container.dataset.mobileCount || '0', 10);
-            var desktopCount = parseInt(container.dataset.desktopCount || '0', 10);
-            if (mobileCount <= 1 && desktopCount <= 1) return;
-            if (typeof window.__bannerInitialFrameHtml === 'undefined') {
-                window.__bannerInitialFrameHtml = {};
-            }
-            function rememberInitialFrame(slotClass) {
-                var slot = container.querySelector('.' + slotClass);
-                if (!slot) return;
-                if (!window.__bannerInitialFrameHtml[slotClass]) {
-                    window.__bannerInitialFrameHtml[slotClass] = slot.innerHTML;
-                }
-            }
-            rememberInitialFrame('banner-image-slot-mobile');
-            rememberInitialFrame('banner-image-slot-desktop');
-            if (typeof window.__bannerRandomIndex === 'undefined') {
-                window.__bannerRandomIndex = {
-                    mobile: mobileCount > 1 ? Math.floor(Math.random() * mobileCount) : 0,
-                    desktop: desktopCount > 1 ? Math.floor(Math.random() * desktopCount) : 0
-                };
-            }
-            function applyRandom(slotClass, tplClass, randomIndex) {
-                if (randomIndex === 0) return;
-                var slot = container.querySelector('.' + slotClass);
-                var templates = container.querySelectorAll('.' + tplClass);
-                if (!slot || !templates.length) return;
-                var tpl = templates[randomIndex - 1];
-                if (!tpl) return;
-                slot.innerHTML = '';
-                slot.appendChild(tpl.content.cloneNode(true));
-            }
-            applyRandom('banner-image-slot-mobile', 'banner-tpl-mobile', window.__bannerRandomIndex.mobile);
-            applyRandom('banner-image-slot-desktop', 'banner-tpl-desktop', window.__bannerRandomIndex.desktop);
-        })();
-    </script>
-    <Fragment set:html={`<style>
-        @keyframes bannerKenBurns {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
-        }
-        .banner-kb {
-            animation: bannerKenBurns ${bannerCarouselInterval + 1500}ms ease-out forwards;
-        }
-    </style>`} />
-    <script is:inline data-swup-ignore-script>
-        (function initBannerCarousel() {
-            var container = document.getElementById('banner-images-container');
-            if (!container) return;
-            var mobileCount = parseInt(container.dataset.mobileCount || '0', 10);
-            var desktopCount = parseInt(container.dataset.desktopCount || '0', 10);
-            if (mobileCount <= 1 && desktopCount <= 1) return;
-            var interval = parseInt(container.dataset.carouselInterval || '8000', 10);
-            var switchable = container.dataset.carouselSwitchable === 'true';
-            var defaultEnabled = container.dataset.carouselEnabled === 'true';
-            var FADE_MS = 1500;
-            function isCarouselEnabled() {
-                if (!switchable) return defaultEnabled;
-                var stored = localStorage.getItem('bannerCarouselEnabled');
-                if (stored === null) return defaultEnabled;
-                return stored === 'true';
-            }
-            if (!window.__bannerCarouselFrames) window.__bannerCarouselFrames = {};
-            function collectFrames(slotClass, tplClass) {
-                if (window.__bannerCarouselFrames[slotClass]) return;
-                var frames = [];
-                var initialFrame =
-                    window.__bannerInitialFrameHtml &&
-                    window.__bannerInitialFrameHtml[slotClass];
-                var slot = container.querySelector('.' + slotClass);
-                if (initialFrame) {
-                    frames.push(initialFrame);
-                } else if (slot) {
-                    frames.push(slot.innerHTML);
-                }
-                var tpls = container.querySelectorAll('.' + tplClass);
-                for (var i = 0; i < tpls.length; i++) {
-                    frames.push(tpls[i].innerHTML);
-                }
-                window.__bannerCarouselFrames[slotClass] = frames;
-            }
-            collectFrames('banner-image-slot-mobile', 'banner-tpl-mobile');
-            collectFrames('banner-image-slot-desktop', 'banner-tpl-desktop');
-            if (typeof window.__bannerCarouselIndex === 'undefined') {
-                window.__bannerCarouselIndex = {
-                    mobile: window.__bannerRandomIndex ? window.__bannerRandomIndex.mobile : 0,
-                    desktop: window.__bannerRandomIndex ? window.__bannerRandomIndex.desktop : 0
-                };
-            }
-            function isSlotHiddenByBreakpoint(slot) {
-                var cl = slot.classList;
-                var w = window.innerWidth;
-                var isLg = w >= 1024;
-                if (cl.contains('lg:hidden') && isLg) return true;
-                if (cl.contains('hidden') && !cl.contains('lg:hidden') && !isLg) return true;
-                return false;
-            }
-            function applyInitialKB(slotClass) {
-                var slot = container.querySelector('.' + slotClass);
-                if (!slot || isSlotHiddenByBreakpoint(slot)) return;
-                slot.classList.remove('banner-kb');
-                void slot.offsetWidth;
-                slot.classList.add('banner-kb');
-            }
-            function crossfade(slotClass, totalCount, type) {
-                if (totalCount <= 1) return;
-                var frames = window.__bannerCarouselFrames[slotClass];
-                if (!frames || frames.length === 0) return;
-                var oldSlot = container.querySelector('.' + slotClass);
-                if (!oldSlot) return;
-                if (isSlotHiddenByBreakpoint(oldSlot)) return;
-                var currentIndex = window.__bannerCarouselIndex[type];
-                var nextIndex = (currentIndex + 1) % frames.length;
-                window.__bannerCarouselIndex[type] = nextIndex;
-                var newSlot = document.createElement('div');
-                var baseClass = oldSlot.className.replace(/\bbanner-kb\b/g, '').trim();
-                newSlot.className = baseClass;
-                newSlot.style.opacity = '0';
-                newSlot.style.transition = 'opacity ' + FADE_MS + 'ms ease-in-out';
-                newSlot.innerHTML = frames[nextIndex];
-                oldSlot.parentNode.insertBefore(newSlot, oldSlot.nextSibling);
-                requestAnimationFrame(function() {
-                    requestAnimationFrame(function() {
-                        newSlot.style.opacity = '1';
-                        newSlot.classList.add('banner-kb');
-                    });
-                });
-                setTimeout(function() {
-                    if (oldSlot.parentNode) oldSlot.parentNode.removeChild(oldSlot);
-                    newSlot.style.transition = '';
-                }, FADE_MS + 50);
-            }
-            var timerId = null;
-            function startCarousel() {
-                stopCarousel();
-                if (!isCarouselEnabled()) return;
-                applyInitialKB('banner-image-slot-mobile');
-                applyInitialKB('banner-image-slot-desktop');
-                timerId = setInterval(function() {
-                    if (!isCarouselEnabled()) { stopCarousel(); return; }
-                    crossfade('banner-image-slot-mobile', mobileCount, 'mobile');
-                    crossfade('banner-image-slot-desktop', desktopCount, 'desktop');
-                }, interval);
-            }
-            function stopCarousel() {
-                if (timerId !== null) { clearInterval(timerId); timerId = null; }
-            }
-            window.addEventListener('bannerCarouselChange', function(e) {
-                e.detail && e.detail.enabled ? startCarousel() : stopCarousel();
-            });
-            window.addEventListener('wallpaperModeChange', function(e) {
-                if (e.detail && e.detail.mode === 'banner') {
-                    if (isCarouselEnabled()) startCarousel();
-                } else {
-                    stopCarousel();
-                }
-            });
-            startCarousel();
-        })();
-    </script>
-    
-    <div id="banner-dim-container" class="absolute inset-0 z-0 pointer-events-none">
-        {showBannerDim && <div class="banner-dim-overlay absolute inset-0"></div>}
-    </div>
-    <div id="banner-overlay-container" class="absolute inset-0 z-20 pointer-events-none transition-swup-fade">
-    {homeTextEnable && (
-        <div class={`banner-home-text-overlay absolute inset-0 z-20 flex items-center justify-center ${!showHomeText ? 'hidden' : ''}`}>
-            <div class="w-4/5 lg:w-3/4 text-center mb-0">
-                <div class="flex flex-col">
-                    {backgroundWallpaper.banner?.homeText?.title && (
-                        <div class="banner-title font-bold text-white mb-2 lg:mb-4 leading-tight" style={{ fontSize: backgroundWallpaper.banner.homeText.titleSize || "3rem" }}>
-                            {backgroundWallpaper.banner.homeText.title}
-                        </div>
-                    )}
-                    {backgroundWallpaper.banner?.homeText?.subtitle && (
-                        <div id="banner-subtitle" class="banner-subtitle text-white/90 leading-snug" style={{ fontSize: backgroundWallpaper.banner.homeText.subtitleSize || "1.5rem" }} data-subtitles={JSON.stringify(backgroundWallpaper.banner.homeText.subtitle)}>
-                            {backgroundWallpaper.banner.homeText.typewriter?.enable ? (
-                                <TypewriterText
-                                    text={backgroundWallpaper.banner.homeText.subtitle}
-                                    speed={backgroundWallpaper.banner.homeText.typewriter.speed}
-                                    deleteSpeed={backgroundWallpaper.banner.homeText.typewriter.deleteSpeed}
-                                    pauseTime={backgroundWallpaper.banner.homeText.typewriter.pauseTime}
-                                />
-                            ) : (
-                                randomSubtitle
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    )}
-    <script is:inline>
-        function setRandomSubtitle() {
-            const subtitleElement = document.getElementById('banner-subtitle');
-            if (!subtitleElement) return;
-            const subtitlesData = subtitleElement.dataset.subtitles;
-            if (!subtitlesData) return;
-            try {
-                const subtitles = JSON.parse(subtitlesData);
-                if (Array.isArray(subtitles) && subtitles.length > 0 && !subtitleElement.querySelector('.typewriter')) {
-                    if (!window.fireflyCachedSubtitle) {
-                        const randomIndex = Math.floor(Math.random() * subtitles.length);
-                        window.fireflyCachedSubtitle = subtitles[randomIndex];
-                    }
-                    subtitleElement.textContent = window.fireflyCachedSubtitle;
-                }
-            } catch (e) {
-                console.error("Failed to parse subtitles", e);
-            }
-        }
-        setRandomSubtitle();
-    </script>
-    {showBannerPageTitle && (
-        <div class="banner-page-title-overlay absolute inset-0 z-20 hidden lg:flex items-center justify-center pointer-events-none">
-            <div class="w-4/5 lg:w-3/4 text-center mb-0">
-                <div class="banner-page-title font-bold text-white leading-tight inline-flex items-center justify-center gap-3">
-                    <span class="banner-page-title-text">{title}</span>
-                </div>
-            </div>
-        </div>
-    )}
-    {showBannerPostMeta && bannerPostMeta && (
-        <div class="banner-post-meta-overlay absolute inset-0 z-20 hidden lg:flex items-center justify-center pointer-events-none">
-            <div class="w-4/5 lg:w-3/4 text-center mb-0">
-                <div class="flex flex-col items-center gap-3">
-                    <div class="banner-post-title font-bold text-white leading-tight">
-                        {bannerPostMeta.title}
-                    </div>
-                    <div class="banner-post-meta-list flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-white/90 text-sm md:text-base">
-                        <span class="inline-flex items-center gap-1.5">
-                            <Icon name="material-symbols:calendar-month-outline-rounded" class="text-[1.05em]" />
-                            <span>{i18n(I18nKey.publishedAt)} {formatDateToYYYYMMDD(bannerPostMeta.published)}</span>
-                        </span>
-                        {bannerPostMeta.updated &&
-                            bannerPostMeta.updated.getTime() !== bannerPostMeta.published.getTime() && (
-                                <span class="inline-flex items-center gap-1.5">
-                                    <Icon name="material-symbols:update-rounded" class="text-[1.05em]" />
-                                    <span>{i18n(I18nKey.updatedAt)} {formatDateToYYYYMMDD(bannerPostMeta.updated)}</span>
-                                </span>
-                            )}
-                        {typeof bannerPostMeta.words === "number" && (
-                            <span class="inline-flex items-center gap-1.5">
-                                <Icon name="material-symbols:ink-pen-outline-rounded" class="text-[1.05em]" />
-                                <span>
-                                    {bannerPostMeta.words} {i18n(bannerPostMeta.words === 1 ? I18nKey.wordCount : I18nKey.wordsCount)}
-                                </span>
-                            </span>
-                        )}
-                        {typeof bannerPostMeta.minutes === "number" && (
-                            <span class="inline-flex items-center gap-1.5">
-                                <Icon name="material-symbols:schedule-outline-rounded" class="text-[1.05em]" />
-                                <span>
-                                    {bannerPostMeta.minutes} {i18n(bannerPostMeta.minutes === 1 ? I18nKey.minuteCount : I18nKey.minutesCount)} · {i18n(I18nKey.readTime)}
-                                </span>
-                            </span>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-    )}
-    </div>
-    {shouldRenderWaves ? (
-    <div class={`waves absolute -bottom-px h-[10vh] max-h-37.5 min-h-12.5 w-full md:h-[15vh]
-        ${!wavesEnabledOnMobile ? 'hidden' : ''} ${!wavesEnabledOnDesktop ? 'md:hidden' : ''} ${wavesEnabledOnDesktop ? 'md:block' : ''}`}
-        id="header-waves"
-        style="transform: translateZ(0);">
-        <svg
-            class="waves"
-            xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
-            viewBox="0 24 150 28"
-            preserveAspectRatio="none"
-            shape-rendering="geometricPrecision"
-        >
-            <defs>
-                <path
-                    id="gentle-wave"
-                    d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v48h-352z"
-                >
-                </path>
-            </defs>
-            <g class="parallax">
-                <use
-                    xlink:href="#gentle-wave"
-                    x="48"
-                    y="0"
-                    class="opacity-25 fill-(--page-bg)"
-                ></use>
-                <use
-                    xlink:href="#gentle-wave"
-                    x="48"
-                    y="3"
-                    class="opacity-50 fill-(--page-bg)"
-                ></use>
-                <use
-                    xlink:href="#gentle-wave"
-                    x="48"
-                    y="5"
-                    class="opacity-65 fill-(--page-bg)"
-                ></use>
-                <use
-                    xlink:href="#gentle-wave"
-                    x="48"
-                    y="7"
-                    class=" opacity-75 fill-(--page-bg)"
-                ></use>
-            </g>
-        </svg>
-    </div>
-    ) : null}
-</div>
-)}
-{!(isWallpaperSwitchable || isBannerMode || isOverlayMode) && (
-<>
-    <div id="banner-overlay-container" class="hidden"></div>
-    <div id="banner-dim-container" class="hidden"></div>
-</>
-)}
-<div class={`absolute w-full z-30 pointer-events-none ${mobileNonHomeBannerClass ? 'mobile-main-no-banner' : ''} ${!(isBannerMode && isBackgroundEnabled) ? 'no-banner-layout' : ''} ${transparentClass}`} style={`top: ${finalMainPanelTop}`}>
-    <div class="relative w-full xl:w-[92vw] max-w-(--page-width) mx-auto pointer-events-auto">
+// ========== 本地定制：解析路由元数据，补齐 title/description/og:type ==========
+const routeMeta = resolveRouteMeta(Astro.url.pathname);
+const isPostPage = !!postSlug;
+const shouldRenderCategoryBar = !!siteConfig.categoryBar;
+const navbarWidthFull = siteConfig.navbar.widthFull ?? false;
+
+const banner = getBannerVisibilityState({
+	isHomePage: isHomePageCheck,
+	isPostPage,
+	title,
+	bannerPostMeta,
+});
+const sidebar = getEffectiveSidebarState({ isPostPage });
+
+const { hasWallpaper } = banner;
+const {
+	hideSidebarOnPostPage,
+	hasLeftComponents,
+	hasRightComponents,
+	sidebarClass,
+	staticBarClass,
+	gridColumnStyle,
+	gridDataAttrs,
+} = sidebar;
+---
+
+<Layout title={title} description={description || routeMeta.description} lang={lang} setOGTypeArticle={setOGTypeArticle ?? routeMeta.ogType === "article"} postSlug={postSlug} postCoverImage={postCoverImage} ogImageWidth={ogImageWidth} ogImageHeight={ogImageHeight} ogImageAlt={ogImageAlt} hasWallpaper={hasWallpaper}>
+
+<slot slot="head" name="head" />
+<HeaderTopRow navbarMode={navbarMode} navbarWidthFull={navbarWidthFull} />
+
+<WallpaperSection state={banner} backgroundImages={backgroundImages} title={title} bannerPostMeta={bannerPostMeta} />
+
+<!-- Main content -->
+<div id="content-panel" class="content-panel absolute w-full z-30 pointer-events-none">
+    <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
+    <div id="content-panel-inner" class="relative w-full xl:w-[92vw] max-w-(--page-width) mx-auto pointer-events-auto" style={gridColumnStyle}>
+        {/* 列几何唯一真源 = computeGridColumns()，SSR 写在父级 #content-panel-inner 上
+            （页脚作为兄弟节点也要拿到 --content-ratio-*）。子元素无需定位类：
+            侧栏包裹层是 display:contents，真正的 grid item 是内层元素 */}
         <div id="main-grid"
-          class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-[auto_1fr_auto] lg:grid-rows-[auto] mx-auto gap-4 px-2 md:px-4 ${!sidebarConfig.mobileShowSidebar ? 'mobile-no-sidebar' : ''}`}
-          data-sidebar-position={sidebarLayoutConfig.position}
-          data-tablet-sidebar={sidebarLayoutConfig.tabletSidebar ?? "left"}
-          data-show-both-sidebars-on-post={sidebarLayoutConfig.showBothSidebarsOnPostPage ? "true" : "false"}
+          class="transition duration-700 w-full left-0 right-0 grid mx-auto gap-4 px-2 md:px-4 mobile-no-sidebar"
+          {...gridDataAttrs}
         >
-            {hasBannerCredit && creditEnabledOnDesktop && <a 
-                href={creditUrlDesktop || "#"} 
-                id="banner-credit-desktop" 
-                target={creditUrlDesktop ? "_blank" : "_self"}
-                rel={creditUrlDesktop ? "noopener" : ""}
-                aria-label="Visit image source"
-                class:list={[
-                    "group onload-animation transition-all absolute justify-center items-center rounded-full " +
-                    "px-3 right-4 -top-13 bg-black/60 hover:bg-black/70 h-9 hidden md:flex", 
-                    {"hover:pr-9 active:bg-black/80": creditUrlDesktop}
-                ]}
-            >
-                <Icon class="text-white/75 text-[1.25rem] mr-1" name="material-symbols:copyright-outline-rounded" ></Icon>
-                <div class="text-white/75 text-xs">{creditTextDesktop}</div>
-                {creditUrlDesktop && <Icon class:list={["transition absolute text-[oklch(0.75_0.14_var(--hue))] right-4 text-[0.75rem] opacity-0 group-hover:opacity-100"]}
-                      name="fa7-solid:arrow-up-right-from-square">
-                </Icon>}
-            </a>}
-            {hasBannerCredit && creditEnabledOnMobile && <a 
-                href={creditUrlMobile || "#"} 
-                id="banner-credit-mobile" 
-                target={creditUrlMobile ? "_blank" : "_self"}
-                rel={creditUrlMobile ? "noopener" : ""}
-                aria-label="Visit image source"
-                class:list={[
-                    "group onload-animation transition-all absolute justify-center items-center rounded-full " +
-                    "px-3 right-4 -top-13 bg-black/60 hover:bg-black/70 h-9 flex md:hidden", 
-                    {"hover:pr-9 active:bg-black/80": creditUrlMobile}
-                ]}
-            >
-                <Icon class="text-white/75 text-[1.25rem] mr-1" name="material-symbols:copyright-outline-rounded" ></Icon>
-                <div class="text-white/75 text-xs">{creditTextMobile}</div>
-                {creditUrlMobile && <Icon class:list={["transition absolute text-[oklch(0.75_0.14_var(--hue))] right-4 text-[0.75rem] opacity-0 group-hover:opacity-100"]}
-                      name="fa7-solid:arrow-up-right-from-square">
-                </Icon>}
-            </a>}
-            {sidebarLayoutConfig.position !== "right" ? (
-                <>
-                    <div id="left-sidebar-wrapper" class="contents" style="contain: layout style paint;">
-                        {effectiveHasLeftComponents && (
-                            <SideBar
-                                side={effectiveIsBothSidebars ? "left" : undefined}
-                                class={`${sidebarClass} ${transparentClass}`}
-                                headings={headings}
-                            />
-                        )}
-                    </div>
-                    <div id="left-sidebar-dynamic" class="hidden transition-swup-fade"></div>
-                </>
-            ) : (
-                <div id="left-sidebar-dynamic" class="contents transition-swup-fade">
-                    {effectiveIsBothSidebars && effectiveHasLeftComponents && (
-                        <SideBar side="left" class={`${sidebarClass} ${transparentClass}`} headings={headings}></SideBar>
-                    )}
-                </div>
-            )}
-            <div class={staticBarClass}>
-                {shouldRenderCategoryBar && <div id="category-bar-wrapper" style={!(isHomeRoute || isHomePaginationRoute || isArchiveRoute) ? "display:none" : undefined}><CategoryBar /></div>}
-                <main id="swup-container" class="transition-main">
-                <div id="grid-class-carrier" data-grid-class={gridCols} class="hidden"></div>
-                <h2 class="sr-only">{fullPageTitle}</h2>
+
+            <SidebarColumn
+                side="left"
+                position={sidebarLayoutConfig.position}
+                enable={sidebarLayoutConfig.enable}
+                hideSidebarOnPostPage={hideSidebarOnPostPage}
+                hasLeftComponents={hasLeftComponents}
+                hasRightComponents={hasRightComponents}
+                sidebarClass={sidebarClass}
+                headings={headings}
+                encrypted={encrypted}
+            />
+                    
+            {/* 主内容区包装器 - 包含静态栏位和swup容器，作为单个grid item */}
+            <div id="content-column" class={staticBarClass}>
+                {/* 分类导航栏 - 全站渲染并显示 */}
+                {shouldRenderCategoryBar && <div id="category-bar-wrapper"><CategoryBar currentPostCategory={postCategory} /></div>}
+                {/* 主内容区 - 始终渲染，确保 Swup 容器存在 */}
+                <main
+                    id="swup-container"
+                    class="transition-main"
+                    data-current-post-category={postCategory || ""}
+                >
+                {/* 为每个页面提供一个隐藏的h1标题，用于SEO和可访问性 */}
+                <h1 class="sr-only">{heading || title}</h1>
                 <div id="content-wrapper" class="onload-animation transition-leaving">
                     <slot></slot>
                 </div>
             </main>
-            </div>
-            {(sidebarLayoutConfig.position === "both" || sidebarLayoutConfig.position === "right") ? (
-                <>
-                    <div id="right-sidebar-static" class="contents">
-                        {(effectiveIsBothSidebars || sidebarLayoutConfig.position === "right") && effectiveHasRightComponents && (
-                            <SideBar side="right" class={`${rightSidebarClass} ${transparentClass}`} headings={headings}></SideBar>
-                        )}
+
+                {/* 移动端底部组件：<768px 时 #main-grid 是 display:block，必须排在页脚之前 */}
+                {sidebarLayoutConfig.mobileBottomComponents && sidebarLayoutConfig.mobileBottomComponents.length > 0 && (
+                    <div id="mobile-bottom-sidebar" class="block md:hidden mt-4">
+                        <SideBar side="bottom" headings={headings} encrypted={encrypted}></SideBar>
                     </div>
-                    <div id="right-sidebar-dynamic" class="hidden transition-swup-fade"></div>
-                </>
-            ) : (
-                <div id="right-sidebar-dynamic" class="contents transition-swup-fade">
-                    {effectiveIsBothSidebars && effectiveHasRightComponents && (
-                        <SideBar side="right" class={`${rightSidebarClass} ${transparentClass}`} headings={headings}></SideBar>
-                    )}
-                </div>
-            )}
-            {sidebarLayoutConfig.mobileBottomComponents && sidebarLayoutConfig.mobileBottomComponents.length > 0 && (
-                <div id="mobile-bottom-sidebar" class="col-span-1 block md:hidden mt-4">
-                    <SideBar side="bottom" class={`${transparentClass}`} headings={headings}></SideBar>
-                </div>
-            )}
-            <div class={footerClassName}>
-                <Footer></Footer>
+                )}
             </div>
+
+            <SidebarColumn
+                side="right"
+                position={sidebarLayoutConfig.position}
+                enable={sidebarLayoutConfig.enable}
+                hideSidebarOnPostPage={hideSidebarOnPostPage}
+                hasLeftComponents={hasLeftComponents}
+                hasRightComponents={hasRightComponents}
+                sidebarClass={sidebarClass}
+                headings={headings}
+                encrypted={encrypted}
+            />
+
         </div>
+
         <SpineModel></SpineModel>
-        {live2dModelConfig.enable && <Live2DWidget config={live2dModelConfig} />}
+        {live2dWidgetConfig.enable && <Live2DWidget config={live2dWidgetConfig} />}
+
+        {/* 页脚宽度跨「侧栏 + 内容栏」，故在 #content-column 之外；又在 Swup 容器之外，
+            切页不重渲染 */}
+        <Footer />
     </div>
 </div>
-<FloatingControls headings={headings} />
-</Layout>
 
-<style is:global>
-  #right-sidebar {
-    transition: opacity 0.35s ease-in-out,
-                transform 0.35s ease-in-out;
-  }
-  @keyframes swupFadeOut {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0.95;
-    }
-  }
-</style>
+<FloatingControls headings={headings} encrypted={encrypted} />
+
+<!-- 移动端导航抽屉：渲染为 <body> 直系子元素，脱离导航栏的 transform 包含块才能铺满视口 -->
+<NavMenuPanel links={resolveNavMenuLinks()} />
+
+<!--
+    触屏设备上让代码块的复制按钮默认隐藏，点一下代码块才显形。
+    expressive-code 没给 <pre> 加 tabindex，点击代码区不会产生焦点，
+    所以纯 CSS 的 :focus-within 拿不到这个状态，只能在这里补一个类。
+    显隐规则见 src/styles/expressive-code.css 的 @media (hover: none) 段。
+-->
+
+
+</Layout>

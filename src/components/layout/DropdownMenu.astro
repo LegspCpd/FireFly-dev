@@ -2,8 +2,7 @@
 import { Icon } from "astro-icon/components";
 import DropdownItem from "@/components/common/DropdownItem.astro";
 import DropdownPanel from "@/components/common/DropdownPanel.astro";
-import { LinkPresets } from "@/constants/link-presets";
-import { LinkPreset, type NavBarLink } from "@/types/config";
+import type { NavBarLink } from "@/types/config";
 import { url } from "@/utils/url-utils";
 
 interface Props {
@@ -18,22 +17,7 @@ if (!link) {
 	return null;
 }
 
-// 转换子菜单中的LinkPreset为NavBarLink
-const processedLink = {
-	...link,
-	children: link.children
-		?.map((child: NavBarLink | LinkPreset): NavBarLink | null => {
-			if (typeof child === "number") {
-				// 检查 LinkPreset 是否存在于 LinkPresets 中
-				if (child in LinkPresets) {
-					return LinkPresets[child as LinkPreset];
-				}
-				return null;
-			}
-			return child;
-		})
-		.filter((child): child is NavBarLink => child !== null),
-};
+const processedLink = link;
 
 const hasChildren = processedLink.children && processedLink.children.length > 0;
 ---
@@ -59,7 +43,7 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 						href={child.external ? child.url : url(child.url)}
 						target={child.external ? "_blank" : undefined}
 						isLast={index === (processedLink.children?.length || 0) - 1}
-						class="dropdown-item"
+						class="dropdown-item focus-ring-inset h-10"
 					>
 						{child.icon && <Icon name={child.icon} class="text-[1.25rem] mr-3 navbar-icon" />}
 						<span>{child.name}</span>
@@ -94,21 +78,17 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 	}
 
 	.dropdown-menu {
-		@apply absolute top-full left-0 pt-2 opacity-0 invisible pointer-events-none transition-all duration-200 ease-out transform translate-y-[-8px] z-50;
+		@apply absolute top-full left-0 pt-2 pointer-events-none z-50;
 	}
 
 	.dropdown-container:hover .dropdown-menu,
 	.dropdown-container:focus-within .dropdown-menu {
-		@apply opacity-100 visible pointer-events-auto translate-y-0;
+		@apply pointer-events-auto;
 	}
 
 	.dropdown-container:hover .dropdown-arrow,
 	.dropdown-container:focus-within .dropdown-arrow {
 		@apply rotate-180;
-	}
-
-	.dropdown-content {
-		@apply min-w-[12rem];
 	}
 
 	/* 移动端隐藏下拉菜单 */
@@ -188,16 +168,12 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 			openDropdown(_dropdown, trigger, menu);
 		}
 	}
-	
-	function openDropdown(_dropdown: Element, trigger: Element, menu: Element) {
+
+	function openDropdown(_dropdown: Element, trigger: Element, _menu: Element) {
 		trigger.setAttribute('aria-expanded', 'true');
-		menu.classList.remove('opacity-0', 'invisible', 'pointer-events-none', 'translate-y-[-8px]');
-		menu.classList.add('opacity-100', 'visible', 'pointer-events-auto', 'translate-y-0');
 	}
-	
-	function closeDropdown(_dropdown: Element, trigger: Element, menu: Element) {
+
+	function closeDropdown(_dropdown: Element, trigger: Element, _menu: Element) {
 		trigger.setAttribute('aria-expanded', 'false');
-		menu.classList.add('opacity-0', 'invisible', 'pointer-events-none', 'translate-y-[-8px]');
-		menu.classList.remove('opacity-100', 'visible', 'pointer-events-auto', 'translate-y-0');
 	}
 </script>

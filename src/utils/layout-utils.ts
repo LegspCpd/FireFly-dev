@@ -1,5 +1,11 @@
 import { backgroundWallpaper } from "../config";
 
+export type BackgroundImages = {
+	desktop: string[];
+	mobile: string[];
+	isMultiple: boolean;
+};
+
 // 将单个值或数组统一为数组
 const toArray = (src: string | string[] | undefined): string[] => {
 	if (!src) return [];
@@ -9,11 +15,7 @@ const toArray = (src: string | string[] | undefined): string[] => {
 
 // 背景图片处理工具函数
 // 返回所有配置的图片（用于构建时渲染所有图片）
-export const getBackgroundImages = (): {
-	desktop: string[];
-	mobile: string[];
-	isMultiple: boolean;
-} => {
+export const getBackgroundImages = (): BackgroundImages => {
 	const bgSrc = backgroundWallpaper.src;
 
 	if (

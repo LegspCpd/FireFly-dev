@@ -1,13 +1,10 @@
 ---
-import ArchivePanel from "@components/controls/ArchivePanel.svelte";
+import ArchivePanel from "@components/controls/ArchivePanel.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
-import { getSortedPostsList } from "@/utils/content-utils";
-
-const sortedPostsList = await getSortedPostsList();
 ---
 
 <MainGridLayout title={i18n(I18nKey.archive)} description="博客文章归档 - 按时间线浏览所有文章，涵盖技术、生活、学习等内容">
-  <ArchivePanel sortedPosts={sortedPostsList} client:only="svelte" />
+  <ArchivePanel />
 </MainGridLayout>
