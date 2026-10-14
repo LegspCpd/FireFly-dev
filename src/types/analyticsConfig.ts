@@ -1,7 +1,7 @@
 export type AnalyticsConfig = {
-$1
+	googleAnalyticsId?: string; // Google Analytics ID
 	// Google AdSense 发布商 ID（ca-pub-xxxxxxxxxxxxxxxx），留空则不加载 AdSense 脚本（本地定制）
-	googleAdsenseClientId?: string; // Google Analytics ID
+	googleAdsenseClientId?: string;
 	microsoftClarityId?: string; // Microsoft Clarity ID
 	umamiAnalytics?: {
 		websiteId?: string; // Umami Website ID

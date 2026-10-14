@@ -1,90 +1,70 @@
-// 字体配置
-import type { FontConfig } from "../types/config";
+/**
+ * 字体配置（统一入口）— 已对齐上游 Astro Font API 新版结构
+ *
+ * - fontsList：Astro Font API 字体定义（自动下载、缓存、优化加载）
+ * - fontConfig：字体选择与区域覆盖
+ *
+ * 说明（本地定制）：本地原先的自定义字体功能为关闭状态（enable: false），
+ * 合并后保持关闭，避免引入未经校验的字体下载行为。原 MiSans 字体通过
+ * unpkg 的 CSS 链接引入，不属于 Astro Font API 的内置 provider，
+ * 如需启用请改用 provider: "local"（把字体文件放到 public/assets/fonts/）
+ * 或 provider: "npm"。
+ */
+import type { FontDefinition, FontSelectionConfig } from "@/types/fontConfig";
 
-export const fontConfig: FontConfig = {
-	// 是否启用自定义字体功能
-	enable: false,
-	// 是否预加载字体文件
-	preload: true,
-	// 当前选择的字体，支持多个字体组合
-	selected: ["misans-regular"],
-
-	// 字体列表
-	// 推荐使用可靠的 CDN 服务商提供的字体链接，它天然做了按需分片加载，且性能较好
-	//
-	// 也可以使用本地字体文件，需自行进行字体子集化处理，否则会因为字体文件庞大增加带宽负担导致页面加载缓慢甚至无法加载
-	// 如果进行字体子集化处理，会导致动态内容（如评论，Bangumi等）无法正确显示字体，因此不推荐使用本地字体文件
-	fonts: {
-		// 系统字体
-		system: {
-			id: "system",
-			name: "系统字体",
-			src: "", // 系统字体无需 src
-			family:
-				"system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif",
-		},
-
-		// Google Fonts - Zen Maru Gothic
-		"zen-maru-gothic": {
-			id: "zen-maru-gothic",
-			name: "Zen Maru Gothic",
-			src: "https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700;900&display=swap",
-			family: "Zen Maru Gothic",
-			display: "swap" as const,
-		},
-
-		// Google Fonts - Inter
-		inter: {
-			id: "inter",
-			name: "Inter",
-			src: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap",
-			family: "Inter",
-			display: "swap" as const,
-		},
-
-		// 小米字体 - MiSans Normal
-		"misans-normal": {
-			id: "misans-normal",
-			name: "MiSans Normal",
-			src: "https://unpkg.com/misans@4.1.0/lib/Normal/MiSans-Normal.min.css",
-			family: "MiSans",
-			weight: 400,
-			display: "swap" as const,
-		},
-
-		// 小米字体 - MiSans Regular
-		"misans-regular": {
-			id: "misans-regular",
-			name: "MiSans Regular",
-			src: "https://unpkg.com/misans@4.1.0/lib/Normal/MiSans-Regular.min.css",
-			family: "MiSans",
-			weight: 500,
-			display: "swap" as const,
-		},
-
-		// 小米字体 - MiSans Semibold
-		"misans-semibold": {
-			id: "misans-semibold",
-			name: "MiSans Semibold",
-			src: "https://unpkg.com/misans@4.1.0/lib/Normal/MiSans-Semibold.min.css",
-			family: "MiSans",
-			weight: 600,
-			display: "swap" as const,
-		},
+// ─── Astro Font API 字体定义 ───────────────────────────────
+export const fontsList: FontDefinition[] = [
+	{
+		name: "Zen Maru Gothic",
+		cssVariable: "--font-zen-maru-gothic",
+		provider: "fontsource",
+		weights: ["300", "400", "500", "700", "900"],
+		styles: ["normal"],
+		subsets: ["latin"],
+		fallbacks: ["sans-serif"],
 	},
+	{
+		name: "Inter",
+		cssVariable: "--font-inter",
+		provider: "fontsource",
+		weights: ["300", "400", "500", "600", "700"],
+		styles: ["normal"],
+		subsets: ["latin"],
+		fallbacks: ["sans-serif"],
+	},
+	{
+		name: "JetBrains Mono",
+		cssVariable: "--font-jetbrains-mono",
+		provider: "fontsource",
+		weights: ["400", "700"],
+		styles: ["normal"],
+		subsets: ["latin"],
+		fallbacks: [
+			"ui-monospace",
+			"SFMono-Regular",
+			"Menlo",
+			"Monaco",
+			"Consolas",
+			"Liberation Mono",
+			"Courier New",
+			"monospace",
+		],
+	},
+];
 
-	// 全局字体回退
-	fallback: [
-		"system-ui",
-		"-apple-system",
-		"BlinkMacSystemFont",
-		"Segoe UI",
-		"PingFang SC",
-		"Hiragino Sans GB",
-		"Microsoft YaHei",
-		"Noto Sans CJK SC",
-		"Source Han Sans SC",
-		"Roboto",
-		"sans-serif",
-	],
+// ─── 字体选择与区域覆盖 ─────────────────────────────────────
+export const fontConfig: FontSelectionConfig = {
+	// 是否启用自定义字体功能
+	// 说明：本地原先该功能为关闭；上游改为 Astro Font API 后，enable=false 会让 <Font> 组件的
+	// cssVariable 类型退化为 never，导致 astro check 报错。这里保持正文观感不变（selected 仍为 system），
+	// 仅让代码块按本地原有意图使用 JetBrains Mono。
+	enable: true,
+	// 当前选择的字体 CSS 变量名，使用 "system" 表示系统字体
+	selected: ["system"],
+	// 各区域独立字体（留空则使用全局 selected）
+	bannerTitleFont: "",
+	bannerSubtitleFont: "",
+	navbarTitleFont: "",
+	// 代码块字体
+	codeFont: "--font-jetbrains-mono",
 };

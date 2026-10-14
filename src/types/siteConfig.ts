@@ -255,4 +255,24 @@ export type SiteConfig = {
 		 */
 		contentMode?: "full" | "summary";
 	};
+
+	// ──────────────────────────────────────────────────────────────
+	// 以下为本地定制扩展字段（上游 SiteConfig 未包含，用于保留本地功能）
+	// ──────────────────────────────────────────────────────────────
+
+	// IndexNow 配置：用于在内容变更时快速通知搜索引擎
+	// 生成 key 后需放置 public/{key}.txt 以便搜索引擎验证
+	indexnow?: {
+		key: string;
+	};
+
+	// 搜索引擎站长验证（用于各大搜索平台的站点所有权验证）
+	webmasterVerification?: {
+		bing?: string;
+		google?: string;
+		baidu?: string;
+		yandex?: string;
+		// 文件验证: key=文件名, value=文件内容, 自动在 /{key}.html 路由输出
+		files?: Record<string, string>;
+	};
 };
