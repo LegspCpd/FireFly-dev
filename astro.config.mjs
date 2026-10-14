@@ -212,6 +212,9 @@ export default defineConfig({
 				"simple-icons": ["*"],
 				mdi: ["*"],
 				mingcute: ["*"],
+				// 本地定制：profileConfig 的社交图标使用这两个集合
+				ic: ["*"],
+				ri: ["*"],
 			},
 		}),
 		expressiveCode({

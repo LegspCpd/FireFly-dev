@@ -107,10 +107,10 @@ const navbarPanelBlur = Math.max(
 
 let pageTitle: string;
 if (title) {
-	pageTitle = `${title} - ${siteConfig.title}`;
+	pageTitle = `${title} | ${siteConfig.title}`;
 } else {
 	pageTitle = siteConfig.subtitle
-		? `${siteConfig.title} - ${siteConfig.subtitle}`
+		? `${siteConfig.title} | ${siteConfig.subtitle}`
 		: siteConfig.title;
 }
 
@@ -141,6 +141,38 @@ const canonicalUrl = getCanonicalUrl(Astro.url);
 const hreflangTags = getHreflangTags(canonicalUrl);
 const routeMeta = resolveRouteMeta(Astro.url.pathname);
 const breadcrumbStructuredData = getBreadcrumbStructuredData(Astro.url.pathname);
+
+// ========== 本地定制：DNS 预取 / 预连接（提升外部资源加载性能） ==========
+const toExternalOrigin = (value?: string): string | null => {
+	if (!value) return null;
+	try {
+		return new URL(value).origin;
+	} catch {
+		return null;
+	}
+};
+const connectionHintOrigins = Array.from(
+	new Set(
+		[
+			...(analyticsConfig?.googleAnalyticsId
+				? ["https://www.googletagmanager.com", "https://www.google-analytics.com"]
+				: []),
+			...(analyticsConfig?.googleAdsenseClientId
+				? ["https://pagead2.googlesyndication.com", "https://googleads.g.doubleclick.net"]
+				: []),
+			...(analyticsConfig?.microsoftClarityId ? ["https://www.clarity.ms"] : []),
+			analyticsConfig?.umamiAnalytics?.websiteId
+				? toExternalOrigin(analyticsConfig.umamiAnalytics.scriptUrl)
+				: null,
+			analyticsConfig?.la51Analytics?.Id
+				? toExternalOrigin(
+						analyticsConfig.la51Analytics.sdkUrl ||
+							"https://sdk.51.la/js-sdk-pro.min.js",
+					)
+				: null,
+		].filter((origin): origin is string => Boolean(origin)),
+	),
+);
 
 // OG 图片：文章走生成图/封面，非文章页回退到站点 logo
 let ogImageUrl: string | undefined;
@@ -201,6 +233,16 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
             screenRecord={analyticsConfig.la51Analytics?.screenRecord}
             />
     )}
+
+    <!-- ========== 本地定制：DNS 预取与预连接 ========== -->
+    {connectionHintOrigins.map((origin) => (
+      <>
+        <link rel="dns-prefetch" href={origin} />
+        <link rel="preconnect" href={origin} crossorigin="anonymous" />
+      </>
+    ))}
+    <link rel="dns-prefetch" href={new URL(siteConfig.site_url).origin} />
+    <link rel="preconnect" href={new URL(siteConfig.site_url).origin} />
 
     <title>{pageTitle}</title>
     <meta

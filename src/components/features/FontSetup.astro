@@ -62,8 +62,10 @@ const codeFontFamily = codeFontVar
 
 <!-- Astro Font API: 自动下载、缓存并生成优化的 @font-face -->
 {Array.from(allCssVars).map((cssVar) => (
+  // enable=false 时 Astro 的 fonts 配置为空，<Font> 的 cssVariable 类型会退化为 never，
+  // 故此处断言为 never；allCssVars 为空（enable=false）时不会渲染任何内容。
   <Font
-    cssVariable={cssVar as any}
+    cssVariable={cssVar as never}
     preload={selectedFontVars.includes(cssVar)}
   />
 ))}

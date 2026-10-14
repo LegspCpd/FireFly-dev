@@ -55,10 +55,11 @@ export const fontsList: FontDefinition[] = [
 // ─── 字体选择与区域覆盖 ─────────────────────────────────────
 export const fontConfig: FontSelectionConfig = {
 	// 是否启用自定义字体功能
-	// 说明：本地原先该功能为关闭；上游改为 Astro Font API 后，enable=false 会让 <Font> 组件的
-	// cssVariable 类型退化为 never，导致 astro check 报错。这里保持正文观感不变（selected 仍为 system），
-	// 仅让代码块按本地原有意图使用 JetBrains Mono。
-	enable: true,
+	// 保持本地原状：关闭。
+	// 注意：enable=true 时 Astro Font API 会在**构建期**从 CDN（jsdelivr）下载字体文件，
+	// 网络受限环境下会直接导致构建失败（[CannotFetchFontFile]）。
+	// 如需启用，请确保构建机可访问对应 CDN，或改用 provider: "local" 并自备字体文件。
+	enable: false,
 	// 当前选择的字体 CSS 变量名，使用 "system" 表示系统字体
 	selected: ["system"],
 	// 各区域独立字体（留空则使用全局 selected）

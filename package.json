@@ -100,17 +100,19 @@
   "devDependencies": {
     "@astrojs/ts-plugin": "^1.10.11",
     "@biomejs/biome": "2.5.12",
+    "@iconify-json/ic": "^1.2.4",
     "@iconify-json/mdi": "^1.2.3",
+    "@iconify-json/ri": "^1.2.10",
     "@iconify-json/svg-spinners": "^1.2.4",
     "@tailwindcss/vite": "^4.3.3",
     "@types/qrcode": "^1.5.6",
     "@types/sanitize-html": "^2.16.2",
+    "cross-env": "^10.1.0",
     "esbuild": "^0.28.2",
     "pinyin-pro": "^3.29.3",
     "postcss-import": "^16.1.1",
     "postcss-nesting": "^14.0.1",
     "rehype-callouts": "^2.2.0",
-    "subset-font": "^2.9.0",
-    "cross-env": "^10.1.0"
+    "subset-font": "^2.9.0"
   }
 }
