@@ -50,3 +50,7 @@ package/
 .codex*
 .claude
 .mimocode
+
+# 会话凭证类文件（禁止提交）
+cookies.zip
+cookies/
