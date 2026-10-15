@@ -238,10 +238,18 @@ async function apply(request, env) {
 	if (credential === "none") {
 		return json({ error: "服务端尚未配置 GitHub 凭据（App 或 PAT），请联系站主" }, 503);
 	}
+	// 先读原文再解析：出错时能报出实际长度与原因（不回显内容）
+	const raw = await request.text().catch(function () { return ""; });
+	if (!raw) return json({ error: "请求体为空", length: 0 }, 400);
+	let body;
 	try {
-		body = await request.json();
+		body = JSON.parse(raw);
 	} catch (e) {
-		return json({ error: "请求体不是合法 JSON" }, 400);
+		return json({
+			error: "请求体不是合法 JSON",
+			detail: String((e && e.message) || e),
+			length: raw.length,
+		}, 400);
 	}
 	const checked = validate(body);
 	if (checked.errors.length) {
