@@ -110,17 +110,89 @@ function validate(body) {
 	return { errors: errors, entry: entry };
 }
 
+/** PEM（PKCS#8）→ DER 字节 */
+function pemToDer(pem) {
+	const body = String(pem).replace(/-----[^-]+-----/g, "").replace(/[\s\r\n]/g, "");
+	const bin = atob(body);
+	const bytes = new Uint8Array(bin.length);
+	for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+	return bytes;
+}
+
+/** base64url（JWT 用） */
+function b64url(input) {
+	const bytes = typeof input === "string" ? new TextEncoder().encode(input) : new Uint8Array(input);
+	let bin = "";
+	for (const b of bytes) bin += String.fromCharCode(b);
+	return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/**
+ * 用 GitHub App 私钥签发 JWT（RS256）。GitHub 要求 exp 距现在不超过 10 分钟。
+ */
+async function signAppJwt(env, nowMs) {
+	const iat = Math.floor((nowMs || Date.now()) / 1000) - 60;
+	const header = { alg: "RS256", typ: "JWT" };
+	const payload = { iat: iat, exp: iat + 540, iss: String(env.APP_ID) };
+	const data = b64url(JSON.stringify(header)) + "." + b64url(JSON.stringify(payload));
+	const key = await crypto.subtle.importKey(
+		"pkcs8",
+		pemToDer(env.APP_PRIVATE_KEY),
+		{ name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+		false,
+		["sign"],
+	);
+	const sig = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(data));
+	return data + "." + b64url(new Uint8Array(sig));
+}
+
+let cachedAppToken = { value: "", expiresAt: 0 };
+
+/** 用 App 私钥换 installation token（缓存到过期前一分钟） */
+async function appToken(env) {
+	if (cachedAppToken.value && Date.now() < cachedAppToken.expiresAt - 60000) return cachedAppToken.value;
+	const jwt = await signAppJwt(env);
+	const appHeaders = {
+	authorization: "Bearer " + jwt,
+	accept: "application/vnd.github+json",
+	"user-agent": "firefly-friends-apply",
+	};
+	const instRes = await fetch(
+		"https://api.github.com/repos/" + env.OWNER + "/" + env.REPO + "/installation",
+		{ headers: appHeaders },
+	);
+	if (!instRes.ok) throw new Error("读取 App 安装信息失败：HTTP " + instRes.status);
+	const inst = await instRes.json();
+	const tokRes = await fetch("https://api.github.com/app/installations/" + inst.id + "/access_tokens", {
+		method: "POST",
+		headers: appHeaders,
+	});
+	if (!tokRes.ok) throw new Error("签发 installation token 失败：HTTP " + tokRes.status);
+	const tok = await tokRes.json();
+	cachedAppToken = { value: tok.token, expiresAt: new Date(tok.expires_at).getTime() };
+	return tok.token;
+}
+
+/** 凭据解析：配了 App 就用 App（短期令牌），否则退回 PAT */
+async function resolveToken(env) {
+	if (env.APP_ID && env.APP_PRIVATE_KEY) return { token: await appToken(env), mode: "github-app" };
+	if (env.GITHUB_TOKEN) return { token: env.GITHUB_TOKEN, mode: "pat" };
+	return { token: "", mode: "none" };
+}
+
 async function gh(env, path, init) {
+	const resolved = await resolveToken(env);
+	if (!resolved.token) return new Response(JSON.stringify({ message: "no credential" }), { status: 503 });
 	const base = {
-		authorization: "Bearer " + env.GITHUB_TOKEN,
-		accept: "application/vnd.github+json",
-		"user-agent": "firefly-friends-apply",
-		"x-github-api-version": "2022-11-28",
+	authorization: "Bearer " + resolved.token,
+	accept: "application/vnd.github+json",
+	"user-agent": "firefly-friends-apply",
+	"x-github-api-version": "2022-11-28",
 	};
 	return fetch("https://api.github.com" + path, {
-		method: (init && init.method) || "GET",
-		body: init && init.body,
-		headers: Object.assign(base, (init && init.headers) || {}),
+	method: (init && init.method) || "GET",
+	body: init && init.body,
+	headers: Object.assign(base, (init && init.headers) || {}),
 	});
 }
 
@@ -136,10 +208,10 @@ const NL = String.fromCharCode(10);
 const TAB = String.fromCharCode(9);
 
 async function apply(request, env) {
-	if (!env.GITHUB_TOKEN) {
-		return json({ error: "服务端尚未配置 GITHUB_TOKEN，请联系站主" }, 503);
+	const credential = env.APP_ID && env.APP_PRIVATE_KEY ? "app" : env.GITHUB_TOKEN ? "pat" : "none";
+	if (credential === "none") {
+		return json({ error: "服务端尚未配置 GitHub 凭据（App 或 PAT），请联系站主" }, 503);
 	}
-	let body;
 	try {
 		body = await request.json();
 	} catch (e) {
@@ -222,6 +294,8 @@ async function apply(request, env) {
 	return json({ ok: true, pr: prJson.html_url, number: prJson.number, file: filePath });
 }
 
+export { pemToDer, b64url, signAppJwt, resolveToken };
+
 export default {
 	async fetch(request, env) {
 		const url = new URL(request.url);
@@ -238,7 +312,11 @@ export default {
 		}
 		if (url.pathname === "/" || url.pathname === "/health") {
 			return withCors(
-				json({ ok: true, service: "firefly-friends-apply", token: env.GITHUB_TOKEN ? "configured" : "missing" }),
+				json({
+					ok: true,
+					service: "firefly-friends-apply",
+					credential: env.APP_ID && env.APP_PRIVATE_KEY ? "github-app" : env.GITHUB_TOKEN ? "pat" : "missing",
+				}),
 			);
 		}
 		if (url.pathname === "/apply" && request.method === "POST") {

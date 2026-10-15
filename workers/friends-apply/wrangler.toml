@@ -1,7 +1,14 @@
 # 友链一键申请后端：独立部署，不参与站点构建
 #   pnpm dlx wrangler deploy --config workers/friends-apply/wrangler.toml
-# 令牌（不要写进仓库）：
-#   pnpm dlx wrangler secret put GITHUB_TOKEN --config workers/friends-apply/wrangler.toml
+#
+# 凭据二选一（都是 Worker 密钥，不要写进仓库；配了 App 就优先用 App）：
+#   A. GitHub App（推荐：私钥签发短期 installation token，令牌一小时过期自动轮换）
+#      pnpm dlx wrangler secret put APP_ID --config workers/friends-apply/wrangler.toml
+#      pnpm dlx wrangler secret put APP_PRIVATE_KEY --config workers/friends-apply/wrangler.toml
+#        （App 私钥：PKCS#8 PEM，整段含换行粘贴即可）
+#      App 权限：Contents = Read and write、Pull requests = Read and write；安装到 LegspCpd/friends
+#   B. fine-grained PAT（最省事，长期有效）
+#      pnpm dlx wrangler secret put GITHUB_TOKEN --config workers/friends-apply/wrangler.toml
 name = "firefly-friends-apply"
 main = "src/index.js"
 compatibility_date = "2025-01-01"
