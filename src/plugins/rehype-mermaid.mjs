@@ -55,7 +55,9 @@ const FORBIDDEN_SVG = [
 function assertSafeSvg(svg, label) {
 	for (const rule of FORBIDDEN_SVG) {
 		if (rule.re.test(svg)) {
-			throw new Error("[mermaid] " + label + " SVG 含被禁止的构造：" + rule.what);
+			throw new Error(
+				"[mermaid] " + label + " SVG 含被禁止的构造：" + rule.what,
+			);
 		}
 	}
 }

@@ -15,4 +15,3 @@ export type FriendsPageConfig = {
 	showComment?: boolean; // 是否显示评论区，默认 true
 	randomizeSort?: boolean; // 是否打乱排序
 };
-

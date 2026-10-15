@@ -120,7 +120,7 @@ async function main() {
       errs.slice(0, 5).forEach(function (m) { console.warn("      - " + m); });
       continue;
     }
-    const next = JSON.stringify(data, null, 2) + "\n";
+    const next = JSON.stringify(data, null, "\t") + "\n";
     const prev = fs.existsSync(OUT) ? fs.readFileSync(OUT, "utf8") : "";
     if (next === prev) {
       console.log("   ✓ 无变化（" + data.length + " 条），来源 " + r.source);

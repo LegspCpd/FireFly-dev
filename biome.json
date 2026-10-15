@@ -15,6 +15,7 @@
       "!**/node_modules/**/*",
       "!**/src/constants/icons-data.json",
       "!**/src/constants/lqips.json"
+      "!**/src/data/friends.json",
     ]
   },
   "formatter": {
