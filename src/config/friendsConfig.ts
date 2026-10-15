@@ -1,5 +1,6 @@
 import friendsData from "@/data/friends.json";
-import type { FriendLink, FriendsPageConfig } from "../types/friendsConfig";
+import removedData from "@/data/removed.json";
+import type { FriendLink, FriendsPageConfig, RemovedFriend } from "../types/friendsConfig";
 
 // 友链列表数据来源：LegspCpd/friends 仓库。
 // 构建前由 scripts/sync-friends.mjs 拉取到 src/data/friends.json。
@@ -37,3 +38,5 @@ export const getEnabledFriends = (): FriendLink[] => {
 
 	return list;
 };
+// 已被每周巡检移除的死链（友链仓通过 data/removed.json 维护）
+export const removedFriends: RemovedFriend[] = removedData as RemovedFriend[];
