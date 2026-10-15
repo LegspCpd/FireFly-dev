@@ -199,6 +199,11 @@ export const siteConfig: SiteConfig = {
 		},
 	},
 
+	// 允许被搜索引擎收录的主机名（本地定制）。
+	// robots.txt 按请求 Host 判定：命中这里就放行，否则整站 Disallow。
+	// 平台自带的镜像域名（*.pages.dev / *.vercel.app / *.dnsoe5.com 等）无需列出，默认都会被拦。
+	seoIndexHosts: ["legspcpd.top", "www.legspcpd.top", "blog.legspcpd.top"],
+
 	// 默认 OG 分享图（本地定制）
 	// 注：当前为 640×640，可满足基本分享需求；
 	// 若要最佳效果建议替换为 1200×630 的专用图，否则部分平台会退化为小尺寸卡片
