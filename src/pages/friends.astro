@@ -414,47 +414,54 @@ const description =
       aria-labelledby="fa-title"
     >
       <div class="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-(--line-divider)">
-        <h3 id="fa-title" class="text-base font-bold">申请友链</h3>
-        <button type="button" data-apply-close class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer" aria-label="关闭" style="font-family: inherit">
-          <Icon name="material-symbols:close" class="text-lg" />
+        <h3 id="fa-title" class="text-lg font-bold text-black dark:text-white">申请友链</h3>
+        <button type="button" data-apply-close class="w-8 h-8 flex items-center justify-center rounded-md text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer" aria-label="关闭" style="font-family: inherit">
+          <Icon name="material-symbols:close" class="text-xl" />
         </button>
       </div>
 
       <div class="px-4 sm:px-5 py-4 space-y-3.5">
         <label class="block">
-          <span class="text-xs text-black/75 dark:text-white/75">站点名 *</span>
-          <input data-fa="name" type="text" maxlength="60" placeholder="例如：某人的小站" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base sm:text-sm text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
+          <span class="text-sm text-black/75 dark:text-white/75">站点名 *</span>
+          <input data-fa="name" type="text" maxlength="60" placeholder="例如：某人的小站" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
         </label>
         <label class="block">
-          <span class="text-xs text-black/75 dark:text-white/75">站点链接 *</span>
-          <input data-fa="url" type="url" placeholder="https://example.com/" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base sm:text-sm text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
+          <span class="text-sm text-black/75 dark:text-white/75">站点链接 *</span>
+          <input data-fa="url" type="url" placeholder="https://example.com/" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
         </label>
         <label class="block">
-          <span class="text-xs text-black/75 dark:text-white/75">头像链接（可选）</span>
-          <input data-fa="avatar" type="url" placeholder="https://example.com/avatar.png" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base sm:text-sm text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
+          <span class="text-sm text-black/75 dark:text-white/75">头像链接（可选）</span>
+          <input data-fa="avatar" type="url" placeholder="https://example.com/avatar.png" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
         </label>
         <label class="block">
-          <span class="text-xs text-black/75 dark:text-white/75">友链页链接（可选，便于机器人检查回链）</span>
-          <input data-fa="backlink" type="url" placeholder="https://example.com/friends/" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base sm:text-sm text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
+          <span class="text-sm text-black/75 dark:text-white/75">友链页链接（可选，便于机器人检查回链）</span>
+          <input data-fa="backlink" type="url" placeholder="https://example.com/friends/" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
         </label>
         <label class="block">
-          <span class="text-xs text-black/75 dark:text-white/75">简介（最多 100 字）</span>
-          <textarea data-fa="description" maxlength="100" rows="2" placeholder="一句话介绍你的站点" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base sm:text-sm text-black/90 dark:text-white/90 outline-none focus:border-(--primary) resize-none"></textarea>
+          <span class="text-sm text-black/75 dark:text-white/75">简介（最多 100 字）</span>
+          <textarea data-fa="description" maxlength="100" rows="2" placeholder="一句话介绍你的站点" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base text-black/90 dark:text-white/90 outline-none focus:border-(--primary) resize-none"></textarea>
           <span class="text-[0.7rem] text-black/50 dark:text-white/50" data-fa="count">0 / 100</span>
         </label>
-        <label class="flex items-start gap-2 text-xs text-black/75 dark:text-white/75">
-          <input data-fa="agreed" type="checkbox" class="mt-0.5" />
+        <label class="flex items-start gap-3 text-sm text-black/75 dark:text-white/75 cursor-pointer select-none">
+          <input data-fa="agreed" type="checkbox" class="peer sr-only" />
+          <span
+            class="mt-[1px] w-5 h-5 shrink-0 rounded-md border-2 border-black/25 dark:border-white/30 bg-transparent flex items-center justify-center transition-all duration-150 peer-checked:bg-(--primary) peer-checked:border-(--primary) peer-checked:[&>svg]:opacity-100 peer-focus-visible:ring-2 peer-focus-visible:ring-(--primary)/40"
+          >
+            <svg class="w-3 h-3 text-white opacity-0 transition-opacity duration-150" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </span>
           <span>我已在<strong class="text-black/90 dark:text-white/90">我的友链页面</strong>添加了本站链接（<span class="font-mono text-black/90 dark:text-white/90" data-site-url></span>）</span>
         </label>
 
-        <ul class="text-xs space-y-1 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-black/90 dark:text-white/90" data-fa="checks"></ul>
+        <ul class="text-sm space-y-1.5 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2.5 text-black/90 dark:text-white/90" data-fa="checks"></ul>
 
-        <div class="text-xs rounded-lg px-3 py-2 hidden" data-fa="result"></div>
+        <div class="text-sm rounded-lg px-3 py-2.5 hidden" data-fa="result"></div>
       </div>
 
       <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 px-4 sm:px-5 py-4 border-t border-(--line-divider)">
-        <button type="button" data-apply-close style="font-family: inherit" class="px-4 py-2 rounded-lg text-sm font-medium text-black/75 dark:text-white/75 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer">取消</button>
-        <button type="button" data-fa="submit" style="font-family: inherit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-(--primary) text-white hover:opacity-90 transition-opacity cursor-pointer">
+        <button type="button" data-apply-close style="font-family: inherit" class="px-4 py-2.5 rounded-lg text-[15px] font-medium text-black/75 dark:text-white/75 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer">取消</button>
+        <button type="button" data-fa="submit" style="font-family: inherit" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-[15px] font-semibold bg-(--primary) text-white hover:opacity-90 transition-opacity cursor-pointer">
           提交申请
         </button>
       </div>
@@ -651,13 +658,13 @@ const description =
         if (!payload.agreed) local.push("请先勾选已添加本站链接");
         box.classList.remove("hidden");
         if (local.length) {
-          box.className = "text-xs rounded-lg px-3 py-2 bg-red-500/10 text-red-500";
+          box.className = "text-sm rounded-lg px-3 py-2.5 bg-red-500/10 text-red-500";
           box.textContent = local.join("；");
           return;
         }
         btn.disabled = true;
         btn.textContent = "提交中…";
-        box.className = "text-xs rounded-lg px-3 py-2 bg-black/5 dark:bg-white/5 text-black/75 dark:text-white/75";
+        box.className = "text-sm rounded-lg px-3 py-2.5 bg-black/5 dark:bg-white/5 text-black/75 dark:text-white/75";
         box.textContent = "正在提交到友链仓库…";
         // 两个入口互为备份：网络层失败就换下一个；服务端返回的业务错误不重试
         var endpoints = [root.getAttribute("data-api")];
@@ -696,14 +703,14 @@ const description =
           if (res === null) {
             btn.disabled = false;
             btn.textContent = "提交申请";
-            box.className = "text-xs rounded-lg px-3 py-2 bg-red-500/10 text-red-500";
+            box.className = "text-sm rounded-lg px-3 py-2.5 bg-red-500/10 text-red-500";
             box.textContent = "两个接口入口都连不上，请稍后再试（或直接到 GitHub 仓库提 PR）";
             return;
           }
           btn.disabled = false;
           btn.textContent = "提交申请";
           if (res.status === 200 && res.body && res.body.ok) {
-            box.className = "text-xs rounded-lg px-3 py-2 bg-green-500/10 text-green-600";
+            box.className = "text-sm rounded-lg px-3 py-2.5 bg-green-500/10 text-green-600";
             box.innerHTML =
               '已提交 PR：<a class="underline" target="_blank" rel="noopener noreferrer" href="' +
               esc(res.body.pr) +
@@ -712,7 +719,7 @@ const description =
               "</a><br>机器人会自动检查并打标签，合并后这里就会显示你的站点。";
             return;
           }
-          box.className = "text-xs rounded-lg px-3 py-2 bg-red-500/10 text-red-500";
+          box.className = "text-sm rounded-lg px-3 py-2.5 bg-red-500/10 text-red-500";
           box.textContent = (res.body && (res.body.error || res.body.detail)) || "提交失败，请稍后再试";
         });
       }
