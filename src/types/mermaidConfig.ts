@@ -1,9 +1,9 @@
-import type { BundledThemePresetName } from "@mermanjs/web";
+import type { HostThemePresetName } from "@mermanjs/web";
 
 /**
  * merman 内置宿主主题预设名
  */
-export type MermaidThemeName = BundledThemePresetName;
+export type MermaidThemeName = HostThemePresetName;
 
 /**
  * Mermaid 图表渲染配置

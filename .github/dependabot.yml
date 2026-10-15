@@ -20,3 +20,6 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # @mermanjs/web 从 0.8.0 起变成「浏览器专用」包（在 Node/SSR 里会直接断言失败），
+      # 构建期渲染必须改用 @mermanjs/node。在完成迁移之前不要自动升级，否则构建必挂。
+      - dependency-name: "@mermanjs/web"
