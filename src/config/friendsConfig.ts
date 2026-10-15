@@ -1,6 +1,11 @@
+import friendsData from "@/data/friends.json";
 import type { FriendLink, FriendsPageConfig } from "../types/friendsConfig";
 
-// 可以在src/content/spec/friends.md中编写友链页面下方的自定义内容
+// 友链列表数据来源：LegspCpd/friends 仓库。
+// 构建前由 scripts/sync-friends.mjs 拉取到 src/data/friends.json。
+// 这里不再硬编码任何友链条目 —— 要加友链请到 https://github.com/LegspCpd/friends 提 PR。
+
+// 可以在 src/content/spec/friends.md 中编写友链页面下方的自定义内容
 
 // 友链页面配置
 export const friendsPageConfig: FriendsPageConfig = {
@@ -10,64 +15,28 @@ export const friendsPageConfig: FriendsPageConfig = {
 	// 页面描述文本，如果留空则使用 i18n 中的翻译
 	description: "",
 
-	// 是否显示底部自定义内容（friends.mdx 中的内容）
+	// 是否显示底部自定义内容（friends.md 中的内容）
 	showCustomContent: true,
 
-	// 是否显示评论区，需要先在commentConfig.ts启用评论系统
+	// 是否显示评论区，需要先在 commentConfig.ts 启用评论系统
 	showComment: true,
 
-	// 是否开启随机排序配置，如果开启，就会忽略权重，构建时进行一次随机排序
+	// 是否开启随机排序；vip 条目始终置顶，这里只影响其余条目
 	randomizeSort: false,
 };
 
-// 友链配置
-export const friendsConfig: FriendLink[] = [
-	{
-		title: "夏夜流萤",
-		imgurl:
-			"https://weavatar.com/avatar/d252655d40d6874417a720bad0a6c5f77f8f6a1fd2f882f8f338402dc37e4190?s=640",
-		desc: "飞萤之火自无梦的长夜亮起，绽放在终竟的明天。",
-		siteurl: "https://blog.cuteleaf.cn",
-		tags: ["Blog"],
-		weight: 1, // 权重，数字越大排序越靠前
-		enabled: true, // 是否启用
-	},
-	{
-		title: "二叉树树",
-		imgurl: "https://img.legspcpd.de5.net/file/image/image.webp",
-		desc: "二叉树树的博客",
-		siteurl: "https://2x.nz",
-		tags: ["Blog"],
-		weight: 2, // 权重，数字越大排序越靠前
-		enabled: true, // 是否启用
-	},
-	{
-		title: "ENA-QAQ",
-		imgurl: "https://avatars.githubusercontent.com/u/178663977?v=4",
-		desc: "Guess I'm a poet as well — my code's full of line breaks",
-		siteurl: "https://enashpinal.pages.dev/",
-		tags: ["Blog"],
-		weight: 2, // 权重，数字越大排序越靠前
-		enabled: true, // 是否启用
-	},
-	{
-		title: "Bai21357",
-		imgurl: "https://img.legspcpd.de5.net/file/image/image(1).webp",
-		desc: "Actions speak louder than words.",
-		siteurl: "https://baiblog.vip/",
-		tags: ["Blog"],
-		weight: 3, // 权重，数字越大排序越靠前
-		enabled: true, // 是否启用
-	},
-];
+// 友链配置（来自外部数据源，已由友链仓按「vip 置顶 + 名称」排好序）
+export const friendsConfig: FriendLink[] = friendsData as FriendLink[];
 
-// 获取启用的友链并进行排序
+// 获取友链：vip 置顶，其余在开启 randomizeSort 时打乱
 export const getEnabledFriends = (): FriendLink[] => {
-	const friends = friendsConfig.filter((friend) => friend.enabled);
+	const list = [...friendsConfig];
+	const pinned = list.filter((friend) => friend.vip === true);
+	const rest = list.filter((friend) => friend.vip !== true);
 
 	if (friendsPageConfig.randomizeSort) {
-		return friends.sort(() => Math.random() - 0.5);
+		rest.sort(() => Math.random() - 0.5);
 	}
 
-	return friends.sort((a, b) => b.weight - a.weight);
+	return [...pinned, ...rest];
 };

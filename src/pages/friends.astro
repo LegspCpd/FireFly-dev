@@ -111,7 +111,7 @@ const description =
         {
           items.map((item) => (
             <a
-              href={item.siteurl}
+              href={item.url}
               target="_blank"
               rel="noopener noreferrer"
               data-tags={item.tags?.join(",")}
@@ -129,8 +129,8 @@ const description =
               {/* 头像 */}
               <div class="relative w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform duration-300">
                 <img
-                  src={item.imgurl}
-                  alt={item.title}
+                  src={item.avatar || "/favicon/favicon-light-192.png"}
+                  alt={item.name}
                   class="w-full h-full object-cover"
                 />
               </div>
@@ -138,14 +138,14 @@ const description =
               {/* 内容 */}
               <div class="grow min-w-0 flex flex-col justify-center gap-0.5">
                 <div class="font-bold text-base text-neutral-900 dark:text-neutral-100 group-hover:text-(--primary) transition-colors truncate pr-4">
-                  {item.title}
+                  {item.name}
                 </div>
 
                 <div
                   class="text-sm text-neutral-500 dark:text-neutral-400 line-clamp-1"
-                  title={item.desc}
+                  title={item.description}
                 >
-                  {item.desc}
+                  {item.description}
                 </div>
 
                 {/* 标签 */}

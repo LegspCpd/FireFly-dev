@@ -57,6 +57,10 @@ function main() {
     status = tsx("scripts/generate-vndb-covers.ts");
     if (status !== 0) process.exit(status);
 
+    // 2.5 同步外部友链数据（网络失败会沿用已有数据并返回 0；只有完全无数据才失败）
+    status = run(process.execPath, [path.join(rootDir, "scripts", "sync-friends.mjs")]);
+    if (status !== 0) process.exit(status);
+
     // 3. astro 纯静态构建
     status = run(process.execPath, [astroCli, "build"], {
       DEPLOY_TARGET: "static",
