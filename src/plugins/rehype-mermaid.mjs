@@ -1,5 +1,4 @@
-import { readFile } from "node:fs/promises";
-import { assertSafeSvgForDom, initMerman, renderSvg } from "@mermanjs/web";
+import { createNodeEngine } from "@mermanjs/node";
 import { fromHtml } from "hast-util-from-html";
 import { h } from "hastscript";
 import { visit } from "unist-util-visit";
@@ -15,14 +14,10 @@ import {
 } from "./utils/diagramConstants.js";
 import { extractText } from "./utils/extractText.js";
 
-const mermanWasmUrl = import.meta.resolve(
-	"@mermanjs/web/pkg/merman_wasm_bg.wasm",
-);
-await initMerman({
-	wasm: {
-		module_or_path: await readFile(new URL(mermanWasmUrl)),
-	},
-});
+// 构建期创建一个原生 Node 引擎并复用。本站是 SSG，用同步渲染路径即可。
+// 注意：0.8.0 起那个浏览器专用包在 Node/SSR 里会直接断言失败，
+// 所以构建期渲染改走 @mermanjs/node。
+const mermanEngine = await createNodeEngine();
 
 /**
  * 在构建时将 Mermaid 源码渲染为浅色和深色两套静态 SVG
@@ -33,6 +28,37 @@ await initMerman({
  * @returns {{ lightSvg: string, darkSvg: string }}
  */
 /**
+ * 生成的 SVG 在注入页面前做一次安全检查。
+ *
+ * 旧实现依赖浏览器包里提供的 DOM 安全断言；该包自 0.8.0 起为浏览器专用，
+ * Node 侧不再提供等价断言，因此这里显式列出禁止构造，保持「构建期失败」的语义。
+ *
+ * 两类引用要分开看：
+ *  - 外部渲染资源（image / use / script 指向 http(s)）→ 禁止
+ *  - 外部导航链接（a 标签指向 https，Mermaid 的 click 指令）→ 允许
+ */
+const FORBIDDEN_SVG = [
+	{ re: /<script/i, what: "script 标签" },
+	{ re: /<foreignobject/i, what: "foreignObject 标签" },
+	{ re: /<iframe/i, what: "iframe 标签" },
+	{ re: /<object/i, what: "object 标签" },
+	{ re: /<embed/i, what: "embed 标签" },
+	{ re: /javascript:/i, what: "javascript: 协议" },
+	{ re: / on[a-z]+ *=/i, what: "on* 事件属性" },
+	{
+		re: /<(?:image|use|script)[^>]*(?:href|xlink:href)="?(?:https?:)?[/][/]/i,
+		what: "指向外部资源的渲染引用",
+	},
+];
+
+function assertSafeSvg(svg, label) {
+	for (const rule of FORBIDDEN_SVG) {
+		if (rule.re.test(svg)) {
+			throw new Error("[mermaid] " + label + " SVG 含被禁止的构造：" + rule.what);
+		}
+	}
+}
+/**
  * 移除 SVG 内联 style 中的 max-width 限制，
  * 使图表能根据容器宽度自适应缩放
  */
@@ -41,23 +67,29 @@ function removeSvgMaxWidth(svg) {
 }
 
 function buildMermaidSvgs(mermaidCode, themeConfig, diagramIndex) {
-	const lightSvg = renderSvg(mermaidCode, {
-		host_theme: { preset: themeConfig.lightTheme },
-		svg: {
-			diagram_id: `mermaid-${diagramIndex}-light`,
-			pipeline: "parity",
-		},
+	const lightSvg = mermanEngine.renderSvgSync(mermaidCode, {
+		// node 包把每次请求的选项以 JSON 字符串传入（与旧 web 包的选项对象同源）
+		optionsJson: JSON.stringify({
+			host_theme: { preset: themeConfig.lightTheme },
+			svg: {
+				diagram_id: "mermaid-" + diagramIndex + "-light",
+				pipeline: "parity",
+			},
+		}),
 	});
-	const darkSvg = renderSvg(mermaidCode, {
-		host_theme: { preset: themeConfig.darkTheme },
-		svg: {
-			diagram_id: `mermaid-${diagramIndex}-dark`,
-			pipeline: "parity",
-		},
+	const darkSvg = mermanEngine.renderSvgSync(mermaidCode, {
+		// node 包把每次请求的选项以 JSON 字符串传入（与旧 web 包的选项对象同源）
+		optionsJson: JSON.stringify({
+			host_theme: { preset: themeConfig.darkTheme },
+			svg: {
+				diagram_id: "mermaid-" + diagramIndex + "-dark",
+				pipeline: "parity",
+			},
+		}),
 	});
 
-	assertSafeSvgForDom(lightSvg);
-	assertSafeSvgForDom(darkSvg);
+	assertSafeSvg(lightSvg, "亮色");
+	assertSafeSvg(darkSvg, "暗色");
 
 	return {
 		lightSvg: removeSvgMaxWidth(lightSvg),
