@@ -39,7 +39,8 @@ const mermanEngine = await createNodeEngine();
  */
 const FORBIDDEN_SVG = [
 	{ re: /<script/i, what: "script 标签" },
-	{ re: /<foreignobject/i, what: "foreignObject 标签" },
+	// 刻意不拦 <foreignObject>：Mermaid 的 HTML 标签（flowchart / classDiagram 等）靠它实现，
+	// 属正常输出。旧的浏览器断言同样允许它，否则本站的图根本构建不出来。
 	{ re: /<iframe/i, what: "iframe 标签" },
 	{ re: /<object/i, what: "object 标签" },
 	{ re: /<embed/i, what: "embed 标签" },
@@ -68,9 +69,10 @@ function removeSvgMaxWidth(svg) {
 
 function buildMermaidSvgs(mermaidCode, themeConfig, diagramIndex) {
 	const lightSvg = mermanEngine.renderSvgSync(mermaidCode, {
-		// node 包把每次请求的选项以 JSON 字符串传入（与旧 web 包的选项对象同源）
+		// node 包把每次请求的选项以 JSON 字符串传入。注意：0.8.0 起移除了 host_theme 选项组，
+		// 主题预设改传 presentation.theme.preset（值仍是 editor-light 等那 7 个）。
 		optionsJson: JSON.stringify({
-			host_theme: { preset: themeConfig.lightTheme },
+			presentation: { theme: { preset: themeConfig.lightTheme } },
 			svg: {
 				diagram_id: "mermaid-" + diagramIndex + "-light",
 				pipeline: "parity",
@@ -78,9 +80,9 @@ function buildMermaidSvgs(mermaidCode, themeConfig, diagramIndex) {
 		}),
 	});
 	const darkSvg = mermanEngine.renderSvgSync(mermaidCode, {
-		// node 包把每次请求的选项以 JSON 字符串传入（与旧 web 包的选项对象同源）
+		// 同上：选项以 JSON 字符串传入，主题预设走 presentation.theme.preset
 		optionsJson: JSON.stringify({
-			host_theme: { preset: themeConfig.darkTheme },
+			presentation: { theme: { preset: themeConfig.darkTheme } },
 			svg: {
 				diagram_id: "mermaid-" + diagramIndex + "-dark",
 				pipeline: "parity",
