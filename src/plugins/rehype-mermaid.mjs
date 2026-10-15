@@ -1,5 +1,4 @@
-import { readFile } from "node:fs/promises";
-import { assertSafeSvgForDom, initMerman, renderSvg } from "@mermanjs/web";
+import { assertNavigableSvgForDom, initMerman, renderSvg } from "@mermanjs/web";
 import { fromHtml } from "hast-util-from-html";
 import { h } from "hastscript";
 import { visit } from "unist-util-visit";
@@ -15,14 +14,9 @@ import {
 } from "./utils/diagramConstants.js";
 import { extractText } from "./utils/extractText.js";
 
-const mermanWasmUrl = import.meta.resolve(
-	"@mermanjs/web/pkg/merman_wasm_bg.wasm",
-);
-await initMerman({
-	wasm: {
-		module_or_path: await readFile(new URL(mermanWasmUrl)),
-	},
-});
+// 0.8.0 起由包自身解析 wasm 路径（旧版需手动 import.meta.resolve 到 pkg/ 下的文件，
+// 该子路径在 0.8.0 已不再导出，文件也已移动到 artifacts/wasm/）。
+await initMerman();
 
 /**
  * 在构建时将 Mermaid 源码渲染为浅色和深色两套静态 SVG
@@ -56,8 +50,8 @@ function buildMermaidSvgs(mermaidCode, themeConfig, diagramIndex) {
 		},
 	});
 
-	assertSafeSvgForDom(lightSvg);
-	assertSafeSvgForDom(darkSvg);
+	assertNavigableSvgForDom(lightSvg);
+	assertNavigableSvgForDom(darkSvg);
 
 	return {
 		lightSvg: removeSvgMaxWidth(lightSvg),
