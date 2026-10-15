@@ -59,6 +59,16 @@ const description =
             <h2>{title}</h2>
             {description && <p>{description}</p>}
           </div>
+          <button
+            type="button"
+            id="friend-apply-switch"
+            style="font-family: inherit"
+            class="ml-auto shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold bg-(--primary) text-white hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer"
+          >
+            <Icon name="material-symbols:add-link" class="text-base" />
+            <span class="hidden sm:inline">申请友链</span>
+            <span class="sm:hidden">申请</span>
+          </button>
         </div>
       </div>
 
@@ -79,14 +89,6 @@ const description =
               />
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                id="friend-apply-switch"
-                class="ml-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-(--primary) text-white hover:opacity-90 transition-opacity cursor-pointer"
-              >
-                <Icon name="material-symbols:add-link" class="text-base" />
-                申请友链
-              </button>
               <button
                 data-tag="all"
                 class="category-pill px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200"
@@ -220,7 +222,7 @@ const description =
 
         handleClick(e) {
           const target = e.target;
-          const button = target.closest("button");
+          const button = target.closest("button[data-tag]");
           if (!button) return;
 
           this.selectedTag = button.dataset.tag;
@@ -397,60 +399,60 @@ const description =
   <!-- 一键申请友链：弹窗（脚本会把它移到 body，避免被带 transform 的祖先裁切） -->
   <div
     id="friend-apply-panel"
-    class="float-panel-closed fixed inset-0 z-[1200] flex items-center justify-center p-4 transition-all duration-200"
+    class="float-panel-closed fixed inset-0 z-[1200] flex items-center justify-center p-3 sm:p-4 transition-all duration-200"
     data-api="https://api.vercel-lc.cc.cd"
     inert
     aria-hidden="true"
   >
     <div class="absolute inset-0 bg-black/50" data-apply-close></div>
     <div
-      class="relative w-full max-w-lg rounded-2xl shadow-xl border border-black/5 dark:border-white/10 max-h-[85vh] overflow-y-auto"
+      class="relative w-full max-w-lg rounded-2xl shadow-xl border border-black/5 dark:border-white/10 max-h-[85vh] overflow-y-auto text-black dark:text-white"
       style="background-color: var(--card-bg); width: 100%; max-width: 32rem; max-height: 85vh"
       role="dialog"
       aria-modal="true"
       aria-labelledby="fa-title"
     >
-      <div class="flex items-center justify-between px-5 py-4 border-b border-(--line-divider)">
+      <div class="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-(--line-divider)">
         <h3 id="fa-title" class="text-base font-bold">申请友链</h3>
         <button type="button" data-apply-close class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer" aria-label="关闭" style="font-family: inherit">
           <Icon name="material-symbols:close" class="text-lg" />
         </button>
       </div>
 
-      <div class="px-5 py-4 space-y-3.5">
+      <div class="px-4 sm:px-5 py-4 space-y-3.5">
         <label class="block">
-          <span class="text-xs text-75">站点名 *</span>
-          <input data-fa="name" type="text" maxlength="60" placeholder="例如：某人的小站" style="font-family: inherit" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm text-90 outline-none focus:border-(--primary)" />
+          <span class="text-xs text-black/75 dark:text-white/75">站点名 *</span>
+          <input data-fa="name" type="text" maxlength="60" placeholder="例如：某人的小站" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base sm:text-sm text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
         </label>
         <label class="block">
-          <span class="text-xs text-75">站点链接 *</span>
-          <input data-fa="url" type="url" placeholder="https://example.com/" style="font-family: inherit" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm text-90 outline-none focus:border-(--primary)" />
+          <span class="text-xs text-black/75 dark:text-white/75">站点链接 *</span>
+          <input data-fa="url" type="url" placeholder="https://example.com/" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base sm:text-sm text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
         </label>
         <label class="block">
-          <span class="text-xs text-75">头像链接（可选）</span>
-          <input data-fa="avatar" type="url" placeholder="https://example.com/avatar.png" style="font-family: inherit" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm text-90 outline-none focus:border-(--primary)" />
+          <span class="text-xs text-black/75 dark:text-white/75">头像链接（可选）</span>
+          <input data-fa="avatar" type="url" placeholder="https://example.com/avatar.png" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base sm:text-sm text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
         </label>
         <label class="block">
-          <span class="text-xs text-75">友链页链接（可选，便于机器人检查回链）</span>
-          <input data-fa="backlink" type="url" placeholder="https://example.com/friends/" style="font-family: inherit" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm text-90 outline-none focus:border-(--primary)" />
+          <span class="text-xs text-black/75 dark:text-white/75">友链页链接（可选，便于机器人检查回链）</span>
+          <input data-fa="backlink" type="url" placeholder="https://example.com/friends/" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base sm:text-sm text-black/90 dark:text-white/90 outline-none focus:border-(--primary)" />
         </label>
         <label class="block">
-          <span class="text-xs text-75">简介（最多 100 字）</span>
-          <textarea data-fa="description" maxlength="100" rows="2" placeholder="一句话介绍你的站点" style="font-family: inherit" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm text-90 outline-none focus:border-(--primary) resize-none"></textarea>
-          <span class="text-[0.7rem] text-50" data-fa="count">0 / 100</span>
+          <span class="text-xs text-black/75 dark:text-white/75">简介（最多 100 字）</span>
+          <textarea data-fa="description" maxlength="100" rows="2" placeholder="一句话介绍你的站点" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base sm:text-sm text-black/90 dark:text-white/90 outline-none focus:border-(--primary) resize-none"></textarea>
+          <span class="text-[0.7rem] text-black/50 dark:text-white/50" data-fa="count">0 / 100</span>
         </label>
-        <label class="flex items-start gap-2 text-xs text-75">
+        <label class="flex items-start gap-2 text-xs text-black/75 dark:text-white/75">
           <input data-fa="agreed" type="checkbox" class="mt-0.5" />
-          <span>我已在<strong class="text-90">我的友链页面</strong>添加了本站链接（<span class="font-mono text-90" data-site-url></span>）</span>
+          <span>我已在<strong class="text-black/90 dark:text-white/90">我的友链页面</strong>添加了本站链接（<span class="font-mono text-black/90 dark:text-white/90" data-site-url></span>）</span>
         </label>
 
-        <ul class="text-xs space-y-1 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-90" data-fa="checks"></ul>
+        <ul class="text-xs space-y-1 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-black/90 dark:text-white/90" data-fa="checks"></ul>
 
         <div class="text-xs rounded-lg px-3 py-2 hidden" data-fa="result"></div>
       </div>
 
-      <div class="flex items-center justify-end gap-2 px-5 py-4 border-t border-(--line-divider)">
-        <button type="button" data-apply-close style="font-family: inherit" class="px-4 py-2 rounded-lg text-sm font-medium text-75 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer">取消</button>
+      <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 px-4 sm:px-5 py-4 border-t border-(--line-divider)">
+        <button type="button" data-apply-close style="font-family: inherit" class="px-4 py-2 rounded-lg text-sm font-medium text-black/75 dark:text-white/75 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer">取消</button>
         <button type="button" data-fa="submit" style="font-family: inherit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-(--primary) text-white hover:opacity-90 transition-opacity cursor-pointer">
           提交申请
         </button>
@@ -545,7 +547,7 @@ const description =
 
       function row(label, ok, text) {
         var mark = ok === true ? "✅" : ok === false ? "❌" : "•";
-        var color = ok === true ? "text-green-500" : ok === false ? "text-red-500" : "text-50";
+        var color = ok === true ? "text-green-500" : ok === false ? "text-red-500" : "text-black/50 dark:text-white/50";
         return '<li class="flex items-center justify-between gap-2"><span>' + esc(label) + '</span><span class="' + color + '">' + mark + " " + esc(text) + "</span></li>";
       }
 
@@ -654,7 +656,7 @@ const description =
         }
         btn.disabled = true;
         btn.textContent = "提交中…";
-        box.className = "text-xs rounded-lg px-3 py-2 bg-black/5 dark:bg-white/5 text-75";
+        box.className = "text-xs rounded-lg px-3 py-2 bg-black/5 dark:bg-white/5 text-black/75 dark:text-white/75";
         box.textContent = "正在提交到友链仓库…";
         fetch(root.getAttribute("data-api") + "/apply", {
           method: "POST",
