@@ -442,6 +442,8 @@ const description =
           <textarea data-fa="description" maxlength="100" rows="2" placeholder="一句话介绍你的站点" style="font-family: inherit" class="mt-1 w-full px-3 py-2.5 rounded-lg border border-(--line-divider) bg-transparent text-base text-black/90 dark:text-white/90 outline-none focus:border-(--primary) resize-none"></textarea>
           <span class="text-[0.7rem] text-black/50 dark:text-white/50" data-fa="count">0 / 100</span>
         </label>
+        <p class="text-xs text-black/50 dark:text-white/50 hidden" data-fa="autofill"></p>
+
         <label class="flex items-start gap-3 text-sm text-black/75 dark:text-white/75 cursor-pointer select-none">
           <input data-fa="agreed" type="checkbox" class="peer sr-only" />
           <span
@@ -559,6 +561,53 @@ const description =
         return '<li class="flex items-center justify-between gap-2"><span>' + esc(label) + '</span><span class="' + color + '">' + mark + " " + esc(text) + "</span></li>";
       }
 
+      /**
+       * 填了站点链接后，把「空着」的字段从对方站点自动抓来补上；已填的一律不动。
+       * 抓取必须走服务端（浏览器跨域读不了别人站的 HTML）。
+       */
+      function autoFill(root) {
+        var url = root.querySelector('[data-fa="url"]').value.trim();
+        var api = root.getAttribute("data-api") || "";
+        var note = root.querySelector('[data-fa="autofill"]');
+        if (!api || !isHttpUrl(url)) return;
+        if (note) {
+          note.textContent = "正在读取你的站点信息…";
+          note.classList.remove("hidden");
+        }
+        fetch(api + "/probe?url=" + encodeURIComponent(url), { method: "GET" })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (res) {
+            if (!res || !res.ok) {
+              if (note) note.textContent = "没能自动读取（" + ((res && res.error) || "未知原因") + "），可手动填写";
+              return;
+            }
+            var filled = [];
+            function setIfEmpty(name, value, label) {
+              if (!value) return;
+              var el = root.querySelector('[data-fa="' + name + '"]');
+              if (el && !el.value.trim()) {
+                el.value = value;
+                filled.push(label);
+              }
+            }
+            setIfEmpty("name", res.title, "站点名");
+            setIfEmpty("avatar", res.avatar, "头像");
+            setIfEmpty("description", res.description, "简介");
+            if (res.backlinks && res.backlinks.length) setIfEmpty("backlink", res.backlinks[0], "友链页");
+            if (note) {
+              note.textContent = filled.length
+                ? "已从你的站点自动填入：" + filled.join("、") + "（可修改）"
+                : "你已填写完整，无需自动补全";
+            }
+            render(root);
+          })
+          .catch(function () {
+            if (note) note.textContent = "没能自动读取（网络错误），可手动填写";
+          });
+      }
+
       function render(root) {
         var rows = [];
         var name = root.querySelector('[data-fa="name"]');
@@ -617,6 +666,7 @@ const description =
               if (isHttpUrl(u)) {
                 state.site = null;
                 render(root);
+                autoFill(root);
                 probeReachable(u, function (ok, text) {
                   state.site = ok;
                   state.siteText = text;
