@@ -81,7 +81,7 @@ const description =
             <div class="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                data-apply-open
+                id="friend-apply-switch"
                 class="ml-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-(--primary) text-white hover:opacity-90 transition-opacity cursor-pointer"
               >
                 <Icon name="material-symbols:add-link" class="text-base" />
@@ -394,56 +394,66 @@ const description =
 	</script>
 
 
-  <!-- 一键申请友链：弹窗 + 实时检查（提交到 api.vercel-lc.cc.cd 的 Worker） -->
-  <div id="friend-apply" data-api="https://api.vercel-lc.cc.cd" hidden>
-    <div class="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm" data-apply-close></div>
-    <div class="fixed inset-0 z-[71] flex items-start justify-center overflow-y-auto p-4 sm:p-6">
-      <div class="w-full max-w-lg rounded-2xl border border-(--line-divider) bg-(--card-bg) shadow-xl my-4" role="dialog" aria-modal="true" aria-labelledby="fa-title">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-(--line-divider)">
-          <h3 id="fa-title" class="text-base font-bold">申请友链</h3>
-          <button type="button" data-apply-close class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer" aria-label="关闭">
-            <Icon name="material-symbols:close" class="text-lg" />
-          </button>
-        </div>
+  <!-- 一键申请友链：弹窗（脚本会把它移到 body，避免被带 transform 的祖先裁切） -->
+  <div
+    id="friend-apply-panel"
+    class="float-panel-closed fixed inset-0 z-[1200] flex items-center justify-center p-4 transition-all duration-200"
+    data-api="https://api.vercel-lc.cc.cd"
+    inert
+    aria-hidden="true"
+  >
+    <div class="absolute inset-0 bg-black/50" data-apply-close></div>
+    <div
+      class="relative w-full max-w-lg rounded-2xl shadow-xl border border-black/5 dark:border-white/10 max-h-[85vh] overflow-y-auto"
+      style="background-color: var(--card-bg)"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fa-title"
+    >
+      <div class="flex items-center justify-between px-5 py-4 border-b border-(--line-divider)">
+        <h3 id="fa-title" class="text-base font-bold">申请友链</h3>
+        <button type="button" data-apply-close class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer" aria-label="关闭" style="font-family: inherit">
+          <Icon name="material-symbols:close" class="text-lg" />
+        </button>
+      </div>
 
-        <div class="px-5 py-4 space-y-3.5">
-          <label class="block">
-            <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">站点名 *</span>
-            <input data-fa="name" type="text" maxlength="60" placeholder="例如：某人的小站" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm outline-none focus:border-(--primary)" />
-          </label>
-          <label class="block">
-            <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">站点链接 *</span>
-            <input data-fa="url" type="url" placeholder="https://example.com/" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm outline-none focus:border-(--primary)" />
-          </label>
-          <label class="block">
-            <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">头像链接（可选）</span>
-            <input data-fa="avatar" type="url" placeholder="https://example.com/avatar.png" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm outline-none focus:border-(--primary)" />
-          </label>
-          <label class="block">
-            <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">友链页链接（可选，便于机器人检查回链）</span>
-            <input data-fa="backlink" type="url" placeholder="https://example.com/friends/" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm outline-none focus:border-(--primary)" />
-          </label>
-          <label class="block">
-            <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">简介（最多 100 字）</span>
-            <textarea data-fa="description" maxlength="100" rows="2" placeholder="一句话介绍你的站点" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm outline-none focus:border-(--primary) resize-none"></textarea>
-            <span class="text-[0.7rem] text-neutral-400" data-fa="count">0 / 100</span>
-          </label>
-          <label class="flex items-start gap-2 text-xs text-neutral-600 dark:text-neutral-300">
-            <input data-fa="agreed" type="checkbox" class="mt-0.5" />
-            <span>我已在<strong>我的友链页面</strong>添加了本站链接（<span class="font-mono" data-site-url></span>）</span>
-          </label>
+      <div class="px-5 py-4 space-y-3.5">
+        <label class="block">
+          <span class="text-xs text-75">站点名 *</span>
+          <input data-fa="name" type="text" maxlength="60" placeholder="例如：某人的小站" style="font-family: inherit" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm text-90 outline-none focus:border-(--primary)" />
+        </label>
+        <label class="block">
+          <span class="text-xs text-75">站点链接 *</span>
+          <input data-fa="url" type="url" placeholder="https://example.com/" style="font-family: inherit" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm text-90 outline-none focus:border-(--primary)" />
+        </label>
+        <label class="block">
+          <span class="text-xs text-75">头像链接（可选）</span>
+          <input data-fa="avatar" type="url" placeholder="https://example.com/avatar.png" style="font-family: inherit" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm text-90 outline-none focus:border-(--primary)" />
+        </label>
+        <label class="block">
+          <span class="text-xs text-75">友链页链接（可选，便于机器人检查回链）</span>
+          <input data-fa="backlink" type="url" placeholder="https://example.com/friends/" style="font-family: inherit" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm text-90 outline-none focus:border-(--primary)" />
+        </label>
+        <label class="block">
+          <span class="text-xs text-75">简介（最多 100 字）</span>
+          <textarea data-fa="description" maxlength="100" rows="2" placeholder="一句话介绍你的站点" style="font-family: inherit" class="mt-1 w-full px-3 py-2 rounded-lg border border-(--line-divider) bg-transparent text-sm text-90 outline-none focus:border-(--primary) resize-none"></textarea>
+          <span class="text-[0.7rem] text-50" data-fa="count">0 / 100</span>
+        </label>
+        <label class="flex items-start gap-2 text-xs text-75">
+          <input data-fa="agreed" type="checkbox" class="mt-0.5" />
+          <span>我已在<strong class="text-90">我的友链页面</strong>添加了本站链接（<span class="font-mono text-90" data-site-url></span>）</span>
+        </label>
 
-          <ul class="text-xs space-y-1 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2" data-fa="checks"></ul>
+        <ul class="text-xs space-y-1 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-90" data-fa="checks"></ul>
 
-          <div class="text-xs rounded-lg px-3 py-2 hidden" data-fa="result"></div>
-        </div>
+        <div class="text-xs rounded-lg px-3 py-2 hidden" data-fa="result"></div>
+      </div>
 
-        <div class="flex items-center justify-end gap-2 px-5 py-4 border-t border-(--line-divider)">
-          <button type="button" data-apply-close class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer">取消</button>
-          <button type="button" data-fa="submit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-(--primary) text-white hover:opacity-90 transition-opacity cursor-pointer">
-            提交申请
-          </button>
-        </div>
+      <div class="flex items-center justify-end gap-2 px-5 py-4 border-t border-(--line-divider)">
+        <button type="button" data-apply-close style="font-family: inherit" class="px-4 py-2 rounded-lg text-sm font-medium text-75 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer">取消</button>
+        <button type="button" data-fa="submit" style="font-family: inherit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-(--primary) text-white hover:opacity-90 transition-opacity cursor-pointer">
+          提交申请
+        </button>
       </div>
     </div>
   </div>
@@ -456,7 +466,7 @@ const description =
       window.__fireflyFriendApply = true;
 
       var MAX_DESC = 100;
-      var state = { name: false, url: false, avatar: null, backlink: null, site: null, avatarUrl: null };
+      var state = { site: null, avatar: null };
 
       function esc(s) {
         return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -474,7 +484,20 @@ const description =
         }
       }
 
-      /** 站点可达性：no-cors 请求拿到 opaque 响应即视为通，网络错误视为不通 */
+      function panelEl() {
+        return document.getElementById("friend-apply-panel");
+      }
+
+      function setOpen(open) {
+        var p = panelEl();
+        if (!p) return;
+        p.classList.toggle("float-panel-closed", !open);
+        p.inert = !open;
+        p.setAttribute("aria-hidden", String(!open));
+        document.body.classList.toggle("menu-open", open);
+        if (open) render(p);
+      }
+
       function probeReachable(url, cb) {
         var done = false;
         var timer = setTimeout(function () {
@@ -497,7 +520,6 @@ const description =
           });
       }
 
-      /** 头像可达性：用 Image 预加载 */
       function probeImage(url, cb) {
         var done = false;
         var img = new Image();
@@ -521,71 +543,80 @@ const description =
         img.src = url;
       }
 
+      function row(label, ok, text) {
+        var mark = ok === true ? "✅" : ok === false ? "❌" : "•";
+        var color = ok === true ? "text-green-500" : ok === false ? "text-red-500" : "text-50";
+        return '<li class="flex items-center justify-between gap-2"><span>' + esc(label) + '</span><span class="' + color + '">' + mark + " " + esc(text) + "</span></li>";
+      }
+
       function render(root) {
         var rows = [];
-        var desc = root.querySelector('[data-fa="description"]');
         var name = root.querySelector('[data-fa="name"]');
         var url = root.querySelector('[data-fa="url"]');
         var avatar = root.querySelector('[data-fa="avatar"]');
+        var desc = root.querySelector('[data-fa="description"]');
         var backlink = root.querySelector('[data-fa="backlink"]');
         var agreed = root.querySelector('[data-fa="agreed"]');
-
         rows.push(row("站点名", name.value.trim() ? true : null, name.value.trim() ? "已填" : "必填"));
         rows.push(row("简介字数", desc.value.length <= MAX_DESC, desc.value.length + " / " + MAX_DESC));
         rows.push(row("站点链接格式", isHttpUrl(url.value) ? true : url.value ? false : null, url.value ? (isHttpUrl(url.value) ? "格式正确" : "需要 http(s) 地址") : "必填"));
         if (url.value && isHttpUrl(url.value)) rows.push(row("站点可达性", state.site, state.site === null ? "检查中…" : state.siteText));
         if (avatar.value) rows.push(row("头像可达性", state.avatar, state.avatar === null ? "检查中…" : state.avatarText));
-        if (backlink.value) rows.push(row("友链页格式", isHttpUrl(backlink.value) ? true : false, isHttpUrl(backlink.value) ? "格式正确" : "需要 http(s) 地址"));
+        if (backlink.value) rows.push(row("友链页格式", isHttpUrl(backlink.value), isHttpUrl(backlink.value) ? "格式正确" : "需要 http(s) 地址"));
         rows.push(row("已添加本站链接", agreed.checked ? true : null, agreed.checked ? "已确认" : "请勾选"));
         rows.push(row("反向链接检查", null, "提交后由机器人检查"));
         root.querySelector('[data-fa="checks"]').innerHTML = rows.join("");
         root.querySelector('[data-fa="count"]').textContent = desc.value.length + " / " + MAX_DESC;
       }
 
-      function row(label, ok, text) {
-        var mark = ok === true ? "✅" : ok === false ? "❌" : ok === null ? "•" : "•";
-        var color = ok === true ? "text-green-500" : ok === false ? "text-red-500" : "text-neutral-400";
-        return '<li class="flex items-center justify-between gap-2"><span>' + esc(label) + '</span><span class="' + color + '">' + mark + " " + esc(text) + "</span></li>";
-      }
-
-      function open(root) {
-        root.hidden = false;
-        document.documentElement.style.overflow = "hidden";
-        var host = root.querySelector("[data-site-url]");
-        if (host) host.textContent = location.host === "localhost:4321" ? "https://blog.legspcpd.top" : location.origin;
-        render(root);
-      }
-
-      function close(root) {
-        root.hidden = true;
-        document.documentElement.style.overflow = "";
-      }
-
       function bind(root) {
         if (root.dataset.bound === "1") return;
         root.dataset.bound = "1";
+
+        var host = root.querySelector("[data-site-url]");
+        if (host) host.textContent = location.host === "localhost:4321" ? "https://blog.legspcpd.top" : location.origin;
+
+        // 开关按钮在这里绑定，弹窗本身移到 body，避免被带 transform 的祖先裁切
+        var trigger = document.getElementById("friend-apply-switch");
+        if (trigger && trigger.dataset.applyBound !== "1") {
+          trigger.dataset.applyBound = "1";
+          trigger.addEventListener("click", function (e) {
+            e.preventDefault();
+            setOpen(true);
+          });
+        }
+        var closers = root.querySelectorAll("[data-apply-close]");
+        for (var i = 0; i < closers.length; i++) {
+          closers[i].addEventListener("click", function () {
+            setOpen(false);
+          });
+        }
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && !root.classList.contains("float-panel-closed")) setOpen(false);
+        });
+
         var fields = root.querySelectorAll("[data-fa]");
         var debounce = null;
-        for (var i = 0; i < fields.length; i++) {
-          fields[i].addEventListener("input", function () {
+        for (var j = 0; j < fields.length; j++) {
+          fields[j].addEventListener("input", function () {
             render(root);
             clearTimeout(debounce);
             debounce = setTimeout(function () {
-              var url = root.querySelector('[data-fa="url"]').value;
-              var avatar = root.querySelector('[data-fa="avatar"]').value;
-              if (isHttpUrl(url)) {
+              var u = root.querySelector('[data-fa="url"]').value;
+              var a = root.querySelector('[data-fa="avatar"]').value;
+              if (isHttpUrl(u)) {
                 state.site = null;
                 render(root);
-                probeReachable(url, function (ok, text) {
+                probeReachable(u, function (ok, text) {
                   state.site = ok;
                   state.siteText = text;
                   render(root);
                 });
               }
-              if (avatar && isHttpUrl(avatar)) {
+              if (a && isHttpUrl(a)) {
                 state.avatar = null;
                 render(root);
-                probeImage(avatar, function (ok, text) {
+                probeImage(a, function (ok, text) {
                   state.avatar = ok;
                   state.avatarText = text;
                   render(root);
@@ -623,7 +654,7 @@ const description =
         }
         btn.disabled = true;
         btn.textContent = "提交中…";
-        box.className = "text-xs rounded-lg px-3 py-2 bg-black/5 dark:bg-white/5 text-neutral-500";
+        box.className = "text-xs rounded-lg px-3 py-2 bg-black/5 dark:bg-white/5 text-75";
         box.textContent = "正在提交到友链仓库…";
         fetch(root.getAttribute("data-api") + "/apply", {
           method: "POST",
@@ -640,7 +671,12 @@ const description =
             btn.textContent = "提交申请";
             if (res.status === 200 && res.body && res.body.ok) {
               box.className = "text-xs rounded-lg px-3 py-2 bg-green-500/10 text-green-600";
-              box.innerHTML = "已提交 PR：" + '<a class="underline" target="_blank" rel="noopener noreferrer" href="' + esc(res.body.pr) + '">' + esc(res.body.pr) + "</a>" + "<br>机器人会自动检查并打标签，合并后这里就会显示你的站点。";
+              box.innerHTML =
+                '已提交 PR：<a class="underline" target="_blank" rel="noopener noreferrer" href="' +
+                esc(res.body.pr) +
+                '">' +
+                esc(res.body.pr) +
+                "</a><br>机器人会自动检查并打标签，合并后这里就会显示你的站点。";
               return;
             }
             box.className = "text-xs rounded-lg px-3 py-2 bg-red-500/10 text-red-500";
@@ -650,30 +686,16 @@ const description =
             btn.disabled = false;
             btn.textContent = "提交申请";
             box.className = "text-xs rounded-lg px-3 py-2 bg-red-500/10 text-red-500";
-            box.textContent = "网络错误，提交失败（若在国内网络，请检查是否能访问 api.vercel-lc.cc.cd）";
+            box.textContent = "网络错误，提交失败（若在国内网络，可能连不上接口域名）";
           });
       }
 
       function setup() {
-        var root = document.getElementById("friend-apply");
+        var root = panelEl();
         if (!root) return;
+        // 关键：移到 body，position:fixed 才不会被带 transform 的祖先裁切
+        if (root.parentElement !== document.body) document.body.appendChild(root);
         bind(root);
-        var opens = document.querySelectorAll("[data-apply-open]");
-        for (var i = 0; i < opens.length; i++) {
-          opens[i].addEventListener("click", function (e) {
-            e.preventDefault();
-            open(root);
-          });
-        }
-        var closes = root.querySelectorAll("[data-apply-close]");
-        for (var j = 0; j < closes.length; j++) {
-          closes[j].addEventListener("click", function () {
-            close(root);
-          });
-        }
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape" && !root.hidden) close(root);
-        });
       }
 
       setup();
@@ -682,5 +704,6 @@ const description =
       document.addEventListener("swup:page:view", setup);
     })();
   </script>
+
 
 </MainGridLayout>
