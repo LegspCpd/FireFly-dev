@@ -1,0 +1,17 @@
+# 友链一键申请后端：独立部署，不参与站点构建
+#   pnpm dlx wrangler deploy --config workers/friends-apply/wrangler.toml
+# 令牌（不要写进仓库）：
+#   pnpm dlx wrangler secret put GITHUB_TOKEN --config workers/friends-apply/wrangler.toml
+name = "firefly-friends-apply"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# 绑子域名：根域名上已有记录会被 CF 拒绝（100117），子域名是空的
+routes = [
+	{ pattern = "api.vercel-lc.cc.cd", custom_domain = true },
+]
+
+[vars]
+OWNER = "LegspCpd"
+REPO = "friends"
+BASE_BRANCH = "main"
