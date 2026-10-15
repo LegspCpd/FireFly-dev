@@ -7,6 +7,7 @@ import {
 	commentConfig,
 	friendsPageConfig,
 	getEnabledFriends,
+	removedFriends,
 	siteConfig,
 } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
@@ -108,6 +109,38 @@ const description =
           </friend-filter>
         )
       }
+
+      {/* 已被每周巡检移除的死链 */}
+      {removedFriends.length > 0 && (
+        <div class="not-prose mt-8 rounded-2xl border border-(--line-divider) overflow-hidden">
+          <div class="flex items-center gap-2 px-4 sm:px-5 py-3.5 border-b border-(--line-divider)">
+            <Icon name="material-symbols:link-off" class="text-(--primary)" />
+            <h3 class="text-base font-bold text-black/90 dark:text-white/90">已移除的友链</h3>
+            <span class="ml-auto text-xs text-black/50 dark:text-white/50">{removedFriends.length} 条</span>
+          </div>
+          <div class="px-4 sm:px-5 py-4">
+            <p class="text-sm text-black/60 dark:text-white/60 mb-3 leading-relaxed">
+              以下站点在最近一次巡检中无法访问，已从列表中移除。
+              <strong class="text-black/90 dark:text-white/90">如果你的网站在其中，请重新提交申请</strong>
+              —— 站点恢复后即可重新加入。
+            </p>
+            <ul class="space-y-2">
+              {removedFriends
+                .slice()
+                .reverse()
+                .map((item) => (
+                  <li class="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-sm">
+                    <span class="font-medium text-black/90 dark:text-white/90">{item.name}</span>
+                    <span class="font-mono text-xs text-black/50 dark:text-white/50 break-all">{item.url}</span>
+                    <span class="text-xs text-black/45 dark:text-white/45">
+                      {item.reason || "不可达"} · {String(item.removedAt || "").slice(0, 10)}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       <div class="friends-grid my-4">
         {

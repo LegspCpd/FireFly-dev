@@ -15,3 +15,12 @@ export type FriendsPageConfig = {
 	showComment?: boolean; // 是否显示评论区，默认 true
 	randomizeSort?: boolean; // 是否打乱排序
 };
+/** 已被巡检移除的友链（来自友链仓每周死链巡检） */
+export type RemovedFriend = {
+	name: string; // 站点名
+	url: string; // 原站点地址
+	avatar?: string | null; // 原头像（可能没有）
+	description?: string; // 原简介
+	removedAt?: string; // 移除时间（ISO）
+	reason?: string; // 移除原因，例如 HTTP 404 / 不可达
+};

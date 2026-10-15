@@ -16,13 +16,15 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = path.join(ROOT, "src", "data", "friends.json");
+// 「已被移除的死链」列表（由友链仓每周巡检维护；可能还不存在）
+const OUT_REMOVED = path.join(ROOT, "src", "data", "removed.json");
 const REPO = process.env.FRIENDS_REPO || "LegspCpd/friends";
 const REF = process.env.FRIENDS_REF || "main";
 const TOKEN = process.env.FRIENDS_TOKEN || "";
 const TIMEOUT_MS = 10000;
 const RETRIES = 2;
 
-const LIMITS = { name: 60, description: 200, tag: 20, tags: 5 };
+const LIMITS = { name: 60, description: 100, tag: 20, tags: 5 };
 
 function isNonEmptyString(v) { return typeof v === "string" && v.trim().length > 0; }
 function isHttpUrl(v) {
@@ -130,6 +132,28 @@ async function main() {
         fs.writeFileSync(OUT, next, "utf8");
       }
       console.log("   ✓ 已更新（" + data.length + " 条），来源 " + r.source);
+    }
+    // 顺带同步「已移除的死链」：文件可能不存在，视为空列表
+    try {
+      const removedUrl =
+        "https://raw.githubusercontent.com/" + REPO + "/" + REF + "/data/removed.json";
+      const removedRes = await fetch(removedUrl, { headers: { "user-agent": "firefly-sync-friends" } });
+      let removedList = [];
+      if (removedRes.ok) {
+        const parsed = JSON.parse(await removedRes.text());
+        if (Array.isArray(parsed)) removedList = parsed;
+      }
+      const prevRemoved = fs.existsSync(OUT_REMOVED) ? fs.readFileSync(OUT_REMOVED, "utf8") : "";
+      const nextRemoved = JSON.stringify(removedList, null, "\t") + "\n";
+      if (nextRemoved !== prevRemoved) {
+        fs.mkdirSync(path.dirname(OUT_REMOVED), { recursive: true });
+        fs.writeFileSync(OUT_REMOVED, nextRemoved, "utf8");
+        console.log("   ✓ 已移除列表：更新为 " + removedList.length + " 条");
+      } else {
+        console.log("   ✓ 已移除列表：无变化（" + removedList.length + " 条）");
+      }
+    } catch (e) {
+      console.warn("   ⚠ 同步已移除列表失败（忽略）：" + e.message);
     }
     return;
   }
