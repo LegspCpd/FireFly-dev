@@ -400,7 +400,8 @@ const description =
   <div
     id="friend-apply-panel"
     class="float-panel-closed fixed inset-0 z-[1200] flex items-center justify-center p-3 sm:p-4 transition-all duration-200"
-    data-api="https://api.vercel-lc.cc.cd"
+    data-api="https://friends-api.legspcpd.top"
+    data-api-fallback="https://api.vercel-lc.cc.cd"
     inert
     aria-hidden="true"
   >
@@ -658,38 +659,62 @@ const description =
         btn.textContent = "提交中…";
         box.className = "text-xs rounded-lg px-3 py-2 bg-black/5 dark:bg-white/5 text-black/75 dark:text-white/75";
         box.textContent = "正在提交到友链仓库…";
-        fetch(root.getAttribute("data-api") + "/apply", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
-        })
-          .then(function (r) {
-            return r.json().then(function (j) {
-              return { status: r.status, body: j };
+        // 两个入口互为备份：网络层失败就换下一个；服务端返回的业务错误不重试
+        var endpoints = [root.getAttribute("data-api")];
+        var fallback = root.getAttribute("data-api-fallback");
+        if (fallback) endpoints.push(fallback);
+        function tryEndpoint(i, done) {
+          if (i >= endpoints.length) {
+            done(null);
+            return;
+          }
+          var ctrl = new AbortController();
+          var timer = setTimeout(function () {
+            ctrl.abort();
+          }, 12000);
+          fetch(endpoints[i] + "/apply", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: ctrl.signal,
+          })
+            .then(function (r) {
+              clearTimeout(timer);
+              return r.json().then(function (j) {
+                return { status: r.status, body: j, via: endpoints[i] };
+              });
+            })
+            .then(function (res) {
+              done(res);
+            })
+            .catch(function () {
+              clearTimeout(timer);
+              tryEndpoint(i + 1, done);
             });
-          })
-          .then(function (res) {
-            btn.disabled = false;
-            btn.textContent = "提交申请";
-            if (res.status === 200 && res.body && res.body.ok) {
-              box.className = "text-xs rounded-lg px-3 py-2 bg-green-500/10 text-green-600";
-              box.innerHTML =
-                '已提交 PR：<a class="underline" target="_blank" rel="noopener noreferrer" href="' +
-                esc(res.body.pr) +
-                '">' +
-                esc(res.body.pr) +
-                "</a><br>机器人会自动检查并打标签，合并后这里就会显示你的站点。";
-              return;
-            }
-            box.className = "text-xs rounded-lg px-3 py-2 bg-red-500/10 text-red-500";
-            box.textContent = (res.body && (res.body.error || res.body.detail)) || "提交失败，请稍后再试";
-          })
-          .catch(function () {
+        }
+        tryEndpoint(0, function (res) {
+          if (res === null) {
             btn.disabled = false;
             btn.textContent = "提交申请";
             box.className = "text-xs rounded-lg px-3 py-2 bg-red-500/10 text-red-500";
-            box.textContent = "网络错误，提交失败（若在国内网络，可能连不上接口域名）";
-          });
+            box.textContent = "两个接口入口都连不上，请稍后再试（或直接到 GitHub 仓库提 PR）";
+            return;
+          }
+          btn.disabled = false;
+          btn.textContent = "提交申请";
+          if (res.status === 200 && res.body && res.body.ok) {
+            box.className = "text-xs rounded-lg px-3 py-2 bg-green-500/10 text-green-600";
+            box.innerHTML =
+              '已提交 PR：<a class="underline" target="_blank" rel="noopener noreferrer" href="' +
+              esc(res.body.pr) +
+              '">' +
+              esc(res.body.pr) +
+              "</a><br>机器人会自动检查并打标签，合并后这里就会显示你的站点。";
+            return;
+          }
+          box.className = "text-xs rounded-lg px-3 py-2 bg-red-500/10 text-red-500";
+          box.textContent = (res.body && (res.body.error || res.body.detail)) || "提交失败，请稍后再试";
+        });
       }
 
       function setup() {

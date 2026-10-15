@@ -13,8 +13,10 @@ name = "firefly-friends-apply"
 main = "src/index.js"
 compatibility_date = "2025-01-01"
 
-# 自定义域：用站主提供的域名（根域名已有记录会被 CF 拒绝，故用其子域）
+# 自定义域：两个入口互为备份 —— cc.cd 那个在国内网络时通时断，
+# 前端会依次尝试，哪个通用哪个。
 routes = [
+	{ pattern = "friends-api.legspcpd.top", custom_domain = true },
 	{ pattern = "api.vercel-lc.cc.cd", custom_domain = true },
 ]
 
