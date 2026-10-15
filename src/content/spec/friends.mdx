@@ -105,12 +105,15 @@ export const notes = [
               <div class="w-0.5 flex-1 bg-(--line-divider) my-1.5"></div>
             </div>
             <div class="pb-4">
-              <p class="font-semibold text-sm mb-1">到友链仓库提交</p>
+              <p class="font-semibold text-sm mb-1">先 Fork 仓库，再加入你的条目</p>
               <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                在 GitHub 上新增一个 JSON 文件（文件名用你站点的短名，如 <code class="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-[0.7rem]">your-blog.json</code>），内容照下面的模板填，然后提交 Pull Request。
+                点下面按钮 <strong>Fork 本仓库</strong>，然后打开<strong>你 Fork 出来的那份仓库</strong>，在 `data/friends/` 下新建一个 JSON 文件（文件名用你站点的短名，如 `your-blog.json`），内容照下面模板填。
               </p>
               <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mt-2">
-                机器人会自动校验格式，并访问你的站点检查是否已放本站链接，结果会贴在 PR 里；只做提示，最终由站主合并。
+                简介（description）最多 100 字；没有头像就填 null。
+              </p>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mt-2">
+                填好后从你自己的仓库向本仓库<strong>提交 Pull Request</strong>。Action 会自动校验格式，并访问你填写的那个页面检查是否已放本站链接（下方任一域名都算），结果会贴在 PR 里 —— 只做提示，最终由站主合并。
               </p>
 
               <div class="relative rounded-lg bg-black/5 dark:bg-white/5 p-4 pr-10 mt-3 text-[0.7rem] leading-relaxed overflow-x-auto whitespace-pre">
@@ -134,13 +137,13 @@ export const notes = [
               </div>
 
               <a
-                href="https://github.com/LegspCpd/friends"
+                href="https://github.com/LegspCpd/friends/fork"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-(--primary) text-white text-xs font-semibold hover:opacity-90 transition-opacity no-underline"
+                class="no-styling mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-(--primary) text-white text-xs font-semibold hover:opacity-90 transition-opacity no-underline"
               >
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.68.8.56A10.52 10.52 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg>
-                打开友链仓库，添加友链
+                Fork 仓库，添加友链
               </a>
             </div>
           </div>
@@ -151,8 +154,8 @@ export const notes = [
               <div class="w-7 h-7 rounded-full bg-(--primary) text-white text-xs font-bold flex items-center justify-center shrink-0">3</div>
             </div>
             <div>
-              <p class="font-semibold text-sm mb-1">等待审核</p>
-              <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">合并后你的友链会自动出现在下方列表（本站每次构建都会重新拉取友链仓库的数据）</p>
+              <p class="font-semibold text-sm mb-1">等 PR 被合并</p>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">合并后你的友链就会出现在下方列表 —— 本站每次构建都会重新拉取友链仓库的数据，无需再改站点代码</p>
             </div>
           </div>
         </div>

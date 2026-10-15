@@ -21,22 +21,19 @@ export const friendsPageConfig: FriendsPageConfig = {
 	// 是否显示评论区，需要先在 commentConfig.ts 启用评论系统
 	showComment: true,
 
-	// 是否开启随机排序；vip 条目始终置顶，这里只影响其余条目
+	// 是否开启随机排序
 	randomizeSort: false,
 };
 
-// 友链配置（来自外部数据源，已由友链仓按「vip 置顶 + 名称」排好序）
+// 友链配置（来自外部数据源，已由友链仓按名称排好序）
 export const friendsConfig: FriendLink[] = friendsData as FriendLink[];
 
-// 获取友链：vip 置顶，其余在开启 randomizeSort 时打乱
+// 获取友链（开启 randomizeSort 时打乱）
 export const getEnabledFriends = (): FriendLink[] => {
 	const list = [...friendsConfig];
-	const pinned = list.filter((friend) => friend.vip === true);
-	const rest = list.filter((friend) => friend.vip !== true);
-
 	if (friendsPageConfig.randomizeSort) {
-		rest.sort(() => Math.random() - 0.5);
+		list.sort(() => Math.random() - 0.5);
 	}
 
-	return [...pinned, ...rest];
+	return list;
 };
