@@ -10,6 +10,8 @@ const PUBLIC_DIR = "public";
 const OUTPUT_FILE = "src/constants/lqips.json";
 // 需要忽略的目录（相对于项目根目录）
 const IGNORE_DIRS = [
+	// OG 分享图由 /og/[...slug].ts 在构建期生成，不参与 LQIP（兜底图同理）
+	"public/og/**",
 	"public/favicon/**",
 	"public/pio/**",
 	"public/assets/images/effects/**",

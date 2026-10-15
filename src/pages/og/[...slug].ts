@@ -232,6 +232,44 @@ const loadImageAsArrayBuffer = async (
 	}
 };
 
+/**
+ * OG 图片渲染的安全包装。
+ *
+ * 背景：图片「加载」失败已有兜底（warnAndFallback 用透明图占位），但图片「渲染」
+ * 本身没有任何保护 —— 渲染器一旦出错（平台原生二进制、字体、布局等）就会直接抛错，
+ * 把整个站点构建带崩。OG 分享图只是锦上添花，不该有这个杀伤力。
+ *
+ * 因此这里捕获渲染异常，改用 public/og/fallback.png 这张静态兜底图，
+ * 目标是「构建成功 + og:image 可用」，而不是「构建失败」。
+ */
+async function renderOg(element: unknown, options?: unknown): Promise<Response> {
+	try {
+		return new ImageResponse(element as never, options as never);
+	} catch (err) {
+		console.warn(
+			"\n \x1b[33m[OG Image] 渲染失败，已改用静态兜底图 public/og/fallback.png\n" +
+				" Failed to render the OG image, falling back to the static placeholder.\n" +
+				" " + (err instanceof Error ? err.message : String(err)) + "\x1b[0m\n",
+		);
+		try {
+			const nodeFs = await import("node:fs");
+			const buf = nodeFs.readFileSync("./public/og/fallback.png");
+			return new Response(new Uint8Array(buf), {
+				headers: {
+					"Content-Type": "image/png",
+					"Cache-Control": "public, max-age=31536000, immutable",
+				},
+			});
+		} catch (fallbackErr) {
+			console.warn(
+				"[OG Image] 兜底图也不可用：" +
+					(fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)),
+			);
+			return new Response(new Uint8Array(getTransparentPngArrayBuffer()));
+		}
+	}
+}
+
 export async function GET({
 	props,
 }: APIContext<{ post: CollectionEntry<"posts"> }>): Promise<Response> {
@@ -260,7 +298,7 @@ export async function GET({
 
 	const description = post.data.description;
 
-	return new ImageResponse(
+	return renderOg(
 		{
 			type: "div",
 			props: {
