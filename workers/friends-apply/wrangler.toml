@@ -20,7 +20,15 @@ routes = [
 	{ pattern = "api.vercel-lc.cc.cd", custom_domain = true },
 ]
 
+# 速率限制用的 KV（wrangler kv namespace create RATE_LIMIT 生成）
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "eab109d70050488caf8305e7e7ee4450"
+
 [vars]
 OWNER = "LegspCpd"
 REPO = "friends"
 BASE_BRANCH = "main"
+# 速率限制：同一 IP 每小时最多几次成功提交；全局每小时上限作为兜底
+RATE_PER_IP = "2"
+RATE_GLOBAL = "20"

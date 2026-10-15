@@ -200,6 +200,134 @@ async function appToken(env) {
 }
 
 /** 凭据解析：配了 App 就用 App（短期令牌），否则退回 PAT */
+/** 从 HTML 的 meta 里取值（property/name 不分先后，属性顺序任意） */
+function metaContent(html, keys) {
+  const tags = html.match(/<meta\b[^>]*>/gi) || [];
+  for (const tag of tags) {
+    const attr = function (n) {
+      const m = tag.match(new RegExp(n + "\\s*=\\s*[\"']([^\"']*)[\"']", "i"));
+      return m ? m[1] : "";
+    };
+    const key = (attr("property") || attr("name")).toLowerCase();
+    if (keys.indexOf(key) >= 0) {
+      const c = attr("content");
+      if (c) return c;
+    }
+  }
+  return "";
+}
+
+/** 从 <link rel=...> 取 href */
+function linkHref(html, rels) {
+  const tags = html.match(/<link\b[^>]*>/gi) || [];
+  for (const tag of tags) {
+    const attr = function (n) {
+      const m = tag.match(new RegExp(n + "\\s*=\\s*[\"']([^\"']*)[\"']", "i"));
+      return m ? m[1] : "";
+    };
+    const rel = attr("rel").toLowerCase();
+    for (const r of rels) {
+      if (rel.indexOf(r) >= 0) {
+        const h = attr("href");
+        if (h) return h;
+      }
+    }
+  }
+  return "";
+}
+
+function absolutize(href, baseUrl) {
+  // 空值 / # / javascript: 之类不能当成有效地址（否则会把页面自身当成头像）
+  if (!href || href === "#" || /^javascript:/i.test(href)) return "";
+  try {
+    const abs = new URL(href, baseUrl).href;
+    return abs === baseUrl ? "" : abs;
+  } catch (e) {
+    return "";
+  }
+}
+
+function decodeEntities(s) {
+  return String(s)
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, "\u0022")
+    .replace(/&#39;/g, "\u0027")
+    .replace(/&nbsp;/g, " ");
+}
+
+/**
+ * 抓取申请人站点，提取「没填时可以自动补全」的字段。
+ * 浏览器受同源策略限制读不了别人站点的 HTML，所以这一步放在服务端。
+ */
+async function probeSite(target) {
+  if (!isPublicHttpUrl(target)) return { ok: false, error: "只支持公网 http(s) 地址" };
+  const ctrl = new AbortController();
+  const timer = setTimeout(function () { ctrl.abort(); }, 15000);
+  let res;
+  try {
+    res = await fetch(target, {
+      redirect: "follow",
+      signal: ctrl.signal,
+      headers: {
+        // 用浏览器 UA：不少站点/CDN 会直接拒掉明显的 Bot UA（实测返回 400）
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+      },
+    });
+  } catch (e) {
+    clearTimeout(timer);
+    return { ok: false, error: "打不开：" + String((e && e.message) || e) };
+  }
+  clearTimeout(timer);
+  if (!res.ok) return { ok: false, error: "HTTP " + res.status };
+  const ctype = res.headers.get("content-type") || "";
+  if (ctype.indexOf("html") < 0) return { ok: false, error: "不是 HTML 页面（" + ctype + "）" };
+  const html = (await res.text()).slice(0, 400000);
+  const finalUrl = res.url || target;
+
+  let title = metaContent(html, ["og:site_name"]) || metaContent(html, ["og:title"]);
+  if (!title) {
+    const m = html.match(/<title[^>]*>([\s\S]{1,200}?)<\/title>/i);
+    if (m) title = m[1];
+  }
+  title = decodeEntities(title).replace(/\s+/g, " ").trim();
+  // 常见写法「文章名 - 站点名」，取最后一段更像站点名
+  const parts = title.split(/\s+[|｜·—–-]\s+/);
+  if (parts.length > 1 && parts[parts.length - 1].length >= 2) title = parts[parts.length - 1].trim();
+
+  const description = decodeEntities(metaContent(html, ["description", "og:description"])).trim();
+
+  let avatar = metaContent(html, ["og:image", "twitter:image"]) || linkHref(html, ["apple-touch-icon", "icon"]) || "";
+  avatar = absolutize(avatar, finalUrl);
+
+  // 可能的友链页：首页里链接文字/地址带「友链/友情链接/links/friends」的
+  const anchorTags = html.match(/<a\b[^>]*href\s*=\s*["'][^"']+["'][^>]*>[\s\S]{0,80}?<\/a>/gi) || [];
+  const backlinks = [];
+  for (const tag of anchorTags) {
+    const href = (tag.match(/href\s*=\s*["']([^"']+)["']/i) || [])[1] || "";
+    // 只认地址里带 friend 的（/friends/、/friendlinks.html 这类）。
+    // 光看链接文字容易把别的页面误判成友链页。
+    if (/friend/i.test(href)) {
+      const abs = absolutize(href, finalUrl);
+      if (abs && backlinks.indexOf(abs) < 0) backlinks.push(abs);
+    }
+    if (backlinks.length >= 5) break;
+  }
+
+  return {
+    ok: true,
+    finalUrl: finalUrl,
+    title: title.slice(0, 60),
+    description: description.slice(0, 120),
+    avatar: avatar,
+    backlinks: backlinks,
+  };
+}
+
 async function resolveToken(env) {
 	if (env.APP_ID && env.APP_PRIVATE_KEY) return { token: await appToken(env), mode: "github-app" };
 	if (env.GITHUB_TOKEN) return { token: env.GITHUB_TOKEN, mode: "pat" };
@@ -233,7 +361,58 @@ function toBase64(text) {
 const NL = String.fromCharCode(10);
 const TAB = String.fromCharCode(9);
 
+/** 取客户端 IP（Cloudflare 会带上真实来源） */
+function clientIp(request) {
+  return request.headers.get("CF-Connecting-IP") || request.headers.get("x-forwarded-for") || "unknown";
+}
+
+function rateConfig(env) {
+  return {
+    perIp: Number(env.RATE_PER_IP || 2),
+    global: Number(env.RATE_GLOBAL || 20),
+  };
+}
+
+/**
+ * 读取当前计数（不写入）。只在「成功建出 PR」时才计数，
+ * 这样字段填错、被校验拦下的提交不会白扣用户额度。
+ */
+async function rateRead(env, ip) {
+  if (!env.RATE_LIMIT) return { ok: true, skipped: true, used: 0 };
+  const cfg = rateConfig(env);
+  const hour = Math.floor(Date.now() / 3600000);
+  const [ipVal, gVal] = await Promise.all([
+    env.RATE_LIMIT.get("ip:" + ip + ":" + hour),
+    env.RATE_LIMIT.get("g:" + hour),
+  ]);
+  const usedIp = Number(ipVal || 0);
+  const usedGlobal = Number(gVal || 0);
+  if (usedIp >= cfg.perIp) {
+    return { ok: false, error: "同一来源每小时最多提交 " + cfg.perIp + " 次，请过一会儿再试" };
+  }
+  if (usedGlobal >= cfg.global) {
+    return { ok: false, error: "当前提交较多，请稍后再试" };
+  }
+  return { ok: true, used: usedIp, remaining: Math.max(0, cfg.perIp - usedIp) };
+}
+
+async function rateBump(env, ip) {
+  if (!env.RATE_LIMIT) return;
+  const cfg = rateConfig(env);
+  const hour = Math.floor(Date.now() / 3600000);
+  const ipKey = "ip:" + ip + ":" + hour;
+  const gKey = "g:" + hour;
+  const [ipVal, gVal] = await Promise.all([env.RATE_LIMIT.get(ipKey), env.RATE_LIMIT.get(gKey)]);
+  await Promise.all([
+    env.RATE_LIMIT.put(ipKey, String(Number(ipVal || 0) + 1), { expirationTtl: 3700 }),
+    env.RATE_LIMIT.put(gKey, String(Number(gVal || 0) + 1), { expirationTtl: 3700 }),
+  ]);
+}
+
 async function apply(request, env) {
+	const ip = clientIp(request);
+	const rate = await rateRead(env, ip);
+	if (!rate.ok) return json({ error: rate.error }, 429);
 	const credential = env.APP_ID && env.APP_PRIVATE_KEY ? "app" : env.GITHUB_TOKEN ? "pat" : "none";
 	if (credential === "none") {
 		return json({ error: "服务端尚未配置 GitHub 凭据（App 或 PAT），请联系站主" }, 503);
@@ -325,7 +504,8 @@ async function apply(request, env) {
 	});
 	if (!pr.ok) return json({ error: "创建 PR 失败", detail: (await pr.text()).slice(0, 300) }, 502);
 	const prJson = await pr.json();
-	return json({ ok: true, pr: prJson.html_url, number: prJson.number, file: filePath });
+	await rateBump(env, ip);
+	return json({ ok: true, pr: prJson.html_url, number: prJson.number, file: filePath, remaining: Math.max(0, (rate.remaining || 0) - 1) });
 }
 
 export { pemToDer, b64url, signAppJwt, resolveToken, pkcs1ToPkcs8, appKeyDer };
@@ -353,6 +533,16 @@ export default {
 				}),
 			);
 		}
+    if (url.pathname === "/probe" && request.method === "GET") {
+      const target = url.searchParams.get("url") || "";
+      try {
+        const r = await probeSite(target);
+        return withCors(json(r, r.ok ? 200 : 400));
+      } catch (e) {
+        return withCors(json({ ok: false, error: "抓取失败：" + String((e && e.message) || e) }, 500));
+      }
+    }
+
 		if (url.pathname === "/apply" && request.method === "POST") {
 			try {
 				return withCors(await apply(request, env));
