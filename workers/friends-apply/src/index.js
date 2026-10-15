@@ -127,6 +127,32 @@ function b64url(input) {
 	return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/** DER 长度编码 */
+function derLen(n) {
+	if (n < 0x80) return [n];
+	if (n < 0x100) return [0x81, n];
+	return [0x82, (n >> 8) & 0xff, n & 0xff];
+}
+
+/**
+ * PKCS#1 → PKCS#8。
+ * GitHub 生成的 App 私钥是 PKCS#1（-----BEGIN RSA PRIVATE KEY-----），
+ * 而 WebCrypto 的 importKey 只接受 PKCS#8，所以这里补上外层封装。
+ */
+function pkcs1ToPkcs8(der) {
+	const ver = [0x02, 0x01, 0x00];
+	const alg = [0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x05, 0x00];
+	const inner = [0x04].concat(derLen(der.length), Array.from(der));
+	const body = ver.concat(alg, inner);
+	return new Uint8Array([0x30].concat(derLen(body.length), body));
+}
+
+/** 按 PEM 头判断是 PKCS#1 还是 PKCS#8，返回可被 WebCrypto 导入的 DER */
+function appKeyDer(pem) {
+	const der = pemToDer(pem);
+	return String(pem).indexOf("BEGIN RSA PRIVATE KEY") >= 0 ? pkcs1ToPkcs8(der) : der;
+}
+
 /**
  * 用 GitHub App 私钥签发 JWT（RS256）。GitHub 要求 exp 距现在不超过 10 分钟。
  */
@@ -137,7 +163,7 @@ async function signAppJwt(env, nowMs) {
 	const data = b64url(JSON.stringify(header)) + "." + b64url(JSON.stringify(payload));
 	const key = await crypto.subtle.importKey(
 		"pkcs8",
-		pemToDer(env.APP_PRIVATE_KEY),
+		appKeyDer(env.APP_PRIVATE_KEY),
 		{ name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
 		false,
 		["sign"],
@@ -294,7 +320,7 @@ async function apply(request, env) {
 	return json({ ok: true, pr: prJson.html_url, number: prJson.number, file: filePath });
 }
 
-export { pemToDer, b64url, signAppJwt, resolveToken };
+export { pemToDer, b64url, signAppJwt, resolveToken, pkcs1ToPkcs8, appKeyDer };
 
 export default {
 	async fetch(request, env) {
