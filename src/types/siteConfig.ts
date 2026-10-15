@@ -276,10 +276,6 @@ export type SiteConfig = {
 		files?: Record<string, string>;
 	};
 
-	// 允许被搜索引擎收录的主机名清单（本地定制）。robots.txt 会按请求 Host 判定：
-	// 在清单内正常放行，不在清单内则整站 Disallow（用于屏蔽平台自带的镜像域名）。
-	seoIndexHosts?: string[];
-
 	// 站点级默认 OG 分享图（本地定制）：用于无封面文章与普通页面的社交分享兜底。
 	// 建议使用 1200×630 的图片，否则分享卡片会退化为小尺寸缩略图。
 	defaultOgImage?: string;
