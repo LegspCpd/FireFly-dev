@@ -272,4 +272,117 @@ const description =
     }
   </script>
 
+  <script slot="head" is:inline>
+	// 友链页增强：统一处理「复制」按钮，并让指向本站的链接跟随访客当前使用的域名。
+	//
+	// 为什么必须在浏览器里做：本站是静态站点，构建期拿不到访客用的是哪个域名
+	// （www / blog / 裸域在构建时完全一样）。浏览器自己知道当前域名，所以放在这里。
+	//
+	// 安全边界：只有当前域名属于「正式域名白名单」（data-site-hosts）时才改写；
+	// 若访客走的是平台镜像域名（例如 *.pages.dev），保持原样，
+	// 避免把镜像域名写进「请复制本站信息」这类内容里。
+	if (!window.__fireflyFriendsEnhance) {
+		window.__fireflyFriendsEnhance = true;
+
+		const hostRegexCache = new Map();
+		const hostRegex = (host) => {
+			if (!hostRegexCache.has(host)) {
+				hostRegexCache.set(
+					host,
+					new RegExp(
+						"(//|^)" + host.replace(/\./g, "\\.") + "(?=[/:?#]|$)",
+						"g",
+					),
+				);
+			}
+			return hostRegexCache.get(host);
+		};
+
+		// 只替换真正处在「主机名」位置的片段，保留路径、查询串与写法风格
+		const swapHost = (value, hosts, to) => {
+			if (!value) return value;
+			let out = value;
+			for (const host of hosts) out = out.replace(hostRegex(host), "$1" + to);
+			return out;
+		};
+
+		// 记住每个元素的**原始**内容，保证反复执行也幂等
+		// （Swup 导航会重复触发；若在已改写的内容上再改一次，可能累积出错误结果）
+		const originals = new WeakMap();
+		const originalOf = (el) => {
+			let rec = originals.get(el);
+			if (!rec) {
+				rec = {
+					copy: el.getAttribute("data-copy"),
+					href: el.getAttribute("href"),
+					text: el.textContent,
+				};
+				originals.set(el, rec);
+			}
+			return rec;
+		};
+
+		const applyHostLinks = () => {
+			const block = document.querySelector("[data-friends-block]");
+			if (!block) return;
+			const hosts = (block.getAttribute("data-site-hosts") || "")
+				.split(/\s+/)
+				.filter(Boolean);
+			if (hosts.length === 0) return;
+			// 当前不在正式域名下（例如平台镜像域名）→ 什么都不改
+			if (!hosts.includes(location.hostname)) return;
+			const to = location.host;
+
+			// ① 标记为「本站链接」的展示文本
+			block.querySelectorAll("[data-site-url]").forEach((el) => {
+				el.textContent = swapHost(originalOf(el).text, hosts, to);
+			});
+			// ② 复制按钮要复制的内容（站点链接那一行的复制值也在这里）
+			block.querySelectorAll("[data-copy]").forEach((el) => {
+				const src = originalOf(el).copy;
+				if (src !== null) el.setAttribute("data-copy", swapHost(src, hosts, to));
+			});
+			// ③ 指向本站的链接
+			block.querySelectorAll("a[href]").forEach((el) => {
+				const src = originalOf(el).href;
+				if (src) el.setAttribute("href", swapHost(src, hosts, to));
+			});
+			// ④ 同一块内容里出现的其它本站域名文本
+			block.querySelectorAll("p, span, code, li").forEach((el) => {
+				if (el.children.length > 0) return;
+				el.textContent = swapHost(originalOf(el).text, hosts, to);
+			});
+		};
+
+		// 复制按钮统一处理：内容会在运行时被上面的逻辑改写，所以点击时现读 data-copy
+		document.addEventListener("click", (event) => {
+			const target = event.target;
+			const btn =
+				target && target.closest
+					? target.closest("[data-friends-block] [data-copy]")
+					: null;
+			if (!btn) return;
+			const text = btn.getAttribute("data-copy") || "";
+			const svgs = btn.querySelectorAll("svg");
+			const flash = () => {
+				if (svgs.length < 2) return;
+				svgs[0].classList.add("hidden");
+				svgs[1].classList.remove("hidden");
+				setTimeout(() => {
+					svgs[0].classList.remove("hidden");
+					svgs[1].classList.add("hidden");
+				}, 1500);
+			};
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(text).then(flash, () => {});
+			}
+		});
+
+		applyHostLinks();
+		document.addEventListener("DOMContentLoaded", applyHostLinks);
+		document.addEventListener("swup:contentReplaced", applyHostLinks);
+		document.addEventListener("swup:page:view", applyHostLinks);
+	}
+	</script>
+
 </MainGridLayout>
