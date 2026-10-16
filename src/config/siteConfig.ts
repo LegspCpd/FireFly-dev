@@ -67,10 +67,9 @@ export const siteConfig: SiteConfig = {
 	},
 
 	// Favicon 配置
-	// 图标必须指向真实存在的文件：之前指向 /favicon/favicon.ico，但 public/favicon/ 下
-	// 只有 PNG，导致浏览器标签图标 404、OG 图生成时也加载失败（用透明图兜底）。
 	// 站点图标直接用头像（站主指定）。
-	// 之前指向 public 下并不存在的 favicon.ico，导致标签图标 404、OG 图也只能用透明图兜底。
+	// 注意：不要指向 public 下不存在的文件（曾经指向 /favicon/favicon.ico，
+	// 那里只有 PNG，导致标签图标 404、OG 图只能拿透明图兜底）。
 	favicon: [
 		{ src: "https://hub.legspcpd.top/file/1787274091485_ico.png" },
 	],
