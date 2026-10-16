@@ -192,7 +192,8 @@ const loadImageAsArrayBuffer = async (
 			if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
 			buffer = Buffer.from(await res.arrayBuffer());
 		} else {
-			const normalized = imagePath.replace(/^\.\//, "");
+			// 同时去掉 ./ 与开头的 /，避免拼出 ./src//favicon/... 这种双斜杠路径
+			const normalized = imagePath.replace(/^\.\//, "").replace(/^\//, "");
 
 			// Try resolving the file in order: src/ -> public/ -> path as-is
 			const candidatePaths = [`./src/${normalized}`, `./public/${normalized}`];
