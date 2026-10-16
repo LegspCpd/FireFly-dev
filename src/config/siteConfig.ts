@@ -67,10 +67,13 @@ export const siteConfig: SiteConfig = {
 	},
 
 	// Favicon 配置
+	// 图标必须指向真实存在的文件：之前指向 /favicon/favicon.ico，但 public/favicon/ 下
+	// 只有 PNG，导致浏览器标签图标 404、OG 图生成时也加载失败（用透明图兜底）。
 	favicon: [
-		{
-			src: "/favicon/favicon.ico",
-		},
+		{ src: "/favicon/favicon-light-192.png", sizes: "192x192", theme: "light" },
+		{ src: "/favicon/favicon-dark-192.png", sizes: "192x192", theme: "dark" },
+		{ src: "/favicon/favicon-light-32.png", sizes: "32x32", theme: "light" },
+		{ src: "/favicon/favicon-dark-32.png", sizes: "32x32", theme: "dark" },
 	],
 
 	// 导航栏配置
