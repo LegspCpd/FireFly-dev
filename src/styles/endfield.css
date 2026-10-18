@@ -539,3 +539,18 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
     0 var(--ef-cut)
   );
 }
+
+/* 23) 列表页：每张卡片的日期做成墨底标签（skill 样例里日期/编号都是标签形态，等宽数字）。
+      作用域限定在 .post-card-wrapper 内，不影响文章页的字段行。 */
+.post-card-wrapper .post-meta-root > div:first-child {
+  background: var(--ef-ink);
+  color: var(--ef-paper);
+  padding: 2px 8px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+}
+/* 该标签处在行首，去掉它前面可能出现的竖线 */
+.post-card-wrapper .post-meta-root > div:first-child::before {
+  content: none !important;
+}
