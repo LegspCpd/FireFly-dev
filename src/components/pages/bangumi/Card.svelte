@@ -21,11 +21,11 @@ const {
 }: Props = $props();
 
 const STATUS_COLORS: Record<number, string> = {
-	1: "bg-blue-500",
-	2: "bg-green-500",
-	3: "bg-yellow-500",
-	4: "bg-orange-500",
-	5: "bg-red-500",
+	1: "bg-(--ef-chip)",
+	2: "bg-(--ef-chip)",
+	3: "bg-(--ef-ink-2)",
+	4: "bg-(--ef-ink)",
+	5: "bg-(--ef-ink)",
 };
 
 function getStatusText(type: number): string {

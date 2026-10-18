@@ -592,8 +592,15 @@ const description =
       }
 
       function row(label, ok, text) {
-        var mark = ok === true ? "✅" : ok === false ? "❌" : "•";
-        var color = ok === true ? "text-green-500" : ok === false ? "text-red-500" : "text-black/50 dark:text-white/50";
+        // endfield：检查结果不用红绿（skill：告警与失败一律用黄块和墨线，红色只给删除），
+        // 用文字说明 + 墨色，色盲也看得出。
+        var mark = ok === true ? "通过" : ok === false ? "不通过" : "—";
+        var color =
+          ok === true
+            ? "text-(--ef-ink) font-medium"
+            : ok === false
+              ? "text-(--ef-ink)"
+              : "text-black/50 dark:text-white/50";
         return '<li class="flex items-center justify-between gap-2"><span>' + esc(label) + '</span><span class="' + color + '">' + mark + " " + esc(text) + "</span></li>";
       }
 
@@ -744,7 +751,8 @@ const description =
         if (!payload.agreed) local.push("请先勾选已添加本站链接");
         box.classList.remove("hidden");
         if (local.length) {
-          box.className = "text-sm rounded-lg px-3 py-2.5 bg-red-500/10 text-red-500";
+          box.className =
+            "text-sm px-3 py-2.5 border-l-4 border-(--ef-ink) bg-(--ef-signal) text-[#161616]";
           box.textContent = local.join("；");
           return;
         }
@@ -789,7 +797,8 @@ const description =
           if (res === null) {
             btn.disabled = false;
             btn.textContent = "提交申请";
-            box.className = "text-sm rounded-lg px-3 py-2.5 bg-red-500/10 text-red-500";
+            box.className =
+            "text-sm px-3 py-2.5 border-l-4 border-(--ef-ink) bg-(--ef-signal) text-[#161616]";
             box.textContent = "两个接口入口都连不上，请稍后再试（或直接到 GitHub 仓库提 PR）";
             return;
           }
@@ -805,7 +814,8 @@ const description =
               "</a><br>机器人会自动检查并打标签，合并后这里就会显示你的站点。";
             return;
           }
-          box.className = "text-sm rounded-lg px-3 py-2.5 bg-red-500/10 text-red-500";
+          box.className =
+            "text-sm px-3 py-2.5 border-l-4 border-(--ef-ink) bg-(--ef-signal) text-[#161616]";
           box.textContent = (res.body && (res.body.error || res.body.detail)) || "提交失败，请稍后再试";
         });
       }

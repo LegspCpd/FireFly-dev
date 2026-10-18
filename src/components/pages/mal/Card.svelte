@@ -28,13 +28,13 @@ const {
 }: Props = $props();
 
 const STATUS_COLORS: Record<string, string> = {
-	watching: "bg-yellow-500",
-	reading: "bg-yellow-500",
-	completed: "bg-green-500",
-	on_hold: "bg-orange-500",
+	watching: "bg-(--ef-ink-2)",
+	reading: "bg-(--ef-ink-2)",
+	completed: "bg-(--ef-ink)",
+	on_hold: "bg-(--ef-chip)",
 	dropped: "bg-(--ef-ink-2)",
-	plan_to_watch: "bg-blue-500",
-	plan_to_read: "bg-blue-500",
+	plan_to_watch: "bg-(--ef-chip)",
+	plan_to_read: "bg-(--ef-chip)",
 	unknown: "bg-gray-500",
 };
 

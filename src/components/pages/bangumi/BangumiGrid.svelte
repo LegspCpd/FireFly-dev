@@ -204,7 +204,7 @@ onMount(async () => {
 {:else if isDynamic && error}
   <div class="text-center py-16">
     <div class="inline-flex items-center justify-center w-16 h-16 bg-(--btn-regular-bg) rounded-full mb-6 border border-(--line-divider)">
-      <span class="text-[2rem] text-red-500">⚠</span>
+      <span class="text-[2rem] text-(--ef-ink-2)">⚠</span>
     </div>
     <h2 class="text-xl font-semibold text-black/80 dark:text-white/80 mb-3">{errorTitle}</h2>
     <p class="text-black/60 dark:text-white/60 mb-4 max-w-md mx-auto">{errorDesc}</p>

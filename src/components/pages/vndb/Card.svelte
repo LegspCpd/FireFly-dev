@@ -26,10 +26,10 @@ const {
 }: Props = $props();
 
 const STATUS_COLORS: Record<string, string> = {
-	wishlist: "bg-blue-500",
-	playing: "bg-yellow-500",
-	finished: "bg-green-500",
-	stalled: "bg-orange-500",
+	wishlist: "bg-(--ef-chip)",
+	playing: "bg-(--ef-ink-2)",
+	finished: "bg-(--ef-ink)",
+	stalled: "bg-(--ef-chip)",
 	dropped: "bg-(--ef-ink-2)",
 	unknown: "bg-gray-500",
 };
