@@ -34,7 +34,27 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
     background: #141414; color: #fff;
     transition: opacity 200ms var(--ef-ease-mech, ease-out);
   }
-  #ef-boot.is-out { opacity: 0; pointer-events: none; }
+  /* 退出转场（照官网 .Loading_container.leaving 的确切参数）：
+     先一整层黄色从左侧扫过整屏（0.6s cubic-bezier(1,0,.7,1)，延迟 0.5s），
+     然后整块在延迟 1.4s 后用 1s 淡出。 */
+  #ef-boot.is-leaving {
+    transition: opacity 1s 1.4s;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #ef-boot.is-leaving::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: #fffa00;
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: ef-boot-wipe 0.6s cubic-bezier(1, 0, 0.7, 1) 0.5s forwards;
+  }
+  @keyframes ef-boot-wipe {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
   /* 左侧竖向进度条：3px 贴边，轨道暗淡，填充黄，从上往下灌 */
   .ef-boot-rail {
     position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
@@ -97,11 +117,11 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
       if (done) return;
       done = true;
       clearInterval(timer);
-      el.classList.add("is-out");
+      el.classList.add("is-leaving");
       document.documentElement.style.overflow = "";
-      setTimeout(function () { el.remove(); }, 240);
+      setTimeout(function () { el.remove(); }, 3600);
     }
-    setTimeout(leave, 3600);
+    setTimeout(leave, 3400);
     el.addEventListener("click", leave);
     window.addEventListener("keydown", leave, { once: true });
   })();
