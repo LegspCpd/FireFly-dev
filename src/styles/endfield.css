@@ -402,3 +402,21 @@ html[data-wallpaper-mode="none"] #banner-wrapper,
 html[data-wallpaper-mode="none"] .banner {
   display: none !important;
 }
+
+/* 10) 主题的「软当前」态（[data-soft-active]）同样被墨色映射坑了：
+      它写成 18% 的 --primary 作底、90% 的 --primary 作字 —— 暗色主题里
+      --primary 是浅的，于是「浅灰底 + 近白字」，糊成一片、几乎读不出。
+      按 skill：空闲/次要的块用浅填充 + 墨字（chip），当前项才用黄块。 */
+.category-pill[data-soft-active],
+.category-pill[data-soft-active]:hover {
+  background: var(--ef-chip) !important;
+  color: var(--ef-ink) !important;
+  font-weight: 600;
+  border-color: transparent !important;
+}
+
+/* 首页那颗胶囊（data-category-name=""）在暗色下也是浅底浅字，统一成 chip 底墨字 */
+.category-pill[data-category-name=""] {
+  background: var(--ef-chip) !important;
+  color: var(--ef-ink) !important;
+}
