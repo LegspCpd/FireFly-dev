@@ -543,8 +543,9 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 /* 23) 列表页：每张卡片的日期做成墨底标签（skill 样例里日期/编号都是标签形态，等宽数字）。
       作用域限定在 .post-card-wrapper 内，不影响文章页的字段行。 */
 .post-card-wrapper .post-meta-root > div:first-child {
-  background: var(--ef-ink);
-  color: var(--ef-paper);
+  /* 用 chip/墨这对色：两端主题都保证可读（此前用 ink 做底，在暗色下渲染成黑条） */
+  background: var(--ef-chip) !important;
+  color: var(--ef-ink) !important;
   padding: 2px 8px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
