@@ -25,6 +25,7 @@ import { resolveNavMenuLinks } from "@/utils/nav-menu-utils";
 import { getEffectiveSidebarState } from "@/utils/sidebar-effective-utils";
 import Layout from "./Layout.astro";
 import BootScreen from "@components/common/BootScreen.astro";
+import ScrollReveal from "@components/common/ScrollReveal.astro";
 
 import "@/styles/expressive-code.css";
 
@@ -108,6 +109,7 @@ const {
 <HeaderTopRow navbarMode={navbarMode} navbarWidthFull={navbarWidthFull} />
 
         {isHomePageCheck && <BootScreen />}
+        <ScrollReveal />
 <WallpaperSection state={banner} backgroundImages={backgroundImages} title={title} bannerPostMeta={bannerPostMeta} />
 
 <!-- Main content -->

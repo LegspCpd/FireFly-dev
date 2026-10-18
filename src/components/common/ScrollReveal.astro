@@ -1,0 +1,45 @@
+---
+// 滚动进场（学官网的滚动驱动动画；按 skill 的动效规定实现）
+//   - 只用 snap 曲线；单个入场 320ms；一个批次错开 38ms（skill 只允许 38/45/100 三档）
+//   - 序列总长控制在 1s 内；prefers-reduced-motion 时完全不做
+//   - 关键：只有 JS 活着时才加 html.ef-reveal-on，JS 挂了内容照常可见（不会白屏）
+---
+
+<style>
+  html.ef-reveal-on .ef-reveal {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  html.ef-reveal-on .ef-reveal.ef-shown {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 320ms var(--ef-ease-snap, ease-out),
+      transform 320ms var(--ef-ease-snap, ease-out);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html.ef-reveal-on .ef-reveal { opacity: 1; transform: none; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    if (!("IntersectionObserver" in window)) return;
+    var sel = ".post-card-wrapper, .category-bar, widget-layout, .custom-md > h2, .custom-md > h3";
+    var els = document.querySelectorAll(sel);
+    if (!els.length) return;
+    document.documentElement.classList.add("ef-reveal-on");
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry, i) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        var delay = Math.min(i, 10) * 38;
+        setTimeout(function () { el.classList.add("ef-shown"); }, delay);
+        io.unobserve(el);
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
+    els.forEach(function (el) { el.classList.add("ef-reveal"); io.observe(el); });
+  })();
+</script>
