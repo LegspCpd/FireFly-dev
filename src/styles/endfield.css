@@ -555,3 +555,31 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 .post-card-wrapper .post-meta-root > div:first-child::before {
   content: none !important;
 }
+
+/* 24) 阅读页的字阶与留白（对照 skill 样例：大标题、一栏宽正文、行高松）。
+      只作用在文章正文与文章标题，不动列表页的紧凑密度。 */
+[data-pagefind-meta="title"] {
+  font-size: clamp(1.85rem, 3.2vw, 2.5rem) !important;
+  line-height: 1.28 !important;
+  letter-spacing: -0.01em;
+}
+.custom-md {
+  font-size: 1.0625rem;
+  line-height: 1.9;
+}
+.custom-md :is(p, ul, ol) {
+  margin-bottom: 1.3rem;
+}
+.custom-md h2 {
+  font-size: 1.45rem;
+  margin-top: 2.6rem;
+  margin-bottom: 1rem;
+}
+.custom-md h3 {
+  font-size: 1.2rem;
+  margin-top: 2rem;
+  margin-bottom: 0.8rem;
+}
+.custom-md :is(pre, blockquote, table) {
+  margin: 1.6rem 0;
+}
