@@ -67,3 +67,78 @@ body::before {
   color: var(--ef-ink-2);
   line-height: 1.2;
 }
+
+/* ===== 结构件工具类（skill 部件速查）===== */
+
+/* 编号标签：墨底 + 纸色字 + 右下切角。只用于真实编号/日期/计数。 */
+.ef-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--ef-ink);
+  color: var(--ef-paper);
+  font-weight: 700;
+  font-stretch: 112%;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  line-height: 1.6;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+}
+
+/* 安静块：空闲的筛选块、次要点的小块 */
+.ef-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--ef-chip);
+  color: var(--ef-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+}
+
+/* 当前/选中：唯一强调色填充，上面写墨字（skill：强调色只做填充） */
+.ef-chip-current,
+.ef-current {
+  background: var(--ef-signal);
+  color: #161616;
+  font-weight: 700;
+}
+
+/* 分页与系列导航的当前项：同样用黄块 + 墨字 */
+[aria-current="page"] {
+  background: var(--ef-signal);
+  color: #161616 !important;
+  font-weight: 700;
+}
+
+/* 空状态：斜线纹（skill：空白处用斜线纹，不用插画） */
+.ef-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 6px,
+    rgb(22 22 22 / 0.22) 6px 7px
+  );
+}
+
+/* 记录行：细线分隔、编号与计数用等宽数字（skill：不堆卡片，用细线分区） */
+.ef-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ef-rule);
+  font-variant-numeric: tabular-nums;
+}
+.ef-row > .ef-row-no {
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-stretch: 112%;
+  color: var(--ef-ink-2);
+}
+.ef-row > .ef-row-count {
+  margin-left: auto;
+  font-weight: 700;
+  font-stretch: 112%;
+}
