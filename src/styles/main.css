@@ -10,15 +10,39 @@
 @import './categories.css';
 @import './layout-base.css';
 
+/* ===== endfield-ui：自托管 Saira（可变宽度 50–125 / 字重 100–900）=====
+   来源 skill 的 templates/flutter/fonts/Saira.ttf（SIL OFL 1.1，许可证见
+   public/assets/fonts/Saira-OFL.txt），经 scripts/endfield-fonts.mjs 子集化：472KB → 102KB。
+   为什么不走 Astro Font API：它会在构建期从 CDN 下载，网络受限会直接构建失败
+   （站点因此一直把自定义字体功能关着）。 */
+@font-face {
+  font-family: 'Saira';
+  src: url('/assets/fonts/saira-subset.woff2') format('woff2-variations'),
+       url('/assets/fonts/saira-subset.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-stretch: 50% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
 @plugin '@tailwindcss/typography';
 
 /* 暗色模式选择器配置 */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* endfield-ui：skill 要求字段类拉丁文字 112% 宽、数字用等宽数字 */
+body {
+  font-stretch: 112%;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Tailwind v4 配置 - 从 tailwind.config.cjs 迁移 */
 @theme {
+  /* endfield-ui：界面用宽体几何拉丁（Saira）+ 中文黑体；
+     原写法里的 'sans-serif' 带引号等于没有兜底，一并修掉 */
   --font-sans:
-    'Roboto', 'sans-serif', ui-sans-serif, system-ui, sans-serif,
+    'Saira', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Source Han Sans SC',
+    ui-sans-serif, system-ui, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
