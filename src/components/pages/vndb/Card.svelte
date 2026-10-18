@@ -30,7 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
 	playing: "bg-yellow-500",
 	finished: "bg-green-500",
 	stalled: "bg-orange-500",
-	dropped: "bg-red-500",
+	dropped: "bg-(--ef-ink-2)",
 	unknown: "bg-gray-500",
 };
 

@@ -32,7 +32,7 @@ const STATUS_COLORS: Record<string, string> = {
 	reading: "bg-yellow-500",
 	completed: "bg-green-500",
 	on_hold: "bg-orange-500",
-	dropped: "bg-red-500",
+	dropped: "bg-(--ef-ink-2)",
 	plan_to_watch: "bg-blue-500",
 	plan_to_read: "bg-blue-500",
 	unknown: "bg-gray-500",

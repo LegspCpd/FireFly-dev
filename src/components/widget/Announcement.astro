@@ -52,7 +52,7 @@ const showTitle = widgetConfig?.showTitle !== false;
       {
         config.closable && (
           <button
-            class="btn-regular rounded-lg h-8 w-8 text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+            class="btn-regular h-8 w-8 text-sm hover:bg-(--ef-chip) transition-colors"
             onclick="this.closest('widget-layout').style.display='none'"
             aria-label={i18n(I18nKey.announcementClose)}
           >
