@@ -35,28 +35,28 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
 
 <style>
   #ef-boot {
-    position: fixed; inset: 0; z-index: 2000;
+    position: fixed; inset: 0; z-index: 99999;
     background: #141414; color: #fff;
     transition: opacity 240ms var(--ef-ease-mech, ease-out);
   }
   #ef-boot.is-out { opacity: 0; pointer-events: none; }
-  .ef-boot-brand { position: absolute; left: 64.453%; top: 27.625rem; }
+  .ef-boot-brand { position: absolute; left: 64.453%; top: clamp(3rem, 22vh, 16rem); }
   .ef-boot-brand-cn { display: block; font-size: 2rem; font-weight: 800; font-stretch: 125%; letter-spacing: 0.01em; }
   .ef-boot-brand-en { display: block; margin-top: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.24em; color: rgba(255,255,255,.72); }
-  .ef-boot-progress { position: absolute; left: 0; bottom: 17.75rem; width: 82.4074074074%; height: 2.5rem; }
+  .ef-boot-progress { position: absolute; left: 0; bottom: clamp(3.5rem, 24vh, 14rem); width: 82.4074074074%; height: 2.5rem; }
   .ef-boot-track { position: relative; width: 100%; height: 100%; background: rgba(255,255,255,.14); }
   .ef-boot-fill {
     position: absolute; inset: 0; transform-origin: left center; transform: scaleX(0);
     background: #fffa00; animation: ef-boot-fill 1400ms var(--ef-ease-snap, ease-out) forwards;
   }
   @keyframes ef-boot-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-  .ef-boot-meter { position: absolute; left: 0; top: calc(2.5rem + 14px); display: flex; align-items: baseline; gap: 16px; }
+  .ef-boot-meter { position: absolute; left: 0; top: 44%; display: flex; align-items: baseline; gap: 16px; }
   .ef-boot-pct {
     font-size: 4.375rem; font-weight: 500; line-height: 1; font-stretch: 112%;
     font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
   }
   .ef-boot-loading { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,.72); }
-  .ef-boot-foot { position: absolute; left: 0; right: 0; bottom: 52px; text-align: center; }
+  .ef-boot-foot { position: absolute; left: 0; right: 0; bottom: clamp(2rem, 7vh, 5rem); text-align: center; }
   .ef-boot-status { margin: 0 0 10px; font-size: 12px; color: rgba(255,255,255,.66); }
   .ef-boot-mark { color: #fffa00; }
   .ef-boot-slogan { margin: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
@@ -68,7 +68,7 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
       position: absolute; left: 0; top: 0; width: 100%; height: 0; transform: none;
       animation: ef-boot-fill-v 1400ms var(--ef-ease-snap, ease-out) forwards;
     }
-    .ef-boot-meter { left: 20px; top: 46%; gap: 10px; }
+    .ef-boot-meter { left: 20px; top: 44%; gap: 10px; }
     .ef-boot-pct { font-size: 2.6rem; }
     .ef-boot-brand { left: auto; right: 24px; top: 28px; }
     .ef-boot-slogan { font-size: 1rem; }
