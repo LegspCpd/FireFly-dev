@@ -1,0 +1,10 @@
+/* ===== endfield-ui 全局规则（纯 CSS —— 下面的类名带转义，Stylus 解析不了）===== */
+
+/* skill：主要按钮静止为墨底 + 纸色文字。
+   主题里 20 处 bg-(--primary) 配 text-white；--primary 现为墨色，而暗色主题的墨色是浅的
+   （#EDEDED），白字压上去等于消失（分类计数徽章就是这么坏掉的）。
+   #F4F4F2 压 #161616、#191919 压 #EDEDED，两套对比都够。 */
+.bg-\(--primary\).text-white,
+.bg-\(--primary\) .text-white {
+  color: var(--ef-paper) !important;
+}

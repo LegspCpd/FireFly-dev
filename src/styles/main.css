@@ -9,6 +9,7 @@
 @import './display-settings.css';
 @import './categories.css';
 @import './layout-base.css';
+@import './endfield.css';
 
 /* ===== endfield-ui：自托管 Saira（可变宽度 50–125 / 字重 100–900）=====
    来源 skill 的 templates/flutter/fonts/Saira.ttf（SIL OFL 1.1，许可证见
