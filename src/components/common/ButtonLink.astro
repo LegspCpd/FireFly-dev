@@ -34,7 +34,6 @@ const { badge, url, label } = Astro.props;
         <div class="overflow-hidden text-left whitespace-nowrap text-ellipsis">
             <slot></slot>
         </div>
-        { badge !== undefined && badge !== null && badge !== '' &&
             {/* endfield-ui：计数用 chip 底 + 墨字（原来是 text-(--btn-content) 配
                 dark:bg-(--primary)，--primary 改成墨色后暗色下变成浅底浅字，只剩一个白方块）。
                 切角表示可点击。 */}
@@ -46,3 +45,5 @@ const { badge, url, label } = Astro.props;
         }
     </div>
 </a>
+
+        { badge !== undefined && badge !== null && badge !== '' &&
