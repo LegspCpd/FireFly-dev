@@ -207,11 +207,17 @@ body::before {
 
 /* 动效：短、硬、机械（skill：三条曲线三档时长；只有回应用户动作与状态变化，不装饰性循环） */
 :root {
-  --ef-ease-snap: cubic-bezier(0.2, 0, 0, 1);
-  --ef-ease-mech: cubic-bezier(0.4, 0, 0.2, 1);
+  /* skill 规定：出现用 snap cubic-bezier(0.16,1,0.3,1)；
+     快门、擦入、灌满和所有退出用 mech cubic-bezier(0.7,0,0.2,1)。 */
+  --ef-ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
+  --ef-ease-mech: cubic-bezier(0.7, 0, 0.2, 1);
   --ef-dur-1: 120ms;
   --ef-dur-2: 200ms;
   --ef-dur-3: 320ms;
+  /* 错开间隔只有三档：38 / 45 / 100ms */
+  --ef-stagger-1: 38ms;
+  --ef-stagger-2: 45ms;
+  --ef-stagger-3: 100ms;
 }
 a, button, .btn-plain, .btn-regular, .post-card-wrapper, .ef-chip, .ef-tag {
   transition-timing-function: var(--ef-ease-snap);
@@ -227,5 +233,15 @@ a, button, .btn-plain, .btn-regular, .post-card-wrapper, .ef-chip, .ef-tag {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* 触屏：没有悬停，所以主要按钮静止时就该是强调色填充 + 墨字（skill 硬规定）。
+   桌面上仍是墨底、悬停擦黄。 */
+@media (hover: none) {
+  .bg-\(--primary\),
+  .btn-regular {
+    background: var(--ef-signal) !important;
+    color: #161616 !important;
   }
 }

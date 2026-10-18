@@ -209,10 +209,13 @@ const description =
         }
       </div>
 
-      {/* 搜索无结果提示 */}
-      <div class="friends-empty hidden flex-col items-center justify-center py-12 text-neutral-400 dark:text-neutral-500">
-        <Icon name="material-symbols:search-off-rounded" class="text-4xl mb-3" />
-        <div class="text-sm">{i18n(I18nKey.searchNoResults)}</div>
+      {/* 搜索无结果提示：skill 要求空状态写成一句完整的话（说明这里会出现什么），
+          空白处用斜线纹而不是插画。这里用本页自己的文案，不动全站共用的搜索无结果键。 */}
+      <div class="friends-empty hidden flex-col items-center justify-center gap-3 py-12 px-6 text-center">
+        <div class="ef-hatch h-10 w-full max-w-xs" aria-hidden="true"></div>
+        <p class="text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+          没有匹配的友链。换个关键词或标签再试试 —— 这里会列出符合条件的站点。
+        </p>
       </div>
     </div>
   </div>
