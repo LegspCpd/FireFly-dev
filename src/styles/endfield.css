@@ -420,3 +420,29 @@ html[data-wallpaper-mode="none"] .banner {
   background: var(--ef-chip) !important;
   color: var(--ef-ink) !important;
 }
+
+/* 11) 补上 skill 的 trace 规则：「标出当前位置的线」浅色时是墨、深色时是黄。
+      主题把这些位置标记写成 --primary，暗色下是浅墨 → 全站位置标记变白，
+      整站看起来「没有颜色」。 */
+:root { --ef-trace: var(--ef-ink); }
+:root.dark { --ef-trace: var(--ef-signal); }
+
+.toc-active-indicator {
+  background: color-mix(in oklab, var(--ef-trace), transparent) !important;
+}
+
+.progress-bar, #progress-bar {
+  background: var(--ef-trace) !important;
+}
+
+/* 12) 日历「今天」：主题是 ring-2 ring-(--primary)，暗色下就是一圈白框；
+      按 skill「当前所在用黄块」改成黄块 + 墨字（两套主题都成立）。 */
+.calendar-day.ring-2 {
+  box-shadow: none !important;
+  outline: none !important;
+  background: var(--ef-signal) !important;
+  color: #161616 !important;
+  font-weight: 700;
+}
+.calendar-day.ring-2 .bg-\(--primary\) { background: #161616 !important; }
+.calendar-day.ring-2 .text-\(--primary\) { color: #161616 !important; }
