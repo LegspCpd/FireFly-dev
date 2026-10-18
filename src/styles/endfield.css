@@ -501,26 +501,32 @@ mark {
 /* 21) 相关文章：skill 样例是编号记录行 —— `No.023 │ 日期 │ 标题 │ 9,102 字`。
       用 a:has(> .shrink-0.w-6.h-6) 精确定位这些行（只有它们是「链接里直接放 24px 编号块」）。
       编号块从圆角浅块改成墨底 No. 标签；行分隔从虚线改细实线；整行去圆角。 */
+/* 对齐套件 .ef-records / .ef-record / .ef-tag 的确切数值（此前是我自己估的） */
 a:has(> .shrink-0.w-6.h-6) {
-  border-bottom-style: solid !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0 1rem;
+  align-items: baseline;
+  padding: 0.7rem 0.6rem !important;
+  border-bottom: 1px solid var(--ef-rule) !important;
   border-radius: 0 !important;
 }
 a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6 {
-  width: auto !important;
-  min-width: 3.4rem;
-  height: 1.5rem;
-  padding: 0 7px;
-  background: var(--ef-ink) !important;
-  color: var(--ef-paper) !important;
+  padding: 0.1rem 0.8rem 0.1rem 0.5rem !important;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-stretch: 112%;
+  background: var(--ef-tag-bg, var(--ef-ink)) !important;
+  color: var(--ef-tag-fg, var(--ef-paper)) !important;
   border-radius: 0 !important;
   font-variant-numeric: tabular-nums;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+  clip-path: none !important;
 }
 a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
   content: "No.";
   opacity: 0.72;
-  margin-right: 1px;
-  font-size: 0.72em;
+  margin-right: 2px;
+  font-size: 0.85em;
   letter-spacing: 0.04em;
 }
 
