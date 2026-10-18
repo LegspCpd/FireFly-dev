@@ -1,0 +1,92 @@
+---
+// 登入式加载动画（学《终末地》官网首屏的结构：宽体大写状态词 + 字标 + 进度条 + 口号 + 进入）
+//
+// 注意（skill 硬规定）：不使用任何游戏官方素材与文案 —— 口号取站点自己的副标题；
+// 只在首页出现、每个会话只出现一次、可点击/按键跳过，且 prefers-reduced-motion 时直接不显示。
+import { backgroundWallpaper } from "@/config";
+
+const slogans = backgroundWallpaper?.common?.homeText?.subtitle ?? [];
+const slogan = Array.isArray(slogans) && slogans.length > 0 ? slogans[0] : "";
+---
+
+<div id="ef-boot" data-ef-boot aria-hidden="false">
+  <div class="ef-boot-box">
+    <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
+    <p class="ef-boot-eyebrow">// LOADING</p>
+    <p class="ef-boot-cn">正在载入</p>
+    <h1 class="ef-boot-title">LegspCpd Blog</h1>
+    {slogan && <p class="ef-boot-slogan">{slogan}</p>}
+    <div class="ef-boot-bar" aria-hidden="true"><span></span></div>
+    <button type="button" class="ef-boot-enter">进入</button>
+  </div>
+</div>
+
+<style>
+  #ef-boot {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ef-paper);
+    color: var(--ef-ink);
+    transition: opacity 240ms var(--ef-ease-mech, ease-out);
+  }
+  #ef-boot.is-out { opacity: 0; pointer-events: none; }
+  .ef-boot-box { width: min(28rem, 84vw); text-align: left; }
+  .ef-boot-eyebrow {
+    margin: 12px 0 0;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ef-ink-2);
+  }
+  .ef-boot-cn { margin: 2px 0 18px; font-size: 15px; font-weight: 700; }
+  .ef-boot-title {
+    margin: 0; font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 800;
+    font-stretch: 125%; line-height: 1.2;
+  }
+  .ef-boot-slogan {
+    margin: 10px 0 0; font-size: 12px; letter-spacing: 0.08em;
+    color: var(--ef-ink-2); text-transform: uppercase;
+  }
+  .ef-boot-bar {
+    margin: 22px 0 14px; height: 2px; width: 100%; background: var(--ef-chip); overflow: hidden;
+  }
+  .ef-boot-bar > span {
+    display: block; height: 100%; width: 0; background: var(--ef-trace, var(--ef-ink));
+    animation: ef-boot-fill 1200ms var(--ef-ease-snap, ease-out) forwards;
+  }
+  @keyframes ef-boot-fill { from { width: 0; } to { width: 100%; } }
+  .ef-boot-enter {
+    padding: 8px 18px; font-size: 14px; font-weight: 700;
+    background: var(--ef-ink); color: var(--ef-paper); border: 0; cursor: pointer;
+    clip-path: polygon(var(--ef-cut, 7px) 0, 100% 0, 100% calc(100% - var(--ef-cut, 7px)), calc(100% - var(--ef-cut, 7px)) 100%, 0 100%, 0 var(--ef-cut, 7px));
+  }
+  @media (hover: none) {
+    .ef-boot-enter { background: var(--ef-signal); color: #161616; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var el = document.getElementById("ef-boot");
+    if (!el) return;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var seen = false;
+    try { seen = sessionStorage.getItem("ef-boot") === "1"; } catch (e) {}
+    if (reduce || seen) { el.remove(); return; }
+    try { sessionStorage.setItem("ef-boot", "1"); } catch (e) {}
+    document.documentElement.style.overflow = "hidden";
+    var done = false;
+    function leave() {
+      if (done) return;
+      done = true;
+      el.classList.add("is-out");
+      document.documentElement.style.overflow = "";
+      setTimeout(function () { el.remove(); }, 300);
+    }
+    setTimeout(leave, 1500);
+    el.addEventListener("click", leave);
+    window.addEventListener("keydown", leave, { once: true });
+  })();
+</script>
