@@ -479,3 +479,10 @@
 /* endfield：切角 = 可以按（skill 固定规则）。右下 + 左上各切一角，和套件同一几何 */
 .ef-cut
   clip-path: polygon(var(--ef-cut) 0, 100% 0, 100% calc(100% - var(--ef-cut)), calc(100% - var(--ef-cut)) 100%, 0 100%, 0 var(--ef-cut))
+
+/* endfield：墨块里的文字用纸色（skill：主要按钮静止为墨底 + 纸色文字）。
+   主题里有 20 处 bg-(--primary) 配 text-white 的写法；--primary 现在是墨色，
+   而暗色主题里的墨色是浅的（#EDEDED），白字压上去等于消失 —— 分类计数徽章
+   就是这么坏掉的。统一改成纸色：#F4F4F2 压 #161616、#191919 压 #EDEDED。 */
+.bg-\(--primary\).text-white, .bg-\(--primary\) .text-white
+  color: var(--ef-paper) !important
