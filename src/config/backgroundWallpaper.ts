@@ -2,7 +2,8 @@ import type { BackgroundWallpaperConfig } from "@/types/config";
 
 export const backgroundWallpaper: BackgroundWallpaperConfig = {
 	// 壁纸模式："banner" 横幅壁纸，"overlay" 全屏透明，"none" 纯色背景无壁纸
-	mode: "overlay",
+	// endfield-ui：纸面优先，全屏壁纸会盖住纸底，故关闭（图片仍保留，随时可切回 "overlay"）
+	mode: "none",
 	/**
 	 * 背景图片配置
 	 * 图片路径支持三种格式：
