@@ -57,8 +57,11 @@ const description =
             <Icon name="material-symbols:group" />
           </div>
           <div>
+            {/* skill：页头 = // 眉标 + 中文标题，标题下三色条 */}
+            <p class="ef-eyebrow">// FRIENDS</p>
             <h2>{title}</h2>
             {description && <p>{description}</p>}
+            <div class="ef-tri mt-3" aria-hidden="true"><i></i><i></i><i></i></div>
           </div>
           <button
             type="button"
