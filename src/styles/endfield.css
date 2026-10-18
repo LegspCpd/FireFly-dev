@@ -142,3 +142,90 @@ body::before {
   font-weight: 700;
   font-stretch: 112%;
 }
+
+/* ===== 页面类型（skill 第一步：阅读安静 / 展示大胆 / 控制台大胆但好用）===== */
+
+/* 展示：字标用宽体拉丁 125%、最重字重（skill：字标宽度 125%、display 800） */
+.banner-title {
+  font-family: var(--font-sans);
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+/* 阅读：一栏正文、行高宽、常规字重；标题粗体、中文不加字距 */
+.custom-md {
+  font-weight: 400;
+  line-height: 1.85;
+}
+.custom-md :is(p, li) {
+  line-height: 1.85;
+}
+.custom-md :is(h1, h2, h3, h4, h5, h6) {
+  font-stretch: 112%;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.custom-md :is(hr, table, td, th) {
+  border-color: var(--ef-rule);
+}
+.custom-md table {
+  border-collapse: collapse;
+}
+.custom-md :is(img, video, .expressive-code, pre) {
+  border-radius: 0;
+  box-shadow: none;
+}
+.custom-md blockquote {
+  border-left: 3px solid var(--ef-ink);
+  background: transparent;
+  font-style: normal;
+}
+
+/* 列表：细线分区，不堆卡片（skill 固定规则）。只作用于文章卡；
+   侧栏部件仍是面板（面板是这个风格允许的面）。 */
+.post-card-wrapper {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--ef-rule);
+  border-radius: 0;
+}
+.post-card-wrapper:hover {
+  background: rgb(22 22 22 / 0.03);
+}
+.dark .post-card-wrapper:hover {
+  background: rgb(237 237 237 / 0.04);
+}
+.post-card-wrapper .post-card-title {
+  font-stretch: 112%;
+}
+
+/* 控制台：编号与计数用等宽数字 */
+.archive-panel, .archive-list, .stats-number, .site-stats {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 动效：短、硬、机械（skill：三条曲线三档时长；只有回应用户动作与状态变化，不装饰性循环） */
+:root {
+  --ef-ease-snap: cubic-bezier(0.2, 0, 0, 1);
+  --ef-ease-mech: cubic-bezier(0.4, 0, 0.2, 1);
+  --ef-dur-1: 120ms;
+  --ef-dur-2: 200ms;
+  --ef-dur-3: 320ms;
+}
+a, button, .btn-plain, .btn-regular, .post-card-wrapper, .ef-chip, .ef-tag {
+  transition-timing-function: var(--ef-ease-snap);
+  transition-duration: var(--ef-dur-2);
+}
+
+/* skill：系统要求减少动态效果时，全部关闭 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
