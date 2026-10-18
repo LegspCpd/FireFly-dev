@@ -1,12 +1,9 @@
 ---
-// 登入式加载动画 —— 按《终末地》官网的真实 CSS 数值实现（已从官网 CSS 里核对）
-//   容器：#141414 深色底 + 白字（官网就是恒定深色，不随主题）
-//   宽屏：横向轨道 left:0 / bottom:17.75rem / width:82.407% / height:2.5rem，
-//         填充 #fffa00 用 scaleX 从左往右灌（对应官网 @keyframes …fadeIn）
-//   窄屏：竖向轨道贴左边缘、从上往下灌（官网的移动端变体 width:0;height:100%）
-//   百分比 4.375rem（70px，官网 Loading_value 的字号）
-//   字标绝对定位在 left:64.453% / top:27.625rem（官网 Loading_logo 的位置）
-//   口号 1.5rem（官网 Loading_slogan 的字号）
+// 登入式加载动画 —— 对齐站主在官网看到的那一版（竖向）
+//   左边缘一条细竖条（3px）从上往下灌黄；
+//   百分比大字在左下、Loading 紧随其下；
+//   字标居中偏右；底部状态小字 + 口号；
+//   深色底恒不透明。不依赖断点，任何窗口都是这一套。
 //
 // 硬规定：不使用游戏官方素材与文案；只在首页；每会话一次；可跳过；减少动态效果时不渲染。
 import { backgroundWallpaper } from "@/config";
@@ -16,16 +13,14 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
 ---
 
 <div id="ef-boot" data-ef-boot>
+  <div class="ef-boot-rail" aria-hidden="true"><span></span></div>
   <div class="ef-boot-brand">
     <span class="ef-boot-brand-cn">LegspCpd</span>
     <span class="ef-boot-brand-en">BLOG</span>
   </div>
-  <div class="ef-boot-progress">
-    <div class="ef-boot-track"><span class="ef-boot-fill"></span></div>
-    <div class="ef-boot-meter">
-      <span class="ef-boot-pct" id="ef-boot-pct">0%</span>
-      <span class="ef-boot-loading">Loading</span>
-    </div>
+  <div class="ef-boot-meter">
+    <span class="ef-boot-pct" id="ef-boot-pct">0%</span>
+    <span class="ef-boot-loading">Loading</span>
   </div>
   <div class="ef-boot-foot">
     <p class="ef-boot-status"><span class="ef-boot-mark">▲</span> 站点资源正在加载，请稍候</p>
@@ -37,43 +32,47 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
   #ef-boot {
     position: fixed; inset: 0; z-index: 99999;
     background: #141414; color: #fff;
-    transition: opacity 240ms var(--ef-ease-mech, ease-out);
+    transition: opacity 200ms var(--ef-ease-mech, ease-out);
   }
   #ef-boot.is-out { opacity: 0; pointer-events: none; }
-  .ef-boot-brand { position: absolute; left: 64.453%; top: clamp(3rem, 22vh, 16rem); }
-  .ef-boot-brand-cn { display: block; font-size: 2rem; font-weight: 800; font-stretch: 125%; letter-spacing: 0.01em; }
-  .ef-boot-brand-en { display: block; margin-top: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.24em; color: rgba(255,255,255,.72); }
-  .ef-boot-progress { position: absolute; left: 0; bottom: clamp(3.5rem, 24vh, 14rem); width: 82.4074074074%; height: 2.5rem; }
-  .ef-boot-track { position: relative; width: 100%; height: 100%; background: rgba(255,255,255,.14); }
-  .ef-boot-fill {
-    position: absolute; inset: 0; transform-origin: left center; transform: scaleX(0);
-    background: #fffa00; animation: ef-boot-fill 1400ms var(--ef-ease-snap, ease-out) forwards;
+  /* 左侧竖向进度条：3px 贴边，轨道暗淡，填充黄，从上往下灌 */
+  .ef-boot-rail {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: rgba(255, 255, 255, 0.14);
   }
-  @keyframes ef-boot-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-  .ef-boot-meter { position: absolute; left: 0; top: 44%; display: flex; align-items: baseline; gap: 16px; }
+  .ef-boot-rail > span {
+    display: block; width: 100%; height: 0; background: #fffa00;
+    animation: ef-boot-rail 1400ms var(--ef-ease-snap, ease-out) forwards;
+  }
+  @keyframes ef-boot-rail { from { height: 0; } to { height: 100%; } }
+  /* 百分比：左下，Loading 紧随其下（官网就是这个位置关系） */
+  .ef-boot-meter {
+    position: absolute; left: 26px; bottom: 24%;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  }
   .ef-boot-pct {
-    font-size: 4.375rem; font-weight: 500; line-height: 1; font-stretch: 112%;
-    font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
+    font-size: 4.375rem; line-height: 1; font-weight: 500;
+    font-stretch: 112%; font-variant-numeric: tabular-nums;
   }
-  .ef-boot-loading { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,.72); }
-  .ef-boot-foot { position: absolute; left: 0; right: 0; bottom: clamp(2rem, 7vh, 5rem); text-align: center; }
-  .ef-boot-status { margin: 0 0 10px; font-size: 12px; color: rgba(255,255,255,.66); }
+  .ef-boot-loading {
+    font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255, 255, 255, 0.66);
+  }
+  /* 字标：居中偏右 */
+  .ef-boot-brand { position: absolute; left: 64%; top: 32%; }
+  .ef-boot-brand-cn { display: block; font-size: 2rem; font-weight: 800; font-stretch: 125%; letter-spacing: 0.02em; }
+  .ef-boot-brand-en { display: block; margin-top: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.24em; color: rgba(255, 255, 255, 0.66); }
+  /* 底部：状态 + 口号 */
+  .ef-boot-foot { position: absolute; left: 0; right: 0; bottom: 9%; text-align: center; }
+  .ef-boot-status { margin: 0 0 10px; font-size: 12px; color: rgba(255, 255, 255, 0.6); }
   .ef-boot-mark { color: #fffa00; }
-  .ef-boot-slogan { margin: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
-  /* 窄屏：官网的竖向变体 —— 贴左边缘、从上往下灌 */
-  @media (max-width: 1024px) {
-    .ef-boot-progress { left: 0; top: 0; bottom: auto; width: 3px; height: 100%; }
-    .ef-boot-track { display: none; }
-    .ef-boot-fill {
-      position: absolute; left: 0; top: 0; width: 100%; height: 0; transform: none;
-      animation: ef-boot-fill-v 1400ms var(--ef-ease-snap, ease-out) forwards;
-    }
-    .ef-boot-meter { left: 20px; top: 44%; gap: 10px; }
-    .ef-boot-pct { font-size: 2.6rem; }
-    .ef-boot-brand { left: auto; right: 24px; top: 28px; }
+  .ef-boot-slogan { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+  @media (max-width: 720px) {
+    .ef-boot-pct { font-size: 2.8rem; }
+    .ef-boot-brand { left: 58%; top: 30%; }
+    .ef-boot-brand-cn { font-size: 1.4rem; }
     .ef-boot-slogan { font-size: 1rem; }
+    .ef-boot-meter { left: 18px; bottom: 26%; }
   }
-  @keyframes ef-boot-fill-v { from { height: 0; } to { height: 100%; } }
 </style>
 
 <script is:inline>
@@ -100,9 +99,9 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
       clearInterval(timer);
       el.classList.add("is-out");
       document.documentElement.style.overflow = "";
-      setTimeout(function () { el.remove(); }, 300);
+      setTimeout(function () { el.remove(); }, 240);
     }
-    setTimeout(leave, 1900);
+    setTimeout(leave, 2000);
     el.addEventListener("click", leave);
     window.addEventListener("keydown", leave, { once: true });
   })();
