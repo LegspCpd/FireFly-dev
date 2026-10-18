@@ -27,7 +27,6 @@ const {
 	style,
 } = Astro.props;
 const className = Astro.props.class;
-const eyebrow = name ? EYEBROW[id] : undefined;
 // skill：`//` 眉标 + 中英成对标题。用部件 id 对应真实业务词；
 // 没有贴切英文的就不显示眉标（skill 允许只写中文或改用编号）。
 const EYEBROW: Record<string, string> = {
@@ -42,6 +41,7 @@ const EYEBROW: Record<string, string> = {
 	dynamic: "MOMENTS",
 	advertisement: "SPONSOR",
 };
+const eyebrow = name ? EYEBROW[id] : undefined;
 ---
 <widget-layout
     data-id={id}
