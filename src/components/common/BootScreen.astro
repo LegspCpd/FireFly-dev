@@ -5,8 +5,9 @@
 // 只在首页出现、每个会话只出现一次、可点击/按键跳过，且 prefers-reduced-motion 时直接不显示。
 import { backgroundWallpaper } from "@/config";
 
-const slogans = backgroundWallpaper?.common?.homeText?.subtitle ?? [];
-const slogan = Array.isArray(slogans) && slogans.length > 0 ? slogans[0] : "";
+// 取站点自己的副标题作口号；取不到就用同一条文案兜底（仍是站主自己的内容）。
+const slogans = ((backgroundWallpaper as any)?.common?.homeText?.subtitle ?? []) as string[];
+const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0]) : "In Reddened Chrysalis, I Once Rest";
 ---
 
 <div id="ef-boot" data-ef-boot aria-hidden="false">

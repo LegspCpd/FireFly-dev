@@ -468,3 +468,29 @@ mark {
   font-weight: 700;
   border-radius: 0;
 }
+
+/* 17) 面板用切角画框（skill 样例的面板四角有切角，不是纯矩形）。
+      只切左上与右下两个角，尺度用套件的 --ef-cut；卡片内边距足够，内容不会被裁到。 */
+.card-base {
+  clip-path: polygon(
+    var(--ef-cut) 0,
+    100% 0,
+    100% calc(100% - var(--ef-cut)),
+    calc(100% - var(--ef-cut)) 100%,
+    0 100%,
+    0 var(--ef-cut)
+  );
+}
+
+/* 18) 字段分隔符统一成竖线 │（skill：字段用竖线 │ 或斜线 /，不用中点 ·）。
+      主题的 .meta-divider 里写的是「/」，用零字号 + ::before 换成竖线，
+      这样日期/分类/标签/字数/时长这一整行就是 skill 的「字段」写法。 */
+.meta-divider {
+  font-size: 0 !important;
+}
+.meta-divider::before {
+  content: "│";
+  font-size: 13px;
+  color: var(--ef-ink-2);
+  font-weight: 400;
+}
