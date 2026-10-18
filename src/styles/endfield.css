@@ -446,3 +446,25 @@ html[data-wallpaper-mode="none"] .banner {
 }
 .calendar-day.ring-2 .bg-\(--primary\) { background: #161616 !important; }
 .calendar-day.ring-2 .text-\(--primary\) { color: #161616 !important; }
+
+/* 13) 正文高亮：skill 样例里「关键字案在一条黄色笔划上」—— 黄底 + 墨字。
+      这是黄在阅读页里唯一合法的出现位置（不铺底、不做字色）。 */
+.custom-md mark,
+.custom-md .markdown-mark,
+mark {
+  background: var(--ef-signal) !important;
+  color: #161616 !important;
+  padding: 0 2px;
+  border-radius: 0;
+}
+
+/* 14) 状态类标签用黄（skill：需要注意的用黄块）。主题里带 .is-pending / .status-*
+      语义的块统一按黄块 + 墨字处理，避免它们各自用 --primary 变成灰块。 */
+.ef-status,
+.status-pending,
+.is-pending {
+  background: var(--ef-signal) !important;
+  color: #161616 !important;
+  font-weight: 700;
+  border-radius: 0;
+}
