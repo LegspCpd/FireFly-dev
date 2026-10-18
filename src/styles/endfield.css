@@ -484,17 +484,16 @@ mark {
   font-variant-numeric: tabular-nums;
 }
 
-/* 20) 字段之间补竖线 │（skill：字段用竖线分隔）。
-      元信息每个字段是「含 .meta-icon 的块」，用 :has() 精确匹配相邻字段；
-      不支持 :has() 的环境只是不加分隔符，不会破坏布局。 */
-div:has(> .meta-icon) + div:has(> .meta-icon)::before {
+/* 20) 元信息字段之间补竖线 │（skill：字段用竖线分隔）。
+      父容器是 .post-meta-root；对它下面所有相邻字段块加竖线，
+      并让紧跟标签分隔符 .meta-divider 之后的那一项不再补，避免双竖线。 */
+.post-meta-root > :not(.meta-divider) + :not(.meta-divider)::before {
   content: "│";
-  margin: 0 10px;
+  margin-right: 6px;
   color: var(--ef-ink-2);
   font-size: 13px;
   font-weight: 400;
 }
-/* 字段块之间给一点呼吸（原图标占位的宽度没了） */
-div:has(> .meta-icon) {
-  gap: 0;
+.meta-divider + *::before {
+  content: none;
 }
