@@ -20,3 +20,50 @@
     0 var(--ef-cut)
   );
 }
+
+/* ===== 结构件（skill 固定规则）===== */
+
+/* 背景质感：等高线，墨色 9%（tokens: alpha.contour），不闭合、不抢内容。
+   固定层 + pointer-events:none，只当底纹，不影响交互。 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url("/endfield-ui/contours/contour-a.svg") center / cover no-repeat;
+  opacity: 0.06;
+}
+
+/* 三色条：3px，品红/黄/薄荷绿三等分。skill 规定只出现在两处 ——
+   屏幕或页面的开始，以及详情标题下方。这里给页面开始用。 */
+.ef-tri {
+  display: flex;
+  height: 3px;
+  width: 100%;
+}
+.ef-tri > i {
+  flex: 1 1 0;
+}
+.ef-tri > i:nth-child(1) { background: #ff00f0; }
+.ef-tri > i:nth-child(2) { background: var(--ef-signal); }
+.ef-tri > i:nth-child(3) { background: #00ffa2; }
+
+/* 切掉一个角 = 可以按（应用在主题的按钮类上，含义不变：都是可点元素） */
+.btn-regular, .btn-plain, .btn-card, .btn-regular-transparent {
+  clip-path: polygon(
+    var(--ef-cut) 0, 100% 0, 100% calc(100% - var(--ef-cut)),
+    calc(100% - var(--ef-cut)) 100%, 0 100%, 0 var(--ef-cut)
+  );
+}
+
+/* `//` 眉标：宽体大写小字 + 字距 0.14em（skill：英文标签全大写、字距 0.14em；中文不加字距） */
+.ef-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-stretch: 125%;
+  color: var(--ef-ink-2);
+  line-height: 1.2;
+}

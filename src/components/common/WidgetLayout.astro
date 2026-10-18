@@ -27,6 +27,21 @@ const {
 	style,
 } = Astro.props;
 const className = Astro.props.class;
+const eyebrow = name ? EYEBROW[id] : undefined;
+// skill：`//` 眉标 + 中英成对标题。用部件 id 对应真实业务词；
+// 没有贴切英文的就不显示眉标（skill 允许只写中文或改用编号）。
+const EYEBROW: Record<string, string> = {
+	categories: "CATEGORIES",
+	tags: "TAGS",
+	announcement: "ANNOUNCEMENT",
+	calendar: "CALENDAR",
+	music: "MUSIC",
+	profile: "PROFILE",
+	siteinfo: "SITE INFO",
+	sitestats: "STATS",
+	dynamic: "MOMENTS",
+	advertisement: "SPONSOR",
+};
 ---
 <widget-layout
     data-id={id}
@@ -37,9 +52,14 @@ const className = Astro.props.class;
 >
     {name && showTitle && (
         <div class="widget-title font-bold transition text-lg text-neutral-900 dark:text-neutral-100 relative ml-8 mt-4 mb-2
-            before:w-1 before:h-4 before:rounded-md before:bg-(--primary)
-            before:absolute before:left-[-16px] before:top-[5.5px] flex items-center justify-between">
-            <span class="widget-name">{name}</span>
+            before:w-1 before:h-4 before:bg-(--primary)
+            before:absolute before:left-[-16px] before:top-[6px] flex items-center justify-between gap-2">
+            <span class="flex min-w-0 flex-col">
+                {eyebrow && (
+                    <span class="ef-eyebrow">{`// ${eyebrow}`}</span>
+                )}
+                <span class="widget-name">{name}</span>
+            </span>
             <slot name="title-icon" />
         </div>
     )}
