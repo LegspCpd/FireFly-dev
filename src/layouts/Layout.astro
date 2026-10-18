@@ -217,9 +217,18 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
 ---
 
 <!doctype html>
-<html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode} data-fullscreen-layout={fullscreenLayout} data-has-wallpaper={hasWallpaper ? "" : undefined} data-tag-style={siteConfig.tagStyle ?? "pill"} data-category-style={siteConfig.categoryStyle ?? "rectangle"}>
+{/* 终末地风味（endfield-ui）变体卡 —— 只在这里设置一次：
+      变体：standard（yellow / neutral / standard / contours / standard / full）
+      主视觉：站点字标 + 文章记录行（替换模板里的 ACME 字标与木箱线稿）
+      页面类型：首页展示，其余阅读
+      token 映射写在 src/styles/variables.styl 末尾（--primary 映射为墨色，
+      强调色 #FFFA00 只做填充 —— skill 规定浅色主题里黄不能当线或字）。 */}
+<html lang={siteLang} data-ef-variant="standard" class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode} data-fullscreen-layout={fullscreenLayout} data-has-wallpaper={hasWallpaper ? "" : undefined} data-tag-style={siteConfig.tagStyle ?? "pill"} data-category-style={siteConfig.categoryStyle ?? "rectangle"}>
   <head>
     <meta charset="UTF-8" />
+    {/* endfield-ui 套件：部件类名与 --ef-* 变量（见 public/endfield-ui/） */}
+    <link rel="stylesheet" href="/endfield-ui/endfield.css" />
+    <script is:inline src="/endfield-ui/variant.js"></script>
     <style is:inline>
 			@layer properties, theme, base, components, utilities;
 		</style>

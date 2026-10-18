@@ -333,3 +333,145 @@
   :root
     --container-width: var(--container-lg)
     --widget-gap: var(--widget-gap-desktop)
+
+/* ===== 终末地风味（endfield-ui · standard 变体）=====
+   变体卡：
+     变体：standard（yellow / neutral / standard / contours / standard / full）
+     主视觉：站点字标 + 文章记录行（不用模板里的 ACME 字标与木箱线稿）
+     页面类型：首页展示，其余阅读
+   说明：颜色取 skill 的 assets/tokens.json。
+     强调色 #FFFA00 只做填充（skill 固定规则：浅色主题里不能当线或字），
+     因此 --primary 映射到墨色 —— 对应 skill 里「主要按钮静止为墨底、悬停擦黄」。
+   覆盖写在文件末尾：同名变量后声明者生效，组件一处都不用改。 */
+
+:root
+  --ef-signal: #FFFA00
+  --ef-ink: #161616
+  --ef-ink-2: #5C5C5C
+  --ef-paper: #F4F4F2
+  --ef-panel: #FFFFFF
+  --ef-rule: #D9D9D6
+  --ef-chip: #E4E4E0
+  --ef-danger: #B3261E
+
+  /* 圆角一律 0（skill 固定规则） */
+  --radius-large: 0
+
+  /* 面与墨 */
+  --primary: var(--ef-ink)
+  --page-bg: var(--ef-paper)
+  --card-bg: var(--ef-panel)
+  --card-bg-transparent: unquote("rgb(255 255 255 / var(--card-transparent-opacity, 0.92))")
+  --deep-text: var(--ef-ink)
+  --title-active: var(--ef-ink)
+
+  /* 线与次要文字 */
+  --line-divider: var(--ef-rule)
+  --line-color: var(--ef-rule)
+  --meta-divider: #C9C9C5
+  --content-meta: var(--ef-ink-2)
+
+  /* 按钮与浅填充 */
+  --btn-content: var(--ef-ink-2)
+  --btn-regular-bg: var(--ef-chip)
+  --btn-regular-bg-hover: #DBDBD6
+  --btn-regular-bg-active: #D2D2CC
+  --btn-plain-bg-hover: var(--ef-chip)
+  --btn-plain-bg-active: #DBDBD6
+  --btn-card-bg-hover: #F2F2EF
+  --btn-card-bg-active: var(--ef-chip)
+  --muted: var(--ef-chip)
+  --inline-code-bg: var(--ef-chip)
+  --inline-code-color: var(--ef-ink)
+
+  /* 选中态、代码块、浮层 */
+  --selection-bg: var(--ef-signal)
+  --codeblock-bg: #161616
+  --codeblock-topbar-bg: #262626
+  --license-block-bg: #EFEFEC
+  --float-panel-bg: var(--ef-panel)
+
+  /* 链接下划线（黄不能当线，用细线灰） */
+  --link-underline: var(--ef-rule)
+  --link-hover: var(--ef-chip)
+  --link-active: #D2D2CC
+
+  /* 提示块：skill 规定告警不用红色，一律墨线 + 黄块 */
+  --admonitions-color-tip: var(--ef-ink-2)
+  --admonitions-color-note: var(--ef-ink-2)
+  --admonitions-color-important: var(--ef-ink)
+  --admonitions-color-warning: var(--ef-ink)
+  --admonitions-color-caution: var(--ef-ink)
+
+  /* 目录 */
+  --toc-badge-bg: var(--ef-chip)
+  --toc-btn-hover: var(--ef-chip)
+  --toc-btn-active: #D2D2CC
+  --toc-indicator-bg: var(--ef-rule)
+  --toc-item-active: var(--ef-ink)
+
+:root.dark
+  --ef-ink: #EDEDED
+  --ef-ink-2: #A3A3A3
+  --ef-paper: #191919
+  --ef-panel: #222222
+  --ef-rule: #353535
+  --ef-chip: #2E2E2E
+  --ef-danger: #FF8A7A
+
+  --primary: var(--ef-ink)
+  --page-bg: var(--ef-paper)
+  --card-bg: var(--ef-panel)
+  --card-bg-transparent: unquote("rgb(25 25 25 / var(--card-transparent-opacity, 0.92))")
+  --deep-text: var(--ef-ink)
+  --title-active: var(--ef-ink)
+
+  --line-divider: var(--ef-rule)
+  --line-color: var(--ef-rule)
+  --meta-divider: #444444
+  --content-meta: var(--ef-ink-2)
+
+  --btn-content: var(--ef-ink-2)
+  --btn-regular-bg: var(--ef-chip)
+  --btn-regular-bg-hover: #383838
+  --btn-regular-bg-active: #414141
+  --btn-plain-bg-hover: var(--ef-chip)
+  --btn-plain-bg-active: #262626
+  --btn-card-bg-hover: var(--ef-chip)
+  --btn-card-bg-active: #383838
+  --muted: var(--ef-chip)
+  --inline-code-bg: var(--ef-chip)
+  --inline-code-color: var(--ef-ink)
+
+  --selection-bg: var(--ef-signal)
+  --codeblock-bg: #161616
+  --codeblock-topbar-bg: #262626
+  --float-panel-bg: var(--ef-panel)
+
+  --link-underline: var(--ef-rule)
+  --link-hover: var(--ef-chip)
+  --link-active: #383838
+
+  --admonitions-color-tip: var(--ef-ink-2)
+  --admonitions-color-note: var(--ef-ink-2)
+  --admonitions-color-important: var(--ef-ink)
+  --admonitions-color-warning: var(--ef-ink)
+  --admonitions-color-caution: var(--ef-ink)
+
+  --toc-badge-bg: var(--ef-chip)
+  --toc-btn-hover: var(--ef-chip)
+  --toc-btn-active: #383838
+  --toc-indicator-bg: var(--ef-rule)
+  --toc-item-active: var(--ef-ink)
+
+/* 选中文字用墨色压在黄块上（否则深色主题下会是浅字压黄，读不出来） */
+::selection
+  background: var(--ef-signal)
+  color: #161616
+
+/* skill 固定规则：不用柔和投影、不用圆角 */
+.shadow-sm, .shadow, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl, .shadow-inner
+  box-shadow: none !important
+
+.rounded-sm, .rounded, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full
+  border-radius: 0 !important
