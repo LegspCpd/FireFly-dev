@@ -1,70 +1,71 @@
 ---
-// 登入式加载动画（学《终末地》官网首屏的结构：宽体大写状态词 + 字标 + 进度条 + 口号 + 进入）
+// 登入式加载动画（对齐《终末地》官网首屏布局）：
+//   左侧一条竖向进度条（从上往下灌）+ 百分比 + Loading
+//   右上角字标（对应官网右上角的 logo）
+//   底部：状态小字 + 口号（口号用站点自己的副标题）
 //
-// 注意（skill 硬规定）：不使用任何游戏官方素材与文案 —— 口号取站点自己的副标题；
-// 只在首页出现、每个会话只出现一次、可点击/按键跳过，且 prefers-reduced-motion 时直接不显示。
+// 硬规定：不使用游戏官方素材与文案；只在首页；每会话一次；可跳过；减少动态效果时不渲染。
 import { backgroundWallpaper } from "@/config";
 
-// 取站点自己的副标题作口号；取不到就用同一条文案兜底（仍是站主自己的内容）。
 const slogans = ((backgroundWallpaper as any)?.common?.homeText?.subtitle ?? []) as string[];
 const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0]) : "In Reddened Chrysalis, I Once Rest";
 ---
 
-<div id="ef-boot" data-ef-boot aria-hidden="false">
-  <div class="ef-boot-box">
-    <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
-    <p class="ef-boot-eyebrow">// LOADING</p>
-    <p class="ef-boot-cn">正在载入</p>
-    <h1 class="ef-boot-title">LegspCpd Blog</h1>
+<div id="ef-boot" data-ef-boot>
+  <div class="ef-boot-rail" aria-hidden="true"><span></span></div>
+  <div class="ef-boot-meter">
+    <p class="ef-boot-pct" id="ef-boot-pct">0%</p>
+    <p class="ef-boot-loading">Loading</p>
+  </div>
+  <div class="ef-boot-brand">
+    <p class="ef-boot-brand-cn">LegspCpd</p>
+    <p class="ef-boot-brand-en">BLOG</p>
+  </div>
+  <div class="ef-boot-foot">
+    <p class="ef-boot-status"><span class="ef-boot-mark">▲</span> 站点资源正在加载，请稍候</p>
     {slogan && <p class="ef-boot-slogan">{slogan}</p>}
-    <div class="ef-boot-bar" aria-hidden="true"><span></span></div>
-    <button type="button" class="ef-boot-enter">进入</button>
   </div>
 </div>
 
 <style>
   #ef-boot {
-    position: fixed;
-    inset: 0;
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--ef-paper);
-    color: var(--ef-ink);
+    position: fixed; inset: 0; z-index: 2000;
+    background: var(--ef-paper); color: var(--ef-ink);
     transition: opacity 240ms var(--ef-ease-mech, ease-out);
   }
   #ef-boot.is-out { opacity: 0; pointer-events: none; }
-  .ef-boot-box { width: min(28rem, 84vw); text-align: left; }
-  .ef-boot-eyebrow {
-    margin: 12px 0 0;
-    font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--ef-ink-2);
+  .ef-boot-rail {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--ef-chip);
   }
-  .ef-boot-cn { margin: 2px 0 18px; font-size: 15px; font-weight: 700; }
-  .ef-boot-title {
-    margin: 0; font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 800;
-    font-stretch: 125%; line-height: 1.2;
+  .ef-boot-rail > span {
+    display: block; width: 100%; height: 0;
+    background: var(--ef-signal);
+    animation: ef-boot-rail 1400ms var(--ef-ease-snap, ease-out) forwards;
   }
-  .ef-boot-slogan {
-    margin: 10px 0 0; font-size: 12px; letter-spacing: 0.08em;
-    color: var(--ef-ink-2); text-transform: uppercase;
+  @keyframes ef-boot-rail { from { height: 0; } to { height: 100%; } }
+  .ef-boot-meter {
+    position: absolute; left: 22px; top: 46%;
+    display: flex; align-items: baseline; gap: 10px;
   }
-  .ef-boot-bar {
-    margin: 22px 0 14px; height: 2px; width: 100%; background: var(--ef-chip); overflow: hidden;
+  .ef-boot-pct {
+    margin: 0; font-size: clamp(1.6rem, 3.2vw, 2.4rem); font-weight: 800;
+    font-stretch: 125%; font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
   }
-  .ef-boot-bar > span {
-    display: block; height: 100%; width: 0; background: var(--ef-trace, var(--ef-ink));
-    animation: ef-boot-fill 1200ms var(--ef-ease-snap, ease-out) forwards;
+  .ef-boot-loading { margin: 0; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ef-ink-2); }
+  .ef-boot-brand { position: absolute; right: 40px; top: 40px; text-align: right; }
+  .ef-boot-brand-cn { margin: 0; font-size: clamp(1.1rem, 2.2vw, 1.6rem); font-weight: 800; font-stretch: 125%; }
+  .ef-boot-brand-en {
+    margin: 2px 0 0; font-size: 11px; font-weight: 700; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--ef-ink-2);
   }
-  @keyframes ef-boot-fill { from { width: 0; } to { width: 100%; } }
-  .ef-boot-enter {
-    padding: 8px 18px; font-size: 14px; font-weight: 700;
-    background: var(--ef-ink); color: var(--ef-paper); border: 0; cursor: pointer;
-    clip-path: polygon(var(--ef-cut, 7px) 0, 100% 0, 100% calc(100% - var(--ef-cut, 7px)), calc(100% - var(--ef-cut, 7px)) 100%, 0 100%, 0 var(--ef-cut, 7px));
-  }
-  @media (hover: none) {
-    .ef-boot-enter { background: var(--ef-signal); color: #161616; }
+  .ef-boot-foot { position: absolute; left: 0; right: 0; bottom: 52px; text-align: center; }
+  .ef-boot-status { margin: 0 0 10px; font-size: 12px; color: var(--ef-ink-2); }
+  .ef-boot-mark { color: var(--ef-ink); }
+  .ef-boot-slogan { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; }
+  @media (max-width: 640px) {
+    .ef-boot-brand { right: 20px; top: 24px; }
+    .ef-boot-meter { left: 16px; }
   }
 </style>
 
@@ -78,15 +79,23 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
     if (reduce || seen) { el.remove(); return; }
     try { sessionStorage.setItem("ef-boot", "1"); } catch (e) {}
     document.documentElement.style.overflow = "hidden";
+    var pct = document.getElementById("ef-boot-pct");
+    var t0 = Date.now();
+    var timer = setInterval(function () {
+      var p = Math.min(100, Math.round(((Date.now() - t0) / 1400) * 100));
+      if (pct) pct.textContent = p + "%";
+      if (p >= 100) clearInterval(timer);
+    }, 60);
     var done = false;
     function leave() {
       if (done) return;
       done = true;
+      clearInterval(timer);
       el.classList.add("is-out");
       document.documentElement.style.overflow = "";
       setTimeout(function () { el.remove(); }, 300);
     }
-    setTimeout(leave, 1500);
+    setTimeout(leave, 1900);
     el.addEventListener("click", leave);
     window.addEventListener("keydown", leave, { once: true });
   })();
