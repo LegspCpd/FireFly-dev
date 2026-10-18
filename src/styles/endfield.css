@@ -523,3 +523,19 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
   font-size: 0.72em;
   letter-spacing: 0.04em;
 }
+
+/* 22) 文章页的分享框 / 版权框：主题是「带底色的圆角卡片」，
+      按 skill「细线分区，不堆卡片」改成细线块 + 切角。 */
+.bg-\(--license-block-bg\) {
+  background: transparent !important;
+  border: 1px solid var(--ef-rule) !important;
+  border-radius: 0 !important;
+  clip-path: polygon(
+    var(--ef-cut) 0,
+    100% 0,
+    100% calc(100% - var(--ef-cut)),
+    calc(100% - var(--ef-cut)) 100%,
+    0 100%,
+    0 var(--ef-cut)
+  );
+}
