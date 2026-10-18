@@ -1,8 +1,12 @@
 ---
-// 登入式加载动画（对齐《终末地》官网首屏布局）：
-//   左侧一条竖向进度条（从上往下灌）+ 百分比 + Loading
-//   右上角字标（对应官网右上角的 logo）
-//   底部：状态小字 + 口号（口号用站点自己的副标题）
+// 登入式加载动画 —— 按《终末地》官网的真实 CSS 数值实现（已从官网 CSS 里核对）
+//   容器：#141414 深色底 + 白字（官网就是恒定深色，不随主题）
+//   宽屏：横向轨道 left:0 / bottom:17.75rem / width:82.407% / height:2.5rem，
+//         填充 #fffa00 用 scaleX 从左往右灌（对应官网 @keyframes …fadeIn）
+//   窄屏：竖向轨道贴左边缘、从上往下灌（官网的移动端变体 width:0;height:100%）
+//   百分比 4.375rem（70px，官网 Loading_value 的字号）
+//   字标绝对定位在 left:64.453% / top:27.625rem（官网 Loading_logo 的位置）
+//   口号 1.5rem（官网 Loading_slogan 的字号）
 //
 // 硬规定：不使用游戏官方素材与文案；只在首页；每会话一次；可跳过；减少动态效果时不渲染。
 import { backgroundWallpaper } from "@/config";
@@ -12,14 +16,16 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
 ---
 
 <div id="ef-boot" data-ef-boot>
-  <div class="ef-boot-rail" aria-hidden="true"><span></span></div>
-  <div class="ef-boot-meter">
-    <p class="ef-boot-pct" id="ef-boot-pct">0%</p>
-    <p class="ef-boot-loading">Loading</p>
-  </div>
   <div class="ef-boot-brand">
-    <p class="ef-boot-brand-cn">LegspCpd</p>
-    <p class="ef-boot-brand-en">BLOG</p>
+    <span class="ef-boot-brand-cn">LegspCpd</span>
+    <span class="ef-boot-brand-en">BLOG</span>
+  </div>
+  <div class="ef-boot-progress">
+    <div class="ef-boot-track"><span class="ef-boot-fill"></span></div>
+    <div class="ef-boot-meter">
+      <span class="ef-boot-pct" id="ef-boot-pct">0%</span>
+      <span class="ef-boot-loading">Loading</span>
+    </div>
   </div>
   <div class="ef-boot-foot">
     <p class="ef-boot-status"><span class="ef-boot-mark">▲</span> 站点资源正在加载，请稍候</p>
@@ -30,43 +36,44 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
 <style>
   #ef-boot {
     position: fixed; inset: 0; z-index: 2000;
-    background: var(--ef-paper); color: var(--ef-ink);
+    background: #141414; color: #fff;
     transition: opacity 240ms var(--ef-ease-mech, ease-out);
   }
   #ef-boot.is-out { opacity: 0; pointer-events: none; }
-  .ef-boot-rail {
-    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-    background: var(--ef-chip);
+  .ef-boot-brand { position: absolute; left: 64.453%; top: 27.625rem; }
+  .ef-boot-brand-cn { display: block; font-size: 2rem; font-weight: 800; font-stretch: 125%; letter-spacing: 0.01em; }
+  .ef-boot-brand-en { display: block; margin-top: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.24em; color: rgba(255,255,255,.72); }
+  .ef-boot-progress { position: absolute; left: 0; bottom: 17.75rem; width: 82.4074074074%; height: 2.5rem; }
+  .ef-boot-track { position: relative; width: 100%; height: 100%; background: rgba(255,255,255,.14); }
+  .ef-boot-fill {
+    position: absolute; inset: 0; transform-origin: left center; transform: scaleX(0);
+    background: #fffa00; animation: ef-boot-fill 1400ms var(--ef-ease-snap, ease-out) forwards;
   }
-  .ef-boot-rail > span {
-    display: block; width: 100%; height: 0;
-    background: var(--ef-signal);
-    animation: ef-boot-rail 1400ms var(--ef-ease-snap, ease-out) forwards;
-  }
-  @keyframes ef-boot-rail { from { height: 0; } to { height: 100%; } }
-  .ef-boot-meter {
-    position: absolute; left: 22px; top: 46%;
-    display: flex; align-items: baseline; gap: 10px;
-  }
+  @keyframes ef-boot-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .ef-boot-meter { position: absolute; left: 0; top: calc(2.5rem + 14px); display: flex; align-items: baseline; gap: 16px; }
   .ef-boot-pct {
-    margin: 0; font-size: clamp(1.6rem, 3.2vw, 2.4rem); font-weight: 800;
-    font-stretch: 125%; font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
+    font-size: 4.375rem; font-weight: 500; line-height: 1; font-stretch: 112%;
+    font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
   }
-  .ef-boot-loading { margin: 0; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ef-ink-2); }
-  .ef-boot-brand { position: absolute; right: 40px; top: 40px; text-align: right; }
-  .ef-boot-brand-cn { margin: 0; font-size: clamp(1.1rem, 2.2vw, 1.6rem); font-weight: 800; font-stretch: 125%; }
-  .ef-boot-brand-en {
-    margin: 2px 0 0; font-size: 11px; font-weight: 700; letter-spacing: 0.22em;
-    text-transform: uppercase; color: var(--ef-ink-2);
-  }
+  .ef-boot-loading { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,.72); }
   .ef-boot-foot { position: absolute; left: 0; right: 0; bottom: 52px; text-align: center; }
-  .ef-boot-status { margin: 0 0 10px; font-size: 12px; color: var(--ef-ink-2); }
-  .ef-boot-mark { color: var(--ef-ink); }
-  .ef-boot-slogan { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; }
-  @media (max-width: 640px) {
-    .ef-boot-brand { right: 20px; top: 24px; }
-    .ef-boot-meter { left: 16px; }
+  .ef-boot-status { margin: 0 0 10px; font-size: 12px; color: rgba(255,255,255,.66); }
+  .ef-boot-mark { color: #fffa00; }
+  .ef-boot-slogan { margin: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+  /* 窄屏：官网的竖向变体 —— 贴左边缘、从上往下灌 */
+  @media (max-width: 1024px) {
+    .ef-boot-progress { left: 0; top: 0; bottom: auto; width: 3px; height: 100%; }
+    .ef-boot-track { display: none; }
+    .ef-boot-fill {
+      position: absolute; left: 0; top: 0; width: 100%; height: 0; transform: none;
+      animation: ef-boot-fill-v 1400ms var(--ef-ease-snap, ease-out) forwards;
+    }
+    .ef-boot-meter { left: 20px; top: 46%; gap: 10px; }
+    .ef-boot-pct { font-size: 2.6rem; }
+    .ef-boot-brand { left: auto; right: 24px; top: 28px; }
+    .ef-boot-slogan { font-size: 1rem; }
   }
+  @keyframes ef-boot-fill-v { from { height: 0; } to { height: 100%; } }
 </style>
 
 <script is:inline>
