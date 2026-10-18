@@ -364,18 +364,20 @@ const seriesData = await getSeriesPosts(entry);
       {
         !usePostCoverOverlay && (
           <div class="relative onload-animation">
+            {/* skill：标题上方加 // 眉标（宽体大写直译），标题下方加三色条；
+                去掉主题原本在标题左侧画的那条竖条（样例里没有）。 */}
+            <p class="ef-eyebrow">// POST</p>
             <div
               data-pagefind-body
               data-pagefind-weight="10"
               data-pagefind-meta="title"
               class="transition w-full block font-bold mb-3
                         text-3xl md:text-[2.25rem]/[2.75rem]
-                        text-black/90 dark:text-white/90
-                        md:before:w-1 before:h-5 before:rounded-md before:bg-(--primary)
-                        before:absolute before:top-3 before:-left-4.5"
+                        text-black/90 dark:text-white/90"
             >
               {entry.data.title}
             </div>
+            <div class="ef-tri mb-5" aria-hidden="true"><i></i><i></i><i></i></div>
           </div>
         )
       }
