@@ -291,3 +291,14 @@ a, button, .btn-plain, .btn-regular, .post-card-wrapper, .ef-chip, .ef-tag {
 .post-card-wrapper:nth-child(9) { animation-delay: calc(var(--ef-stagger-1) * 8); }
 .post-card-wrapper:nth-child(10) { animation-delay: calc(var(--ef-stagger-1) * 9); }
 .post-card-wrapper:nth-child(n + 11) { animation-delay: calc(var(--ef-stagger-1) * 10); }
+
+/* 弹窗进出：入场用 snap、退出用 mech（skill：退出约为入场的 0.6–0.7，且一律机械） */
+#friend-apply-panel {
+  transition-property: opacity, transform;
+  transition-duration: var(--ef-dur-3);
+  transition-timing-function: var(--ef-ease-snap);
+}
+#friend-apply-panel.float-panel-closed {
+  transition-duration: var(--ef-dur-2);
+  transition-timing-function: var(--ef-ease-mech);
+}
