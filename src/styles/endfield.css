@@ -393,3 +393,12 @@ a[href^="/archive/?category="] p {
 #display-setting input[type="range"] {
   border-radius: 0 !important;
 }
+
+/* 9) 关键 bug：壁纸模式设为 none 后，主题的壁纸层仍在画一层深色底。
+      暗色主题下看不出来，但一切到浅色，整页会被盖黑（纸面完全露不出来）。
+      只在 none 模式下隐藏该层，其它模式不受影响。 */
+html[data-wallpaper-mode="none"] #wallpaper-wrapper,
+html[data-wallpaper-mode="none"] #banner-wrapper,
+html[data-wallpaper-mode="none"] .banner {
+  display: none !important;
+}
