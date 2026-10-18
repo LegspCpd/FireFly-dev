@@ -8,3 +8,15 @@
 .bg-\(--primary\) .text-white {
   color: var(--ef-paper) !important;
 }
+
+/* skill：切掉一个角 = 可以按。左下与右上各切一角，与套件的几何一致。 */
+.ef-cut {
+  clip-path: polygon(
+    var(--ef-cut) 0,
+    100% 0,
+    100% calc(100% - var(--ef-cut)),
+    calc(100% - var(--ef-cut)) 100%,
+    0 100%,
+    0 var(--ef-cut)
+  );
+}
