@@ -470,3 +470,16 @@ mark {
   color: var(--ef-ink-2);
   font-weight: 400;
 }
+
+/* 19) 文章元信息：skill 样例里是「字段」—— 纯文字、竖线分隔、不摆图标。
+      主题每个字段前都套了一个 .meta-icon 图标，这里统一隐藏；
+      分隔符已由上面的 .meta-divider::before 换成竖线 │。 */
+.meta-icon {
+  display: none !important;
+}
+/* 字段行用等宽数字，与 skill 的「编号/日期/计数」一致 */
+.post-meta,
+.post-meta-list,
+.banner-post-meta-list {
+  font-variant-numeric: tabular-nums;
+}
