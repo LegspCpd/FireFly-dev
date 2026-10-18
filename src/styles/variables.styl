@@ -475,3 +475,7 @@
 
 .rounded-sm, .rounded, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full
   border-radius: 0 !important
+
+/* endfield：切角 = 可以按（skill 固定规则）。右下 + 左上各切一角，和套件同一几何 */
+.ef-cut
+  clip-path: polygon(var(--ef-cut) 0, 100% 0, 100% calc(100% - var(--ef-cut)), calc(100% - var(--ef-cut)) 100%, 0 100%, 0 var(--ef-cut))

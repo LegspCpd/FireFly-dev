@@ -35,9 +35,11 @@ const { badge, url, label } = Astro.props;
             <slot></slot>
         </div>
         { badge !== undefined && badge !== null && badge !== '' &&
-            <div class="transition px-2 h-7 ml-4 min-w-8 rounded-lg text-sm font-bold
-                text-(--btn-content) dark:text-(--deep-text)
-                bg-[oklch(0.95_0.025_var(--hue))] dark:bg-(--primary)
+            {/* endfield-ui：计数用 chip 底 + 墨字（原来是 text-(--btn-content) 配
+                dark:bg-(--primary)，--primary 改成墨色后暗色下变成浅底浅字，只剩一个白方块）。
+                切角表示可点击。 */}
+            <div class="ef-cut transition px-2 h-7 ml-4 min-w-8 text-sm font-bold
+                bg-(--ef-chip) text-(--ef-ink)
                 flex items-center justify-center">
                 { badge }
             </div>
