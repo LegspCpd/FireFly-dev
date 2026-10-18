@@ -2,8 +2,9 @@ import type { BackgroundWallpaperConfig } from "@/types/config";
 
 export const backgroundWallpaper: BackgroundWallpaperConfig = {
 	// 壁纸模式："banner" 横幅壁纸，"overlay" 全屏透明，"none" 纯色背景无壁纸
-	// endfield-ui：纸面优先，全屏壁纸会盖住纸底，故关闭（图片仍保留，随时可切回 "overlay"）
-	mode: "none",
+	// endfield-ui：纸面优先，但首页需要主视觉 —— 用 "banner"（顶部横幅 + 下方纸面），
+	// 而不是 "overlay"（全屏壁纸会盖住纸底）或 "none"（连横幅一起没了，手机端会丢头像卡片）
+	mode: "banner",
 	/**
 	 * 背景图片配置
 	 * 图片路径支持三种格式：
@@ -23,11 +24,13 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 		dimOpacity: 0.2,
 
 		// 主页横幅文字
+		// endfield-ui：展示型首页需要主视觉（skill 第一步：首页 = 展示页）。
+		// 这里打开站名横幅文字 —— 壁纸图片数组是空的，所以主视觉就是站名字标，不是图片。
 		homeText: {
 			// 是否启用主页横幅文字
-			enable: false,
+			enable: true,
 			// 主页横幅主标题
-			title: "",
+			title: "LegspCpd Blog",
 			// 主页横幅主标题字体大小
 			titleSize: "3.8rem",
 			// 主页横幅副标题
