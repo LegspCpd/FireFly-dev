@@ -26,7 +26,10 @@ export const displaySettingsConfig: DisplaySettingsConfig =
 		// ── 外观 (Appearance) ──────────────────────────────────
 
 		// 主题色选择器开关
-		themeColorSwitchable: true,
+		// endfield-ui 改版后强调色固定为 #FFFA00（skill：一个产品只用一种强调色，且只做填充），
+		--hue 已不再影响任何可见颜色 —— 留着这个滑块就是「拉了没反应」的死控件，故关闭。
+		// 其余设置项与设置面板入口不受影响。
+		themeColorSwitchable: false,
 
 		// 文章列表布局切换开关
 		layoutSwitchable: true,
