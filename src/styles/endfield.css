@@ -682,7 +682,7 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 /* 29) 阅读宽度：正文栏限宽居中（实测文章正文 1248px，一行太长） */
 #content-wrapper { max-width: 76rem; margin-inline: auto; }
 /* 文章正文：约 46rem，接近官网的窄栏阅读 */
-.custom-md { max-width: 46rem; margin-inline: auto; }
+.custom-md { max-width: 46rem !important; margin-inline: auto !important; }
 /* 文章页的标题与字段行也跟着收窄对齐 */
 .ef-article { max-width: 52rem; margin-inline: auto; }
 /* 列表页（归档/分类/标签/友链）内容栏收窄 */

@@ -44,7 +44,6 @@
   <div class="ef-ch-rail" aria-hidden="true">
     <span class="is-current"></span>
   </div>
-  <div class="ef-ch-marks" aria-hidden="true"><span>02</span><span>03</span><span>04</span><span>05</span></div>
   <p class="ef-ch-scroll ef-field" aria-hidden="true">Scroll ↓</p>
 </section>
 
@@ -120,9 +119,6 @@
   .ef-ch-rail { position: absolute; right: clamp(0.6rem, 2.5vw, 1.6rem); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; z-index: 2; }
   .ef-ch-rail > span { width: 3px; height: 46px; background: color-mix(in srgb, var(--ef-ink) 18%, transparent); }
   .ef-ch-rail > span.is-current { background: var(--ef-signal); }
-  /* 右侧章节刻度：把空心 01 与右侧空间串起来 */
-  .ef-ch-marks { position: absolute; right: clamp(1rem, 3.2vw, 2.4rem); top: 50%; transform: translateY(28%); display: flex; flex-direction: column; gap: 0.35rem; z-index: 2; }
-  .ef-ch-marks > span { font-size: 0.72rem; letter-spacing: 0.18em; color: color-mix(in srgb, var(--ef-ink) 42%, transparent); font-variant-numeric: tabular-nums; }
   /* 入口面板 */
   .ef-ch-panel { margin-top: 1.6rem; max-width: 26rem; border: 1px solid var(--ef-rule); background: color-mix(in srgb, var(--ef-panel) 70%, transparent); }
   .ef-ch-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--ef-rule); }

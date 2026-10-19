@@ -23,6 +23,8 @@ const dateText = published ? published.toISOString().slice(0, 10).replace(/-/g, 
 ---
 
 <div class="ef-sheet-wrap">
+<div class="ef-article-layout">
+<div class="ef-article-main">
   <p class="ef-eyebrow">// POST</p>
 
   {
@@ -70,6 +72,26 @@ const dateText = published ? published.toISOString().slice(0, 10).replace(/-/g, 
   <slot name="after" />
 </div>
 
+  <!-- 右侧 margin：目录 + 本页信息（官网右栏结构） -->
+  <aside class="ef-article-margin" aria-label="本页目录">
+    <div class="ef-margin-block">
+      <p class="ef-field ef-margin-title">目录</p>
+      <ul class="ef-margin-toc" id="ef-toc"></ul>
+    </div>
+    <div class="ef-margin-block">
+      <p class="ef-field ef-margin-title">本页</p>
+      <ul class="ef-ledger">
+        {dateText && <li><span>日期</span><span class="ef-field">{dateText}</span></li>}
+        {words ? <li><span>字数</span><span class="ef-field">{words.toLocaleString("en-US")}</span></li> : null}
+        {minutes ? <li><span>时长</span><span class="ef-field">约 {minutes} 分钟</span></li> : null}
+        {category && <li><span>分类</span><span class="ef-field">{category}</span></li>}
+        {tagList.length > 0 && <li><span>标签</span><span class="ef-field">{tagList.length} 个</span></li>}
+      </ul>
+    </div>
+  </aside>
+</div>
+</div>
+
 <style>
   .ef-sheet-wrap {
     background: var(--ef-panel);
@@ -87,4 +109,63 @@ const dateText = published ? published.toISOString().slice(0, 10).replace(/-/g, 
   }
   #ef-article .ef-tri, .ef-sheet-wrap .ef-tri { max-width: 100%; margin-bottom: 1.1rem; }
   .ef-lede { margin: 0 0 1.6rem; font-size: 1.0625rem; line-height: 1.8; color: var(--ef-ink-2); }
+  /* 两栏：正文 + 右侧 margin */
+  .ef-article-layout {
+    display: grid; grid-template-columns: minmax(0, 1fr) 15rem;
+    gap: clamp(1.5rem, 4vw, 3.5rem); align-items: start;
+    max-width: 74rem; margin-inline: auto;
+  }
+  .ef-article-main { min-width: 0; }
+  .ef-article-margin { position: sticky; top: 5.5rem; display: flex; flex-direction: column; gap: 1.4rem; }
+  .ef-margin-title { margin: 0 0 0.45rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--ef-rule); }
+  .ef-margin-toc { list-style: none; margin: 0; padding: 0; }
+  .ef-margin-toc a {
+    display: block; padding: 0.28rem 0 0.28rem 0.6rem;
+    border-left: 2px solid transparent;
+    color: var(--ef-ink-2); text-decoration: none;
+    font-size: 0.82rem; line-height: 1.5;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ef-margin-toc a:hover { color: var(--ef-ink); }
+  .ef-margin-toc a.is-current { border-left-color: var(--ef-signal); color: var(--ef-ink); }
+  .ef-margin-toc .is-3 { padding-left: 1.3rem; font-size: 0.78rem; }
+  @media (max-width: 1080px) {
+    .ef-article-layout { grid-template-columns: minmax(0, 1fr); }
+    .ef-article-margin { position: static; }
+  }
 </style>
+
+<script is:inline>
+  (function () {
+    function build() {
+      var toc = document.getElementById("ef-toc");
+      var prose = document.querySelector(".ef-prose");
+      if (!toc || !prose) return;
+      var hs = prose.querySelectorAll("h2, h3");
+      if (!hs.length) { var blk = toc.closest(".ef-margin-block"); if (blk) blk.style.display = "none"; return; }
+      toc.innerHTML = "";
+      var links = [];
+      for (var i = 0; i < hs.length; i++) {
+        var el = hs[i];
+        if (!el.id) el.id = "ef-h-" + i;
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        a.href = "#" + el.id;
+        a.textContent = el.textContent.replace(/^#+\s*/, "").trim().slice(0, 40);
+        if (el.tagName === "H3") a.className = "is-3";
+        a.dataset.id = el.id;
+        li.appendChild(a); toc.appendChild(li); links.push(a);
+      }
+      if (!("IntersectionObserver" in window)) return;
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          links.forEach(function (a) { a.classList.toggle("is-current", a.dataset.id === en.target.id); });
+        });
+      }, { rootMargin: "-12% 0px -70% 0px" });
+      for (var j = 0; j < hs.length; j++) io.observe(hs[j]);
+    }
+    build();
+    document.addEventListener("swup:page:view", function () { setTimeout(build, 60); });
+  })();
+</script>
