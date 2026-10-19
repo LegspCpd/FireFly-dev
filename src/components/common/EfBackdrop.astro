@@ -1,0 +1,100 @@
+---
+// 整页背景层：地形纹理（等高线 + 细网格 + 极淡黄扫描带）铺满视口，固定不动。
+//   首屏与其它页面共用这一层；文字内容浮在其上。
+//   约定：无 WebGL 时加 .no-webgl，由 CSS 网格纹理降级；prefers-reduced-motion 冻结动画。
+---
+
+<div id="ef-backdrop" aria-hidden="true"><canvas id="ef-backdrop-canvas"></canvas></div>
+
+<style>
+  #ef-backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  #ef-backdrop canvas { width: 100%; height: 100%; display: block; }
+  #ef-backdrop.no-webgl {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--ef-ink) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--ef-ink) 6%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var host = document.getElementById("ef-backdrop");
+    var cv = document.getElementById("ef-backdrop-canvas");
+    if (!host || !cv) return;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var VS = "attribute vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }";
+    var FS = [
+      "precision mediump float;",
+      "uniform vec2 uRes; uniform float uTime; uniform vec2 uMouse; uniform float uScroll; uniform float uDark;",
+      "float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
+      "float noise(vec2 p){ vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);",
+      "  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y); }",
+      "float fbm(vec2 p){ float v = 0.0; float a = 0.5; for (int i = 0; i < 4; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; } return v; }",
+      "float lineAt(float v, float w){ float d = abs(fract(v) - 0.5); return 1.0 - smoothstep(0.5 - w, 0.5, d); }",
+      "void main(){",
+      "  vec2 p = (gl_FragCoord.xy - uRes * 0.5) / uRes.y;",
+      "  p += uMouse * 0.03; p.y += uScroll * 0.05;",
+      "  float grid = max(lineAt(p.x * 12.0, 0.02), lineAt(p.y * 12.0, 0.02));",
+      "  float h = fbm(p * 1.5 + vec2(uTime * 0.010, uTime * 0.005));",
+      "  float contour = lineAt(h * 13.0, 0.035);",
+      "  float ink = grid * 0.045 + contour * 0.14;",
+      "  float band = smoothstep(0.88, 1.0, sin((p.x * 0.5 + p.y * 0.35 - uTime * 0.04) * 3.14159) * 0.5 + 0.5);",
+      "  vec3 lineCol = mix(vec3(0.086), vec3(0.929), uDark);",
+      "  vec3 col = mix(lineCol, vec3(1.0, 0.980, 0.0), band * 0.5);",
+      "  float a = clamp(ink + band * 0.04, 0.0, 0.6);",
+      "  gl_FragColor = vec4(col, a);",
+      "}",
+    ].join("\n");
+    var gl = null;
+    try { gl = cv.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: false }); } catch (e) { gl = null; }
+    if (!gl) { host.classList.add("no-webgl"); return; }
+    function sh(t, src) { var s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); return s; }
+    var prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { host.classList.add("no-webgl"); return; }
+    gl.useProgram(prog);
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, "aPos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    var uRes = gl.getUniformLocation(prog, "uRes");
+    var uTime = gl.getUniformLocation(prog, "uTime");
+    var uMouse = gl.getUniformLocation(prog, "uMouse");
+    var uScroll = gl.getUniformLocation(prog, "uScroll");
+    var uDark = gl.getUniformLocation(prog, "uDark");
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    var mouse = [0, 0], target = [0, 0], t0 = performance.now(), visible = true;
+    window.addEventListener("pointermove", function (e) {
+      target[0] = e.clientX / window.innerWidth - 0.5;
+      target[1] = 0.5 - e.clientY / window.innerHeight;
+    }, { passive: true });
+    document.addEventListener("visibilitychange", function () { visible = !document.hidden; });
+    function resize() {
+      var d = Math.min(window.devicePixelRatio || 1, 2);
+      cv.width = Math.max(1, Math.round(window.innerWidth * d));
+      cv.height = Math.max(1, Math.round(window.innerHeight * d));
+      gl.viewport(0, 0, cv.width, cv.height);
+    }
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+    function frame(now) {
+      if (!visible) { requestAnimationFrame(frame); return; }
+      mouse[0] += (target[0] - mouse[0]) * 0.05;
+      mouse[1] += (target[1] - mouse[1]) * 0.05;
+      gl.uniform2f(uRes, cv.width, cv.height);
+      gl.uniform1f(uTime, reduce ? 0 : (now - t0) / 1000);
+      gl.uniform2f(uMouse, mouse[0], mouse[1]);
+      gl.uniform1f(uScroll, reduce ? 0 : Math.min(1, window.scrollY / 900));
+      gl.uniform1f(uDark, document.documentElement.classList.contains("dark") ? 1 : 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+</script>
