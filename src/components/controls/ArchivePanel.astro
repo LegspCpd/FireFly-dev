@@ -150,18 +150,22 @@ const dialIdle = { label: "归档总量", big: posts.length, unit: "篇", sub: `
 </archive-panel>
 
 <script>
-  // public/ 下的运行时模块，构建期没有类型声明
-  // @ts-expect-error 运行时模块由 public 提供
-  import { drawDial } from "/endfield-ui/dial.js";
+  // public/ 下的套件模块：必须运行时动态 import（静态 import 会被 Vite 在构建期解析而失败）
+  type DialFn = (svg: SVGSVGElement, cfg: unknown) => void;
 
-  function mountDial() {
+  async function mountDial() {
     const svg = document.querySelector("[data-archive-dial]") as SVGSVGElement | null;
     if (!svg || svg.dataset.ready === "1") return;
     const sections = JSON.parse(svg.dataset.sections || "[]");
     const idle = JSON.parse(svg.dataset.idle || "{}");
     if (!sections.length) return;
-    drawDial(svg, { sections, idle });
-    svg.dataset.ready = "1";
+    try {
+      const mod = (await import(/* @vite-ignore */ "/endfield-ui/dial.js")) as { drawDial: DialFn };
+      mod.drawDial(svg, { sections, idle });
+      svg.dataset.ready = "1";
+    } catch {
+      /* 模块加载失败时保持空容器，不影响归档列表 */
+    }
   }
   mountDial();
   document.addEventListener("swup:page:view", mountDial);
