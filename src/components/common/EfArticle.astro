@@ -58,7 +58,7 @@ const dateText = published ? published.toISOString().slice(0, 10).replace(/-/g, 
     {minutes ? <li>约 {minutes} 分钟</li> : null}
   </ul>
 
-  <h1 class="ef-article-title ef-read">{title}</h1>
+  <h1 class="ef-article-title ef-read" data-pagefind-weight="10" data-pagefind-meta="title">{title}</h1>
   <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
 
   {lede && <p class="ef-lede ef-read">{lede}</p>}

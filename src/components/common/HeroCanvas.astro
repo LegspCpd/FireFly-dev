@@ -1,51 +1,94 @@
 ---
-// 首页首屏：WebGL 几何主视觉（纯几何/文字构成，不用美术图）
-//   - 手写 fragment shader：等高线 + 细网格 + 黄色扫描带，鼠标与滚动视差
-//   - 无第三方库（不引 Three.js），Shader 只有几 KB
-//   - 优雅降级：无 WebGL / 减少动态效果 → 静止一帧或纯 CSS 网格底纹
-//   - 线色随主题（浅色墨线 / 暗色亮线），黄带恒用强调色 #fffa00
+// 首页第 01 屏 —— 按《终末地》官网第 01 章节的真实骨架重做：
+//   bg 背景层（WebGL 几何）+ 横向/纵向遮罩 + 标题舞台（实心大字 + 空心大字）
+//   + 内容容器（说明 + 字段行 + CTA 面板）；章节编号 // 01 HOME 用 skill 的眉标写法。
+//   纯几何/文字构成，不用美术图；背景与文字随主题。
 ---
 
-<section id="ef-hero" data-ef-hero>
-  <canvas id="ef-hero-canvas" aria-hidden="true"></canvas>
-  <div class="ef-hero-inner">
-    <p class="ef-eyebrow">// LEGSPCPD BLOG</p>
-    <h1 class="ef-hero-title">工程师的笔记本</h1>
-    <p class="ef-hero-lede">Cloudflare / EdgeOne / 自建服务 —— 记录配置、踩坑与取舍。</p>
-    <ul class="ef-facts ef-field ef-hero-facts">
+<section id="ef-chapter-01" data-ef-hero class="ef-chapter">
+  <!-- bg 层：几何背景 + 两层遮罩（对应官网 bg_bg / horizontalMask / verticalMask） -->
+  <div class="ef-ch-bg" aria-hidden="true">
+    <canvas id="ef-hero-canvas"></canvas>
+    <div class="ef-ch-mask-h"></div>
+    <div class="ef-ch-mask-v"></div>
+  </div>
+
+  <!-- 内容容器 -->
+  <div class="ef-ch-inner">
+    <p class="ef-eyebrow">// 01 HOME</p>
+
+    <!-- 标题舞台：实心 + 空心 -->
+    <div class="ef-ch-stage">
+      <h1 class="ef-ch-title">工程师的笔记本</h1>
+      <p class="ef-ch-hollow" aria-hidden="true">LEGSPCPD BLOG</p>
+    </div>
+
+    <p class="ef-ch-lede">Cloudflare / EdgeOne / 自建服务 —— 记录配置、踩坑与取舍。</p>
+
+    <ul class="ef-facts ef-field ef-ch-facts">
       <li><span data-ef-count="posts">—</span> 篇文章</li>
       <li><span data-ef-count="tags">—</span> 个标签</li>
-      <li><span data-ef-count="words">—</span> 字</li>
+      <li>持续更新中</li>
     </ul>
-    <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
+
+    <!-- CTA 面板（对应官网 downloader 面板的位置与分量） -->
+    <div class="ef-ch-cta">
+      <a class="ef-btn primary" href="/archive/">浏览全部文章</a>
+      <a class="ef-btn" href="/friends/">友链</a>
+      <a class="ef-btn" href="/about/">关于</a>
+    </div>
   </div>
-  <p class="ef-hero-scroll ef-field" aria-hidden="true">Scroll ↓</p>
+
+  <div class="ef-tri ef-ch-tri" aria-hidden="true"><i></i><i></i><i></i></div>
+  <p class="ef-ch-scroll ef-field" aria-hidden="true">Scroll ↓</p>
 </section>
 
 <style>
-  #ef-hero {
+  .ef-chapter {
     position: relative;
-    min-height: clamp(28rem, 72vh, 44rem);
+    min-height: clamp(30rem, 78vh, 46rem);
     display: flex; align-items: center;
     overflow: hidden;
     background: var(--ef-paper);
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--ef-cut)), calc(100% - var(--ef-cut)) 100%, 0 100%);
+    border-bottom: 1px solid var(--ef-rule);
   }
-  #ef-hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  .ef-hero-inner { position: relative; z-index: 1; padding: clamp(1.5rem, 5vw, 4rem); max-width: 46rem; }
-  .ef-hero-title {
-    margin: 0.4rem 0 0.6rem;
-    font-size: clamp(1.9rem, 5vw, 3.4rem);
-    font-weight: 800; font-stretch: 118%; line-height: 1.14; letter-spacing: -0.01em;
+  .ef-ch-bg { position: absolute; inset: 0; }
+  .ef-ch-bg canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  /* 两层遮罩：横向压暗两端、纵向压暗底部，让标题区始终干净 */
+  .ef-ch-mask-h { position: absolute; inset: 0; background: linear-gradient(90deg, var(--ef-paper) 0%, transparent 34%, transparent 62%, var(--ef-paper) 100%); }
+  .ef-ch-mask-v { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 42%, var(--ef-paper) 100%); }
+  .ef-ch-inner {
+    position: relative; z-index: 1;
+    padding: clamp(1.5rem, 5vw, 4.5rem);
+    padding-left: max(1.5rem, 12vw);
+    max-width: 52rem;
+  }
+  .ef-ch-stage { position: relative; margin: 0.35rem 0 0.5rem; }
+  .ef-ch-title {
+    position: relative; z-index: 1;
+    margin: 0;
+    font-size: clamp(2rem, 5.4vw, 3.6rem);
+    font-weight: 800; font-stretch: 120%; line-height: 1.1; letter-spacing: -0.015em;
     color: var(--ef-ink);
   }
-  .ef-hero-lede { margin: 0 0 1.2rem; font-size: 1.0625rem; line-height: 1.7; color: var(--ef-ink-2); max-width: 34rem; }
-  .ef-hero-facts { gap: 0 0.75rem; }
-  .ef-hero-facts li + li::before { content: "│"; margin-right: 0.75rem; color: var(--ef-ink-2); }
-  #ef-hero .ef-tri { margin-top: 1.4rem; max-width: 18rem; }
-  .ef-hero-scroll { position: absolute; right: clamp(1rem, 4vw, 3rem); bottom: 1.2rem; margin: 0; }
-  /* 降级：没有 WebGL 时用 CSS 网格底纹 */
-  #ef-hero.no-webgl {
+  /* 空心大字：描边不填充，压在实心标题下方（skill：字标「实心加空心」） */
+  .ef-ch-hollow {
+    margin: 0.1rem 0 0;
+    font-size: clamp(1.5rem, 4.2vw, 3rem);
+    font-weight: 800; font-stretch: 125%; letter-spacing: 0.06em; line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--ef-ink) 55%, transparent);
+    text-stroke: 1.5px color-mix(in srgb, var(--ef-ink) 55%, transparent);
+    user-select: none;
+  }
+  .ef-ch-lede { margin: 0.9rem 0 1rem; font-size: 1.0625rem; line-height: 1.75; color: var(--ef-ink-2); max-width: 32rem; }
+  .ef-ch-facts { gap: 0 0.75rem; }
+  .ef-ch-facts li + li::before { content: "│"; margin-right: 0.75rem; color: var(--ef-ink-2); }
+  .ef-ch-cta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.5rem; }
+  .ef-ch-tri { position: absolute; left: 0; right: 0; bottom: 0; }
+  .ef-ch-scroll { position: absolute; right: clamp(1rem, 4vw, 3rem); bottom: 1.1rem; margin: 0; }
+  #ef-chapter-01.no-webgl .ef-ch-bg::before {
+    content: ""; position: absolute; inset: 0;
     background-image:
       linear-gradient(to right, color-mix(in srgb, var(--ef-ink) 7%, transparent) 1px, transparent 1px),
       linear-gradient(to bottom, color-mix(in srgb, var(--ef-ink) 7%, transparent) 1px, transparent 1px);
@@ -55,7 +98,7 @@
 
 <script is:inline>
   (function () {
-    var hero = document.getElementById("ef-hero");
+    var hero = document.getElementById("ef-chapter-01");
     var cv = document.getElementById("ef-hero-canvas");
     if (!hero || !cv) return;
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -71,7 +114,7 @@
       "float lineAt(float v, float w){ float d = abs(fract(v) - 0.5); return 1.0 - smoothstep(0.5 - w, 0.5, d); }",
       "void main(){",
       "  vec2 p = (gl_FragCoord.xy - uRes * 0.5) / uRes.y;",
-      "  p += uMouse * 0.035; p.y += uScroll * 0.06;",
+      "  p += uMouse * 0.04; p.y += uScroll * 0.06;",
       "  float grid = max(lineAt(p.x * 12.0, 0.02), lineAt(p.y * 12.0, 0.02));",
       "  float h = fbm(p * 1.5 + vec2(uTime * 0.012, uTime * 0.006));",
       "  float contour = lineAt(h * 13.0, 0.035);",
@@ -79,7 +122,7 @@
       "  float band = smoothstep(0.75, 1.0, sin((p.x * 0.5 + p.y * 0.35 - uTime * 0.05) * 3.14159) * 0.5 + 0.5);",
       "  vec3 lineCol = mix(vec3(0.086), vec3(0.929), uDark);",
       "  vec3 col = mix(lineCol, vec3(1.0, 0.980, 0.0), band);",
-      "  float a = clamp(ink + band * 0.22, 0.0, 0.85);",
+      "  float a = clamp(ink + band * 0.20, 0.0, 0.85);",
       "  gl_FragColor = vec4(col, a);",
       "}",
     ].join("\n");
@@ -87,31 +130,26 @@
     var gl = null;
     try { gl = cv.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: false }); } catch (e) { gl = null; }
     if (!gl) { hero.classList.add("no-webgl"); return; }
-
-    function sh(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
+    function sh(t, src) { var s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); return s; }
     var prog = gl.createProgram();
     gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
     gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
     gl.linkProgram(prog);
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { hero.classList.add("no-webgl"); return; }
     gl.useProgram(prog);
-
     var buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     var loc = gl.getAttribLocation(prog, "aPos");
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-
     var uRes = gl.getUniformLocation(prog, "uRes");
     var uTime = gl.getUniformLocation(prog, "uTime");
     var uMouse = gl.getUniformLocation(prog, "uMouse");
     var uScroll = gl.getUniformLocation(prog, "uScroll");
     var uDark = gl.getUniformLocation(prog, "uDark");
-
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
     var mouse = [0, 0], target = [0, 0], t0 = performance.now(), visible = true;
     window.addEventListener("pointermove", function (e) {
       var r = hero.getBoundingClientRect();
@@ -119,40 +157,33 @@
       target[1] = 0.5 - (e.clientY - r.top) / r.height;
     }, { passive: true });
     document.addEventListener("visibilitychange", function () { visible = !document.hidden; });
-
-    function dpr() { return Math.min(window.devicePixelRatio || 1, 2); }
     function resize() {
-      var w = hero.clientWidth, h = hero.clientHeight, d = dpr();
-      cv.width = Math.max(1, Math.round(w * d)); cv.height = Math.max(1, Math.round(h * d));
+      var d = Math.min(window.devicePixelRatio || 1, 2);
+      cv.width = Math.max(1, Math.round(hero.clientWidth * d));
+      cv.height = Math.max(1, Math.round(hero.clientHeight * d));
       gl.viewport(0, 0, cv.width, cv.height);
     }
     resize();
     window.addEventListener("resize", resize, { passive: true });
-
     function frame(now) {
       if (!visible) { requestAnimationFrame(frame); return; }
       mouse[0] += (target[0] - mouse[0]) * 0.06;
       mouse[1] += (target[1] - mouse[1]) * 0.06;
-      var dark = document.documentElement.classList.contains("dark") ? 1 : 0;
       gl.uniform2f(uRes, cv.width, cv.height);
       gl.uniform1f(uTime, reduce ? 0 : (now - t0) / 1000);
       gl.uniform2f(uMouse, mouse[0], mouse[1]);
       gl.uniform1f(uScroll, reduce ? 0 : Math.min(1, window.scrollY / 600));
-      gl.uniform1f(uDark, dark);
+      gl.uniform1f(uDark, document.documentElement.classList.contains("dark") ? 1 : 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
-
-    // 事实数字：取自页面里已有的统计（若有），否则从 DOM 现算
     try {
       var posts = document.querySelectorAll(".post-card-wrapper").length;
       var tags = document.querySelectorAll("#tags a, .tag-cloud a").length;
-      var wordsEl = document.querySelector("[data-ef-words]");
       var set = function (k, v) { var el = hero.querySelector("[data-ef-count=\"" + k + "\"]"); if (el && v) el.textContent = v; };
       set("posts", posts ? String(posts) : "");
       set("tags", tags ? String(tags) : "");
-      set("words", wordsEl ? wordsEl.getAttribute("data-ef-words") : "");
     } catch (e) {}
   })();
 </script>

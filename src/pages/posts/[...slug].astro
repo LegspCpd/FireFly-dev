@@ -25,6 +25,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import CoverImage from "@/components/common/CoverImage.astro";
 import PostMetadata from "@/components/layout/PostMeta.astro";
+import EfArticle from "@components/common/EfArticle.astro";
 import RecommendedPost from "@/components/misc/RecommendedPost.astro";
 import SeriesNav from "@/components/misc/SeriesNav.astro";
 import SharePoster from "@/components/misc/SharePoster.svelte";
@@ -197,6 +198,11 @@ const jsonLd = {
 };
 
 const relatedPosts = await getRelatedPosts(entry, 5);
+
+// 文章的真实序号：按发布时间排序的位置（最老为 001），用于官网骨架的 No. 标签 —— 不编造数字
+const _sortedForNo = await getSortedPosts();
+const _idx = _sortedForNo.findIndex((x: any) => x.id === entry.id);
+const postNo = _idx >= 0 ? _sortedForNo.length - _idx : null;
 const seriesData = await getSeriesPosts(entry);
 ---
 
@@ -360,45 +366,24 @@ const seriesData = await getSeriesPosts(entry);
         )
       }
 
-      <!-- title -->
+      {/* 标题与字段：按《终末地》官网骨架（EfArticle）。
+          data-pagefind-body 留在包裹层，保证 Pagefind 的索引范围与原来一致。 */}
       {
         !usePostCoverOverlay && (
-          <div class="relative onload-animation">
-            {/* skill：标题上方加 // 眉标（宽体大写直译），标题下方加三色条；
-                去掉主题原本在标题左侧画的那条竖条（样例里没有）。 */}
-            <p class="ef-eyebrow">// POST</p>
-            <div
-              data-pagefind-body
-              data-pagefind-weight="10"
-              data-pagefind-meta="title"
-              class="transition w-full block font-bold mb-3
-                        text-3xl md:text-[2.25rem]/[2.75rem]
-                        text-black/90 dark:text-white/90"
-            >
-              {entry.data.title}
-            </div>
-            <div class="ef-tri mb-5" aria-hidden="true"><i></i><i></i><i></i></div>
-          </div>
-        )
-      }
-
-      <!-- metadata -->
-      {
-        !usePostCoverOverlay && (
-          <div class="onload-animation">
-            <PostMetadata
-              className="mb-5"
+          <div class="onload-animation" data-pagefind-body>
+            <EfArticle
+              title={entry.data.title}
+              no={postNo}
               published={entry.data.published}
-              updated={entry.data.updated}
+              category={entry.data.category}
               tags={entry.data.tags}
-              category={entry.data.category || undefined}
-              id={entry.id}
+              words={remarkPluginFrontmatter.words}
+              minutes={remarkPluginFrontmatter.minutes}
+              lede={entry.data.description}
             />
-            {
-              !showPostCover && (
-                <div class="border-(--line-divider) border-dashed border-b mt-3 mb-5" />
-              )
-            }
+            {!showPostCover && (
+              <div class="border-(--line-divider) border-b mt-4 mb-5" />
+            )}
           </div>
         )
       }
