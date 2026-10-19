@@ -854,7 +854,9 @@ friend-filter button.ef-chip[data-active] {
   background-color: color-mix(in srgb, var(--ef-signal) 14%, transparent) !important;
 }
 /* 编号块：方角细线（原来是圆角 + 主题色底） */
-/* 编号块：主题用 bg-(--enter-btn-bg) 工具类上色，单靠 transparent 压不住，用 all 级的显式清零 */
+/* 编号块：主题用 bg-(--enter-btn-bg) 工具类上色 —— 直接改写它读的那个变量，
+   比跟工具类抢优先级稳（前三次改 background 属性都没压住）。 */
+.card-base a.group.items-center { --enter-btn-bg: transparent; }
 .card-base a.group.items-center > div:first-child,
 .card-base a.group.items-center > div[class*="w-6"] {
   border-radius: 0 !important;
