@@ -272,6 +272,7 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
             }, { rootMargin: "0px 0px -6% 0px", threshold: 0.05 })
           : null;
 
+        var observed = 0;
         function boot(root) {
           replay(root);
           AUTO.forEach(function (spec) {
@@ -279,12 +280,17 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
               if (el.hasAttribute("data-replay")) return; // markup 上已标注的由上一行处理
               el.setAttribute("data-replay", spec[1]);
               if (spec[2]) el.style.setProperty("--i", String(i % 8));
-              if (io) io.observe(el);
-              else play(el);
+              // 首屏内立即播（getBoundingClientRect，不依赖 IntersectionObserver，
+              // 因为隐藏文档不投递 IO 回调）；首屏外交给观察器，滚到才播。
+              var r = el.getBoundingClientRect();
+              var inView = r.top < (window.innerHeight || 0) && r.bottom > 0;
+              if (inView || !io) play(el);
+              else { io.observe(el); observed++; }
             });
           });
         }
         window.__efReplay = replay;
+        window.__efMotion = function () { return { observed: observed, auto: AUTO.length }; };
         if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { boot(document); });
         else boot(document);
         document.addEventListener("swup:page:view", function () { boot(document); });
