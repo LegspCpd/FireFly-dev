@@ -71,9 +71,12 @@ const tagTotal = allTags.length;
     margin-left: auto;
     margin-right: auto;
     padding: clamp(2.2rem, 4.2vw, 4rem) clamp(2rem, 4.4vw, 4.2rem);
-    background: color-mix(in srgb, var(--ef-panel) 82%, transparent);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
+    /* 站主反复反馈「主视觉经常整块看不见」。实测：DOM 里每个子元素都是
+       opacity:1 / visibility:visible / 无动画 / clipPath:none、文字也在，但截图是空框 ——
+       即渲染层问题，不是样式问题。这里的 backdrop-filter 与下面的 clip-path 同时存在，
+       是 Chromium 已知的合成缺陷组合，表现恰好就是「时有时无」。
+       保留切角（终末地特征），去掉 backdrop 模糊，改用足够不透明的底色。 */
+    background: color-mix(in srgb, var(--ef-panel) 96%, transparent);
     border: 1px solid var(--ef-rule);
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
   }
