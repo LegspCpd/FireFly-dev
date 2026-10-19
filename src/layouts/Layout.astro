@@ -248,6 +248,13 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
           // 实测 .custom-md > h2 匹配 0 个、.custom-md h2 匹配 36 个。
           [".custom-md h2, .custom-md h3", "ef-in-power", true],
           [".custom-md figure, .custom-md img", "ef-in-come", true],
+          // 正文里的代码块/表格/引用
+          [".custom-md pre, .custom-md table, .custom-md blockquote", "ef-in-come", true],
+          // 空状态
+          [".ef-empty", "ef-in-power", false],
+          // 卡片本体不能挂：.card-base 的切角是 clip-path，套件预设的关键帧也写 clip-path，
+          // fill-mode: both 会永久覆盖切角。改用它的子元素（子元素没有裁剪）。
+          [".card-base > :not(.ef-tri)", "ef-in-power", false],
           [".ef-ledger > li, .ef-page-list > li", "ef-in-come", true],
           [".archive-year-block", "ef-in-power", true],
           ["footer .ef-footer, footer .ef-ids", "ef-in-power", false]
