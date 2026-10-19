@@ -128,6 +128,12 @@
   .ef-ch-kv a { color: var(--ef-ink); text-decoration: none; font-weight: 600; }
   .ef-ch-kv a:hover { color: var(--ef-signal); }
   .ef-ch-scroll { position: absolute; right: clamp(1rem, 4vw, 3rem); bottom: 1.1rem; margin: 0; }
+  /* 窄屏：空心大号编号会压到正文面板上（实测 500px 宽时完全重叠）→ 直接不显示 */
+  @media (max-width: 860px) {
+    .ef-ch-no { display: none; }
+    .ef-ch-inner { margin-left: 0; }
+    .ef-ch-chapter, .ef-chapter { min-height: clamp(30rem, 76vh, 44rem); }
+  }
   #ef-chapter-01.no-webgl .ef-ch-bg::before {
     content: ""; position: absolute; inset: 0;
     background-image:
