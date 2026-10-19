@@ -160,7 +160,9 @@ const dialIdle = { label: "归档总量", big: posts.length, unit: "篇", sub: `
     const idle = JSON.parse(svg.dataset.idle || "{}");
     if (!sections.length) return;
     try {
-      const mod = (await import(/* @vite-ignore */ "/endfield-ui/dial.js")) as { drawDial: DialFn };
+      // 用变量说明符：TS 无法静态解析，Vite 也不会尝试打包它（public/ 下的运行时模块）
+      const dialUrl = "/endfield-ui/dial.js";
+      const mod = (await import(/* @vite-ignore */ dialUrl)) as { drawDial: DialFn };
       mod.drawDial(svg, { sections, idle });
       svg.dataset.ready = "1";
     } catch {
