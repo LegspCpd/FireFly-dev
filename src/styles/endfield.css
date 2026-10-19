@@ -79,17 +79,8 @@
 }
 
 /* 安静块：空闲的筛选块、次要点的小块 */
-.ef-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  background: var(--ef-chip);
-  color: var(--ef-ink);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  font-size: 12px;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
-}
+/* .ef-chip 交给套件：它用 linear-gradient(-45deg, …) + --ef-cut 做切角填充，
+   我之前手写的 flat 背景 + clip-path 版本反而盖住了正版，已删。 */
 
 /* 当前/选中：唯一强调色填充，上面写墨字（skill：强调色只做填充） */
 .ef-chip-current,
