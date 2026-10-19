@@ -150,12 +150,7 @@ const {
                 </div>
             </main>
 
-                {/* 移动端底部组件：<768px 时 #main-grid 是 display:block，必须排在页脚之前 */}
-                {!isHomePageCheck && sidebarLayoutConfig.mobileBottomComponents && sidebarLayoutConfig.mobileBottomComponents.length > 0 && (
-                    <div id="mobile-bottom-sidebar" class="block md:hidden mt-4">
-                        <SideBar side="bottom" headings={headings} encrypted={encrypted}></SideBar>
-                    </div>
-                )}
+                {/* 全面重写：移动端底部组件（主题部件）一并移除 */}
             </div>
 
 
