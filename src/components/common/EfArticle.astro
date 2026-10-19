@@ -1,0 +1,90 @@
+---
+// 文章页 —— 按《终末地》官网骨架重写的表现层（结构取自 skill 的 templates/reading.html）
+//   // 眉标 → 面包屑 → No. 标签 + 分类 + 标签 → 字段行 → 大标题 → 三色条 → 摘要 → 正文 →
+//   记录行相关文章 → 右侧 margin（目录 / 统计）
+//   类名用套件的 ef-*（已全局引入 public/endfield-ui/endfield.css）；
+//   不使用套件里 .title/.name/.ids 这类通用名，避免和 Firefly 主题撞。
+
+interface Props {
+	title: string;
+	no?: number | null;
+	published?: Date | null;
+	category?: string | null;
+	tags?: string[] | null;
+	words?: number | null;
+	minutes?: number | null;
+	lede?: string | null;
+	breadcrumb?: { name: string; url: string }[];
+}
+
+const { title, no, published, category, tags, words, minutes, lede, breadcrumb = [] } = Astro.props;
+const tagList = tags ?? [];
+const dateText = published ? published.toISOString().slice(0, 10).replace(/-/g, ".") : "";
+---
+
+<div class="ef-sheet-wrap">
+  <p class="ef-eyebrow">// POST</p>
+
+  {
+    breadcrumb.length > 0 && (
+      <p class="ef-crumb ef-field">
+        {breadcrumb.map((b) => (
+          <a href={b.url}>{b.name}</a>
+        ))}
+      </p>
+    )
+  }
+
+  <p class="ef-ids">
+    {no ? <span class="ef-tag">No.{String(no).padStart(3, "0")}</span> : null}
+    {
+      category && (
+        <span class="ef-kv">
+          <span>分类</span>
+          <span>{category}</span>
+        </span>
+      )
+    }
+    {
+      tagList.slice(0, 4).map((t) => (
+        <span class="ef-state">{t}</span>
+      ))
+    }
+  </p>
+
+  <ul class="ef-facts ef-field">
+    {dateText && <li><time datetime={published?.toISOString()}>{dateText}</time></li>}
+    {words ? <li>{words.toLocaleString("en-US")} 字</li> : null}
+    {minutes ? <li>约 {minutes} 分钟</li> : null}
+  </ul>
+
+  <h1 class="ef-article-title ef-read">{title}</h1>
+  <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  {lede && <p class="ef-lede ef-read">{lede}</p>}
+
+  <div class="ef-prose">
+    <slot />
+  </div>
+
+  <slot name="after" />
+</div>
+
+<style>
+  .ef-sheet-wrap {
+    background: var(--ef-panel);
+    padding: clamp(1.25rem, 4vw, 2.75rem) var(--ef-pad, 1.25rem) 2.5rem;
+  }
+  .ef-crumb { display: flex; flex-wrap: wrap; gap: 0 0.5rem; margin: 0.15rem 0 0.6rem; }
+  .ef-crumb a { color: var(--ef-ink-2); text-decoration: none; }
+  .ef-crumb a + a::before { content: "/"; margin-right: 0.5rem; color: var(--ef-ink-2); }
+  .ef-ids { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.5rem; margin: 0 0 0.75rem; }
+  .ef-article-title {
+    margin: 0.2rem 0 0.9rem;
+    font-size: clamp(1.7rem, 3.6vw, 2.4rem);
+    font-weight: 800; font-stretch: 118%; line-height: 1.24; letter-spacing: -0.01em;
+    color: var(--ef-ink);
+  }
+  #ef-article .ef-tri, .ef-sheet-wrap .ef-tri { max-width: 100%; margin-bottom: 1.1rem; }
+  .ef-lede { margin: 0 0 1.6rem; font-size: 1.0625rem; line-height: 1.8; color: var(--ef-ink-2); }
+</style>
