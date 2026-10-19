@@ -23,17 +23,8 @@
 
 /* ===== 结构件（skill 固定规则）===== */
 
-/* 背景质感：等高线，墨色 9%（tokens: alpha.contour），不闭合、不抢内容。
-   固定层 + pointer-events:none，只当底纹，不影响交互。 */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: url("/endfield-ui/contours/contour-a.svg") center / cover no-repeat;
-  opacity: 0.06;
-}
+/* 背景质感：交给套件现成的 .ef-contours（body 已挂类，双 SVG 遮罩 + 固定层）——
+   此前这里重复实现了一份 contour-a 底图，反而把套件的遮罩版盖住了，已删。 */
 
 /* 三色条：3px，品红/黄/薄荷绿三等分。skill 规定只出现在两处 ——
    屏幕或页面的开始，以及详情标题下方。这里给页面开始用。 */
