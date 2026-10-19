@@ -694,7 +694,7 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 /* ===== 30) 挑剩下的主题件：按浏览器实测逐个去掉 ===== */
 
 /* 归档文章行里的 1x1 分类色点（hover 长成 h-5）—— 分类名已经用文字给出，色点只是噪声 */
-#archive-panel [class*="group-hover:h-5"] { display: none !important; }
+[class*="group-hover:h-5"] { display: none !important; }
 
 /* 分类页每行：左边图标圆底 + 右边大箭头，全部去掉；名称与计数排成一行 */
 .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > .card-base > .shrink-0 { display: none !important; }
@@ -705,8 +705,8 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > .card-base p { margin: 0 !important; }
 
 /* 标签页 Top 10：粗填充条改细线 + 黄色填充（skill：黄只做填充） */
-#tags [class*="h-2"][class*="rounded-full"] { height: 2px !important; background: var(--ef-rule) !important; }
-#tags [class*="h-full"][class*="bg-(--primary)"] { background: var(--ef-signal) !important; }
+[class*="h-2"][class*="rounded-full"][class*="bg-(--primary)"] { height: 2px !important; background: var(--ef-rule) !important; }
+[class*="h-full"][class*="bg-(--primary)"] { background: var(--ef-signal) !important; }
 
 /* 友链：头像去圆、卡片去圆角与阴影，改成细线面板；表单控件同一套 */
 .friend-card, .friend-card * { border-radius: 0 !important; }
@@ -717,3 +717,31 @@ form input, form textarea, form select {
   color: var(--ef-ink) !important;
 }
 button, .btn { border-radius: 0 !important; }
+
+/* ===== 31) 友链页：改用官网的记录行/细线面板 ===== */
+.friends-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)) !important;
+  gap: 0.5rem !important;
+}
+.friend-card {
+  border-radius: 0 !important;
+  border: 1px solid var(--ef-rule) !important;
+  border-left: 2px solid transparent !important;
+  background: color-mix(in srgb, var(--ef-panel) 78%, transparent) !important;
+  box-shadow: none !important;
+  padding: 0.8rem 0.9rem !important;
+}
+.friend-card:hover {
+  border-left-color: var(--ef-signal) !important;
+  background: color-mix(in srgb, var(--ef-panel) 94%, transparent) !important;
+}
+/* 头像：方角 + 小一号，去掉主题的圆角方块与底色 */
+.friend-card > div:first-child, .friend-card [class*="rounded-xl"] {
+  border-radius: 0 !important;
+  width: 2.6rem !important; height: 2.6rem !important;
+  background: transparent !important;
+}
+.friend-card img { border-radius: 0 !important; }
+/* 友链页里的代码块/说明块统一成细线面板 */
+.friends-grid ~ .card-base, .friend-card + .card-base { border-radius: 0 !important; box-shadow: none !important; }
