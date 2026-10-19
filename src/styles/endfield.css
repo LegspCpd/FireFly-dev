@@ -690,3 +690,30 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 .ef-article { max-width: 52rem; margin-inline: auto; }
 /* 列表页（归档/分类/标签/友链）内容栏收窄 */
 #content-wrapper > * { max-width: 76rem; margin-inline: auto; }
+
+/* ===== 30) 挑剩下的主题件：按浏览器实测逐个去掉 ===== */
+
+/* 归档文章行里的 1x1 分类色点（hover 长成 h-5）—— 分类名已经用文字给出，色点只是噪声 */
+#archive-panel [class*="group-hover:h-5"] { display: none !important; }
+
+/* 分类页每行：左边图标圆底 + 右边大箭头，全部去掉；名称与计数排成一行 */
+.grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > .card-base > .shrink-0 { display: none !important; }
+.grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > .card-base > .flex-1 {
+  display: flex !important; align-items: baseline; justify-content: space-between; gap: 1rem;
+}
+.grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > .card-base h2 { margin: 0 !important; }
+.grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > .card-base p { margin: 0 !important; }
+
+/* 标签页 Top 10：粗填充条改细线 + 黄色填充（skill：黄只做填充） */
+#tags [class*="h-2"][class*="rounded-full"] { height: 2px !important; background: var(--ef-rule) !important; }
+#tags [class*="h-full"][class*="bg-(--primary)"] { background: var(--ef-signal) !important; }
+
+/* 友链：头像去圆、卡片去圆角与阴影，改成细线面板；表单控件同一套 */
+.friend-card, .friend-card * { border-radius: 0 !important; }
+.friend-card img, img[class*="rounded-full"] { border-radius: 0 !important; }
+form input, form textarea, form select {
+  border-radius: 0 !important; border: 1px solid var(--ef-rule) !important;
+  background: color-mix(in srgb, var(--ef-panel) 70%, transparent) !important;
+  color: var(--ef-ink) !important;
+}
+button, .btn { border-radius: 0 !important; }
