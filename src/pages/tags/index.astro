@@ -40,6 +40,17 @@ const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18
                     <div>
                         <h2 class="ef-field ef-sub-head">Top 10</h2>
                         <ul class="ef-ledger">
+                            {/* 柱图：套件 ef-bars（Top 10 标签的篇数分布，逐项归一化） */}
+                            <ol class="ef-bars" aria-label="Top 10">
+                                {topTags.map((t) => (
+                                    <li
+                                        style={"--v: " + (t.count / (topTags[0]?.count || 1)).toFixed(3)}
+                                        class={t.count === topTags[0]?.count ? "is-over" : undefined}
+                                    >
+                                        <span>{t.name.trim()}</span>
+                                    </li>
+                                ))}
+                            </ol>
                             {topTags.map((t, idx) => (
                                 <li>
                                     <a class="ef-in-come" style={"--i: " + String(idx % 8)} href={getTagUrl(t.name)}>{t.name.trim()}</a>

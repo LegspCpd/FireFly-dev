@@ -7,7 +7,6 @@ import { getCategoryList } from "@/utils/content-utils";
 const categories = await getCategoryList();
 const totalPosts = categories.reduce((sum, cat) => sum + cat.count, 0);
 const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18nKey.postsCount)}`;
-const maxCount = categories.reduce((m, c) => Math.max(m, c.count), 1);
 ---
 
 <MainGridLayout title={i18n(I18nKey.categories)}>
@@ -18,23 +17,6 @@ const maxCount = categories.reduce((m, c) => Math.max(m, c.count), 1);
         <p class="ef-field ef-page-sub">
             {i18n(I18nKey.allCategories)} · {countLabel(totalPosts)}
         </p>
-
-        <!-- 柱图：套件 ef-bars（每分类篇数，按最大值归一化；最高的一格标记 is-over） -->
-        {categories.length > 0 && (
-            <>
-                <h2 class="ef-field ef-sub-head">分布</h2>
-                <ol class="ef-bars" aria-label={i18n(I18nKey.categories)}>
-                    {categories.map((category) => (
-                        <li
-                            style={"--v: " + (category.count / maxCount).toFixed(3)}
-                            class={category.count === maxCount ? "is-over" : undefined}
-                        >
-                            <span>{category.name}</span>
-                        </li>
-                    ))}
-                </ol>
-            </>
-        )}
 
         <!-- 账目表：套件 ef-ledger（ul > li，两端对齐 + 细线） -->
         {categories.length > 0 ? (
