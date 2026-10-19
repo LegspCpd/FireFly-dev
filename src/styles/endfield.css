@@ -802,3 +802,13 @@ button, .btn { border-radius: 0 !important; }
 .ef-page-list a { color: var(--ef-ink) !important; text-decoration: none; }
 .ef-page-list a:hover { color: var(--ef-signal) !important; }
 .ef-empty { padding: 2.5rem 0; text-align: center; color: var(--ef-ink-2) !important; }
+
+/* ===== 37) 标签云容器（配合套件 ef-chip）===== */
+.ef-chip-row {
+  display: flex; flex-wrap: wrap; gap: 0.55rem 0.7rem;
+  margin: 0 0 2rem; padding: 0; list-style: none;
+}
+.ef-chip-row li { display: block; }
+.ef-chip-row a.ef-chip { color: var(--ef-ink) !important; text-decoration: none; }
+.ef-chip-row a.ef-chip:hover { --fill: color-mix(in srgb, var(--ef-signal) 55%, var(--ef-chip)); color: var(--ef-ink) !important; }
+.ef-sub-head { margin: 0 0 0.4rem; color: var(--ef-ink-2) !important; }
