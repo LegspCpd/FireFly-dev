@@ -710,7 +710,8 @@ button, .btn { border-radius: 0 !important; }
 [class*="h-2"][class*="rounded-full"] > * { background: var(--ef-signal) !important; }
 
 /* 页头里的按钮（搜索 / 主题）统一成方角细线小钮，去掉主题的浅底 */
-.ef-header-inner button, .ef-header-inner .ef-theme-toggle {
+/* 主题自带的按钮（如搜索）：保持方角细线；套件 .ef-btn 的不受此影响，走套件样式 */
+.ef-header-inner button:not(.ef-btn) {
   border-radius: 0 !important;
   border: 1px solid var(--ef-rule) !important;
   background: color-mix(in srgb, var(--ef-panel) 70%, transparent) !important;
@@ -719,7 +720,7 @@ button, .btn { border-radius: 0 !important; }
   font-size: 0.82rem !important;
   box-shadow: none !important;
 }
-.ef-header-inner button:hover, .ef-header-inner .ef-theme-toggle:hover {
+.ef-header-inner button:not(.ef-btn):hover {
   color: var(--ef-ink) !important;
   border-color: color-mix(in srgb, var(--ef-ink) 45%, transparent) !important;
 }
