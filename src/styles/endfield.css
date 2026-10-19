@@ -782,7 +782,10 @@ button, .btn { border-radius: 0 !important; }
 /* ===== 35) 窄屏兜底：首屏大号空心编号必须隐藏（组件内 scoped 规则实测在线上未生效） ===== */
 @media (max-width: 860px) {
   .ef-ch-no { display: none !important; }
-  .ef-ch-inner { margin-left: 0 !important; }
+  /* 原来写死 margin-left:0 + !important，把 HeroCanvas 里的居中顶掉了，
+     所以主视觉一直贴左、右侧留大片空白（站主两轮都说「太小/太空」）。
+     这里改回 auto，窄屏保持满宽即可。 */
+  .ef-ch-inner { margin-left: auto !important; margin-right: auto !important; }
 }
 
 /* ===== 36) 页名骨架（配合套件 ef-ledger / ef-field 使用）===== */
