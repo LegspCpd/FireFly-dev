@@ -53,7 +53,7 @@ const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18
                             </ol>
                             {topTags.map((t, idx) => (
                                 <li>
-                                    <a class="ef-in-come" style={"--i: " + String(idx % 8)} href={getTagUrl(t.name)}>{t.name.trim()}</a>
+                                    <a data-replay="ef-in-come" style={"--i: " + String(idx % 8)} href={getTagUrl(t.name)}>{t.name.trim()}</a>
                                     <span class="ef-field">{countLabel(t.count)}</span>
                                 </li>
                             ))}

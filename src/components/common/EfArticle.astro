@@ -37,7 +37,7 @@ const dateText = published ? published.toISOString().slice(0, 10).replace(/-/g, 
     )
   }
 
-  <p class="ef-ids">
+  <p class="ef-ids" data-replay="ef-in-power" style="--i: 0">
     {no ? <span class="ef-tag">No.{String(no).padStart(3, "0")}</span> : null}
     {
       category && (
@@ -54,16 +54,16 @@ const dateText = published ? published.toISOString().slice(0, 10).replace(/-/g, 
     }
   </p>
 
-  <ul class="ef-facts ef-field">
+  <ul class="ef-facts ef-field" data-replay="ef-in-power" style="--i: 1">
     {dateText && <li><time datetime={published?.toISOString()}>{dateText}</time></li>}
     {words ? <li>{words.toLocaleString("en-US")} 字</li> : null}
     {minutes ? <li>约 {minutes} 分钟</li> : null}
   </ul>
 
-  <h1 class="ef-article-title ef-read" data-pagefind-weight="10" data-pagefind-meta="title">{title}</h1>
-  <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
+  <h1 class="ef-article-title ef-read" data-replay="ef-in-power" style="--i: 2" data-pagefind-weight="10" data-pagefind-meta="title">{title}</h1>
+  <div class="ef-tri" data-replay="ef-in-sweep" aria-hidden="true"><i></i><i></i><i></i></div>
 
-  {lede && <p class="ef-lede ef-read">{lede}</p>}
+  {lede && <p class="ef-lede ef-read" data-replay="ef-in-power" style="--i: 3">{lede}</p>}
 
   <div class="ef-prose">
     <slot />

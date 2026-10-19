@@ -23,7 +23,7 @@ const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18
             <ul class="ef-ledger ef-page-list">
                 {categories.map((category, idx) => (
                     <li>
-                        <a class="ef-in-come" style={"--i: " + String(idx % 8)} href={category.url}>{category.name}</a>
+                        <a data-replay="ef-in-come" style={"--i: " + String(idx % 8)} href={category.url}>{category.name}</a>
                         <span class="ef-field">{countLabel(category.count)}</span>
                     </li>
                 ))}

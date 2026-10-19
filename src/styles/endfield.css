@@ -910,3 +910,6 @@ friend-filter button.ef-chip[data-active] {
    会导致原生滚动条 / 表单控件 / 自动填充按浅色渲染，与暗色页面冲突。 */
 :root { color-scheme: light; }
 :root.dark { color-scheme: dark; }
+
+/* ==== 46) 搜索页输入框：给左侧放大镜图标留位（占位文字原本压在图标上）==== */
+.ef-form input.pl-10, .ef-form input[class*='pl-10'] { padding-left: 2.6rem !important; }

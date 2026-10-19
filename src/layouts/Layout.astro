@@ -230,6 +230,25 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
     <link rel="stylesheet" href="/endfield-ui/endfield.css" />
     <script is:inline src="/endfield-ui/variant.js"></script>
     <script is:inline src="/endfield-ui/fx.js"></script>
+    <!-- 入场动效的「重放」运行时：照搬套件 motion.html 的实现
+         （把 data-replay 里的入场类摘掉 -> 强制回流 -> 加回去）。
+         为什么需要它：入场动画只在首次渲染跑一次，站内跳转（swup）后不会重跑。 -->
+    <script is:inline>
+      (function () {
+        function replay(root) {
+          (root || document).querySelectorAll("[data-replay]").forEach(function (el) {
+            var cls = el.getAttribute("data-replay");
+            if (!cls) return;
+            el.classList.remove(cls);
+            void el.offsetWidth;
+            el.classList.add(cls);
+          });
+        }
+        window.__efReplay = replay;
+        replay(document);
+        document.addEventListener("swup:page:view", function () { replay(document); });
+      })();
+    </script>
     <style is:inline>
 			@layer properties, theme, base, components, utilities;
 		</style>
