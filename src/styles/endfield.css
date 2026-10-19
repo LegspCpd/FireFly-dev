@@ -904,3 +904,9 @@ friend-filter button.ef-chip[data-active] {
   border-color: var(--ef-ink) !important;
   outline: none !important; box-shadow: none !important;
 }
+
+/* ==== 45) color-scheme 跟随主题 ==== */
+/* 实测暗色下 documentElement 的 colorScheme 仍是 light（inline 为空），
+   会导致原生滚动条 / 表单控件 / 自动填充按浅色渲染，与暗色页面冲突。 */
+:root { color-scheme: light; }
+:root.dark { color-scheme: dark; }
