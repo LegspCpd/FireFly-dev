@@ -1,4 +1,10 @@
 ---
+import { getSortedPosts, getTagList } from "@/utils/content-utils";
+
+// 首屏统计：构建期算真值（此前用 data-ef-count 占位但没有任何脚本去填，线上一直显示破折号）
+const [allPosts, allTags] = await Promise.all([getSortedPosts(), getTagList()]);
+const postTotal = allPosts.length;
+const tagTotal = allTags.length;
 // 首页第 01 屏 —— 按《终末地》官网第 01 章节的真实骨架重做：
 //   bg 背景层（WebGL 几何）+ 横向/纵向遮罩 + 标题舞台（实心大字 + 空心大字）
 //   + 内容容器（说明 + 字段行 + CTA 面板）；章节编号 // 01 HOME 用 skill 的眉标写法。
@@ -19,8 +25,8 @@
     <p class="ef-ch-lede">Cloudflare / EdgeOne / 自建服务 —— 记录配置、踩坑与取舍。</p>
 
     <ul class="ef-facts ef-field ef-ch-facts">
-      <li><span data-ef-count="posts">—</span> 篇文章</li>
-      <li><span data-ef-count="tags">—</span> 个标签</li>
+      <li><b class="ef-num" data-fx-load aria-label={String(postTotal)}>{postTotal}</b> 篇文章</li>
+      <li><b class="ef-num" data-fx-load aria-label={String(tagTotal)}>{tagTotal}</b> 个标签</li>
       <li>持续更新中</li>
     </ul>
 

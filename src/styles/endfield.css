@@ -813,3 +813,6 @@ friend-filter input[data-search] { padding-left: 2.35rem !important; }
 friend-filter button.ef-chip[data-active] {
   --fill: var(--ef-signal); color: #161616 !important; font-weight: 700;
 }
+
+/* ===== 39) 首屏统计数字（配合套件 fx.js 的 data-fx-load）===== */
+.ef-num { font-weight: 700; color: var(--ef-ink); font-variant-numeric: tabular-nums; }
