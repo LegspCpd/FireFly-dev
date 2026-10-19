@@ -963,6 +963,10 @@ friend-filter button.ef-chip[data-active] {
   pointer-events: none !important;
 }
 .ef-ch-inner { z-index: 1; max-width: min(70rem, 86vw) !important; }
+/* 编号只有在大屏才放得下；<=1399px 时面板几乎占满，硬放会变成残缺一角（实测过） */
+@media (max-width: 1399px) {
+  .ef-ch-no { display: none !important; }
+}
 .ef-ch-no {
   font-size: clamp(6rem, 15vw, 14rem) !important;
   right: 2.5vw !important;
