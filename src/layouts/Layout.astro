@@ -244,8 +244,11 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
       (function () {
         // [选择器, 套件预设类, 是否按序号错开 --i]
         var AUTO = [
-          [".custom-md > h2, .custom-md > h3", "ef-in-power", true],
-          [".ef-ledger > li", "ef-in-come", true],
+          // 注意用后代选择器：markdown 的 h2/h3 外面还有一层无类名的包裹，
+          // 实测 .custom-md > h2 匹配 0 个、.custom-md h2 匹配 36 个。
+          [".custom-md h2, .custom-md h3", "ef-in-power", true],
+          [".custom-md figure, .custom-md img", "ef-in-come", true],
+          [".ef-ledger > li, .ef-page-list > li", "ef-in-come", true],
           [".archive-year-block", "ef-in-power", true],
           ["footer .ef-footer, footer .ef-ids", "ef-in-power", false]
         ];
