@@ -816,3 +816,25 @@ friend-filter button.ef-chip[data-active] {
 
 /* ===== 39) 首屏统计数字（配合套件 fx.js 的 data-fx-load）===== */
 .ef-num { font-weight: 700; color: var(--ef-ink); font-variant-numeric: tabular-nums; }
+
+/* ===== 40) 主题按钮统一到套件按钮语言 ===== */
+/* 主题的按钮集中在 .btn-regular / .btn-plain / .btn-card 三个类上（全站约 65 处），
+   逐个改组件不现实；这里把三个类映射到套件 .ef-btn 的取值：
+   安静填充 --ef-chip、悬停黄擦除 --ef-signal、1px --ef-rule 细线、圆角 0。 */
+:is(.btn-regular, .btn-plain, .btn-card) {
+  border-radius: 0 !important;
+  border: 1px solid var(--ef-rule) !important;
+  background-color: var(--ef-chip) !important;
+  color: var(--ef-ink) !important;
+  box-shadow: none !important;
+  transition: background-color 0.16s cubic-bezier(0.7, 0, 0.2, 1), color 0.12s 0.06s, border-color 0.16s;
+}
+:is(.btn-regular, .btn-plain, .btn-card):hover {
+  background-color: var(--ef-signal) !important;
+  border-color: var(--ef-signal) !important;
+  color: #161616 !important;
+}
+:is(.btn-regular, .btn-plain, .btn-card):disabled,
+:is(.btn-regular, .btn-plain, .btn-card)[disabled] {
+  opacity: 0.45 !important; cursor: not-allowed !important;
+}
