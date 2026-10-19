@@ -102,7 +102,9 @@ const foldOnFilter = collapseAllButFirst;
         </button>
 
         <div class="archive-year-content" hidden={collapsed}>
+          <ul class="ef-records">
           {group.posts.map((post, idx) => (
+            <li>
             <a
               href={getPostUrlBySlug(post.id)}
               aria-label={post.data.title}
@@ -117,7 +119,9 @@ const foldOnFilter = collapseAllButFirst;
               <span class="name ef-read">{post.data.title}</span>
               <span class="ef-field">{formatTag(post.data.tags || [])}</span>
             </a>
+            </li>
           ))}
+          </ul>
         </div>
       </div>
     );
