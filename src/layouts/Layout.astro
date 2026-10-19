@@ -230,30 +230,61 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
     <link rel="stylesheet" href="/endfield-ui/endfield.css" />
     <script is:inline src="/endfield-ui/variant.js"></script>
     <script is:inline src="/endfield-ui/fx.js"></script>
-    <!-- 入场动效的「重放」运行时：照搬套件 motion.html 的实现
-         （把 data-replay 里的入场类摘掉 -> 强制回流 -> 加回去）。
-         为什么需要它：入场动画只在首次渲染跑一次，站内跳转（swup）后不会重跑。 -->
+    <!-- 入场动效运行时。动画类一律来自套件预设（不受这里影响）：
+           ef-in-power / ef-in-come / ef-in-drive / ef-in-sweep ...
+         这里只补套件没有的两件事：
+           1) replay —— 把 data-replay 里的类摘掉 -> 强制回流 -> 加回去
+              （实现照搬套件 templates/motion.html，套件的 fx.js 并不含它）。
+              没有它，入场动画只在首次渲染跑一次，站内跳转（swup）后不会重跑。
+           2) 触发 —— 套件只有「开页即播」，长页面下半部分在播完后才被看到，
+              等于没有动效。因此改为：进入视口时才挂类。
+              对无法在 markup 上标注的内容生成元素（markdown 的 h2/h3 等）走 AUTO 列表。
+         套件预设本身包在 prefers-reduced-motion: no-preference 里，尊重系统设置。 -->
     <script is:inline>
       (function () {
+        // [选择器, 套件预设类, 是否按序号错开 --i]
+        var AUTO = [
+          [".custom-md > h2, .custom-md > h3", "ef-in-power", true],
+          [".ef-ledger > li", "ef-in-come", true],
+          [".archive-year-block", "ef-in-power", true],
+          ["footer .ef-footer, footer .ef-ids", "ef-in-power", false]
+        ];
+        function play(el) {
+          var cls = el.getAttribute("data-replay");
+          if (!cls) return;
+          el.classList.remove(cls);
+          void el.offsetWidth;
+          el.classList.add(cls);
+        }
         function replay(root) {
-          (root || document).querySelectorAll("[data-replay]").forEach(function (el) {
-            var cls = el.getAttribute("data-replay");
-            if (!cls) return;
-            el.classList.remove(cls);
-            void el.offsetWidth;
-            el.classList.add(cls);
+          (root || document).querySelectorAll("[data-replay]").forEach(play);
+        }
+        var io = "IntersectionObserver" in window
+          ? new IntersectionObserver(function (entries) {
+              entries.forEach(function (en) {
+                if (!en.isIntersecting) return;
+                io.unobserve(en.target);
+                play(en.target);
+              });
+            }, { rootMargin: "0px 0px -6% 0px", threshold: 0.05 })
+          : null;
+
+        function boot(root) {
+          replay(root);
+          AUTO.forEach(function (spec) {
+            (root || document).querySelectorAll(spec[0]).forEach(function (el, i) {
+              if (el.hasAttribute("data-replay")) return; // markup 上已标注的由上一行处理
+              el.setAttribute("data-replay", spec[1]);
+              if (spec[2]) el.style.setProperty("--i", String(i % 8));
+              if (io) io.observe(el);
+              else play(el);
+            });
           });
         }
         window.__efReplay = replay;
-        // 关键：本脚本在 <head> 里，首次执行时 <body> 尚未解析，
-        // 直接 replay(document) 找不到任何元素（实测 animationName 全为 none）。
-        function boot() { replay(document); }
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", boot);
-        } else {
-          boot();
-        }
-        document.addEventListener("swup:page:view", function () { replay(document); });
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { boot(document); });
+        else boot(document);
+        document.addEventListener("swup:page:view", function () { boot(document); });
       })();
     </script>
     <style is:inline>
