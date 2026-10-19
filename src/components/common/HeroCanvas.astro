@@ -44,7 +44,6 @@
   <div class="ef-ch-rail" aria-hidden="true">
     <span class="is-current"></span>
   </div>
-  <div class="ef-tri ef-ch-tri" aria-hidden="true"><i></i><i></i><i></i></div>
   <p class="ef-ch-scroll ef-field" aria-hidden="true">Scroll ↓</p>
 </section>
 
@@ -64,9 +63,15 @@
   .ef-ch-mask-v { position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--ef-paper) 70%, transparent) 0%, transparent 26%, transparent 52%, var(--ef-paper) 100%); }
   .ef-ch-inner {
     position: relative; z-index: 1;
-    padding: clamp(2rem, 6vw, 5rem) clamp(1.5rem, 5vw, 4.5rem);
-    padding-left: max(2rem, 11vw);
-    max-width: 54rem;
+    /* 文字底色：让标题区始终可读（站主反馈文字与背景重合看不清） */
+    max-width: 46rem;
+    margin-left: max(1rem, 8vw);
+    padding: clamp(1.6rem, 4vw, 3rem) clamp(1.4rem, 3.5vw, 2.6rem);
+    background: color-mix(in srgb, var(--ef-panel) 82%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--ef-rule);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
   }
   .ef-ch-stage { position: relative; margin: 0.35rem 0 0.5rem; }
   .ef-ch-title {
@@ -87,7 +92,7 @@
     text-stroke: 1.5px color-mix(in srgb, var(--ef-ink) 55%, transparent);
     user-select: none;
   }
-  .ef-ch-lede { margin: 1.1rem 0 1.1rem; font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.75; color: var(--ef-ink-2); max-width: 32rem; }
+  .ef-ch-lede { margin: 1.15rem 0 1.2rem; font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.8; color: color-mix(in srgb, var(--ef-ink) 88%, transparent); max-width: 32rem; }
   .ef-ch-facts { gap: 0 0.9rem; margin-top: 0.2rem; font-size: 0.95rem; }
   .ef-ch-facts li + li::before { content: "│"; margin-right: 0.75rem; color: var(--ef-ink-2); }
   .ef-ch-cta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.5rem; }

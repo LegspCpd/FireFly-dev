@@ -37,11 +37,13 @@ body::before {
 
 /* 三色条：3px，品红/黄/薄荷绿三等分。skill 规定只出现在两处 ——
    屏幕或页面的开始，以及详情标题下方。这里给页面开始用。 */
+/* 三色条：官网只是很小的一个标记（站主：不要整行宽） */
 .ef-tri {
-  display: flex;
-  height: 3px;
-  width: 100%;
+  width: 72px !important; height: 3px !important;
+  display: flex !important; flex: 0 0 auto;
+  margin: 0.6rem 0;
 }
+.ef-tri > i { flex: 1 1 auto; }
 .ef-tri > i {
   flex: 1 1 0;
 }
@@ -599,17 +601,21 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 /* 不再用主题的卡片与圆角，统一：细线分隔 + 等宽数字 + 切角 + 标题归墨（强调色只做填充） */
 
 /* a. 归档：每篇文章行 → 记录行 */
+/* 文章：站主要「像以前那样有板块的」，不是一条一条（细线行留给分类） */
 .archive-post {
   display: grid !important;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   gap: 0 1rem;
   align-items: baseline;
   height: auto !important;
-  padding: 0.6rem 0.5rem !important;
-  border-bottom: 1px solid var(--ef-rule);
+  padding: 0.75rem 0.9rem !important;
+  margin-bottom: 0.4rem;
+  border: 1px solid var(--ef-rule) !important;
   border-radius: 0 !important;
+  background: color-mix(in srgb, var(--ef-panel) 70%, transparent);
   font-variant-numeric: tabular-nums;
 }
+.archive-post:hover { border-color: var(--ef-ink) !important; }
 .archive-post:hover { background: color-mix(in srgb, var(--ef-ink) 4%, transparent); }
 /* b. 归档：年份组头 → 章节行 */
 .archive-year-toggle {
@@ -666,3 +672,8 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 }
 /* 归档行里的分类色块也去掉（用文字即可） */
 .archive-post [class*="bg-\("] { background: transparent !important; }
+
+/* 28) 归档年份行里的描边小圆点（h-3 w-3 outline-3）：纯装饰，且被全局去圆角变成了方块 —— 直接隐藏 */
+.archive-year-toggle [class*="outline-(--primary)"] { display: none !important; }
+/* 年份行改成两列，圆点隐藏后不留空档 */
+.archive-year-toggle { grid-template-columns: auto minmax(0, 1fr) !important; }
