@@ -27,6 +27,7 @@ import Layout from "./Layout.astro";
 import BootScreen from "@components/common/BootScreen.astro";
 import ScrollReveal from "@components/common/ScrollReveal.astro";
 import HeroCanvas from "@components/common/HeroCanvas.astro";
+import EfHeader from "@components/common/EfHeader.astro";
 
 import "@/styles/expressive-code.css";
 
@@ -107,7 +108,8 @@ const {
 <Layout title={title} description={description || routeMeta.description} lang={lang} setOGTypeArticle={setOGTypeArticle ?? routeMeta.ogType === "article"} postSlug={postSlug} postCoverImage={postCoverImage} ogImageWidth={ogImageWidth} ogImageHeight={ogImageHeight} ogImageAlt={ogImageAlt} hasWallpaper={hasWallpaper} skipBreadcrumbStructuredData={skipBreadcrumbStructuredData}>
 
 <slot slot="head" name="head" />
-<HeaderTopRow navbarMode={navbarMode} navbarWidthFull={navbarWidthFull} />
+        {!isHomePageCheck && <HeaderTopRow navbarMode={navbarMode} navbarWidthFull={navbarWidthFull} />}
+        {isHomePageCheck && <EfHeader />}
 
         {isHomePageCheck && <BootScreen />}
         <ScrollReveal />
