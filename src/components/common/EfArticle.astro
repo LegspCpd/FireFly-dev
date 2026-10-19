@@ -166,7 +166,18 @@ const dateText = published ? published.toISOString().slice(0, 10).replace(/-/g, 
       }, { rootMargin: "-12% 0px -70% 0px" });
       for (var j = 0; j < hs.length; j++) io.observe(hs[j]);
     }
-    build();
-    document.addEventListener("swup:page:view", function () { setTimeout(build, 60); });
+    // 本脚本在文档中部执行，正文还没解析出来 → 等 DOM 就绪，并做有限重试
+    function boot() {
+      build();
+      var tries = 0;
+      var t = setInterval(function () {
+        tries++;
+        if (document.querySelectorAll("#ef-toc a").length > 0 || tries > 12) clearInterval(t);
+        else build();
+      }, 300);
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+    else boot();
+    document.addEventListener("swup:page:view", function () { setTimeout(boot, 80); });
   })();
 </script>
