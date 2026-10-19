@@ -112,7 +112,7 @@ const handleInput = () => {
 };
 </script>
 
-<div class="card-base px-6 py-6 md:px-9 md:py-6 mb-4 rounded-(--radius-large)">
+<div class="ef-form card-base px-6 py-6 md:px-9 md:py-6 mb-4 rounded-(--radius-large)">
     <!-- Title Section -->
     <div class="mb-4">
         <div class="flex items-center gap-3 mb-3">

@@ -893,3 +893,14 @@ friend-filter button.ef-chip[data-active] {
 #search-panel { border-radius: 0 !important; backdrop-filter: none !important; }
 #search-panel input { border-radius: 0 !important; }
 #search-panel .rounded-xl, #search-panel .rounded-lg { border-radius: 0 !important; }
+
+/* ==== 44) 搜索页表单：交给套件 .ef-form 的输入框语言（工具类圆角需 !important 压掉）==== */
+.ef-form :is(input:not([type='checkbox'], [type='radio']), select, textarea) {
+  border-radius: 0 !important;
+  border: 1px solid var(--ef-rule) !important;
+  background: var(--ef-panel) !important;
+}
+.ef-form :is(input, select, textarea):focus-visible {
+  border-color: var(--ef-ink) !important;
+  outline: none !important; box-shadow: none !important;
+}
