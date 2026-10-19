@@ -112,6 +112,8 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
        background-position:50%; background-repeat:no-repeat; filter:blur(8px) }
      竖屏换 bg_m.529c4e62.jpg。素材取自官网 CDN（站主同意少量使用官方素材）。 */
   #ef-boot { overflow: hidden; }
+  /* 官方那片 #fffa00 是整屏盖住的，必须压在 KV 与所有内容之上，否则会透出正文 */
+  #ef-boot.is-leaving::after { z-index: 3; }
   .ef-boot-bg {
     position: absolute; inset: -2rem; z-index: 0;
     background-image: url("/endfield-ui/official/loading-bg.jpg");
@@ -136,7 +138,7 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
     var pct = document.getElementById("ef-boot-pct");
     var t0 = Date.now();
     var timer = setInterval(function () {
-      var p = Math.min(100, Math.round(((Date.now() - t0) / 2400) * 100));
+      var p = Math.min(100, Math.round(((Date.now() - t0) / 1400) * 100));
       if (pct) pct.textContent = p + "%";
       if (p >= 100) { clearInterval(timer); el.classList.add("is-sharp"); }
     }, 60);
@@ -147,9 +149,9 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
       clearInterval(timer);
       el.classList.add("is-leaving");
       document.documentElement.style.overflow = "";
-      setTimeout(function () { el.remove(); }, 3600);
+      setTimeout(function () { el.remove(); }, 3000);
     }
-    setTimeout(leave, 3400);
+    setTimeout(leave, 1650);
     el.addEventListener("click", leave);
     window.addEventListener("keydown", leave, { once: true });
   })();
