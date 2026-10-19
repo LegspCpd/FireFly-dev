@@ -44,6 +44,7 @@
   <div class="ef-ch-rail" aria-hidden="true">
     <span class="is-current"></span>
   </div>
+  <div class="ef-ch-marks" aria-hidden="true"><span>02</span><span>03</span><span>04</span><span>05</span></div>
   <p class="ef-ch-scroll ef-field" aria-hidden="true">Scroll ↓</p>
 </section>
 
@@ -51,7 +52,7 @@
   .ef-chapter {
     position: relative;
     background: transparent;
-    min-height: clamp(32rem, 82vh, 50rem);
+    min-height: clamp(34rem, 80vh, 48rem);
     display: flex; align-items: center;
     overflow: hidden;
     border-bottom: 1px solid var(--ef-rule);
@@ -64,7 +65,7 @@
   .ef-ch-inner {
     position: relative; z-index: 1;
     /* 文字底色：让标题区始终可读（站主反馈文字与背景重合看不清） */
-    max-width: 46rem;
+    max-width: 48rem;
     margin-left: max(1rem, 8vw);
     padding: clamp(1.6rem, 4vw, 3rem) clamp(1.4rem, 3.5vw, 2.6rem);
     background: color-mix(in srgb, var(--ef-panel) 82%, transparent);
@@ -109,15 +110,19 @@
   .ef-ch-eyebrow > i { display: inline-block; width: 10px; height: 10px; background: var(--ef-signal); }
   /* 大号空心章节编号 */
   .ef-ch-no {
-    position: absolute; right: clamp(1rem, 6vw, 5rem); top: 12%; margin: 0; z-index: 1;
-    font-size: clamp(5rem, 16vw, 12rem); font-weight: 800; font-stretch: 125%; line-height: 1;
-    color: transparent; -webkit-text-stroke: 2px color-mix(in srgb, var(--ef-ink) 30%, transparent);
+    position: absolute; right: clamp(1rem, 5vw, 4rem); top: 50%; transform: translateY(-52%);
+    margin: 0; z-index: 1;
+    font-size: clamp(6rem, 19vw, 15rem); font-weight: 800; font-stretch: 125%; line-height: 0.86;
+    color: transparent; -webkit-text-stroke: 2px color-mix(in srgb, var(--ef-ink) 26%, transparent);
     user-select: none; pointer-events: none;
   }
   /* 右侧竖向指示条：当前章节一小段实心 */
   .ef-ch-rail { position: absolute; right: clamp(0.6rem, 2.5vw, 1.6rem); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; z-index: 2; }
   .ef-ch-rail > span { width: 3px; height: 46px; background: color-mix(in srgb, var(--ef-ink) 18%, transparent); }
   .ef-ch-rail > span.is-current { background: var(--ef-signal); }
+  /* 右侧章节刻度：把空心 01 与右侧空间串起来 */
+  .ef-ch-marks { position: absolute; right: clamp(1rem, 3.2vw, 2.4rem); top: 50%; transform: translateY(28%); display: flex; flex-direction: column; gap: 0.35rem; z-index: 2; }
+  .ef-ch-marks > span { font-size: 0.72rem; letter-spacing: 0.18em; color: color-mix(in srgb, var(--ef-ink) 42%, transparent); font-variant-numeric: tabular-nums; }
   /* 入口面板 */
   .ef-ch-panel { margin-top: 1.6rem; max-width: 26rem; border: 1px solid var(--ef-rule); background: color-mix(in srgb, var(--ef-panel) 70%, transparent); }
   .ef-ch-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--ef-rule); }
@@ -126,7 +131,6 @@
   .ef-ch-kv li:last-child { border-bottom: 0; }
   .ef-ch-kv a { color: var(--ef-ink); text-decoration: none; font-weight: 600; }
   .ef-ch-kv a:hover { color: var(--ef-signal); }
-  .ef-ch-tri { position: absolute; left: 0; right: 0; bottom: 0; }
   .ef-ch-scroll { position: absolute; right: clamp(1rem, 4vw, 3rem); bottom: 1.1rem; margin: 0; }
   #ef-chapter-01.no-webgl .ef-ch-bg::before {
     content: ""; position: absolute; inset: 0;

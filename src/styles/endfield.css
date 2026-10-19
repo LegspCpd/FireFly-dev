@@ -605,17 +605,18 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 .archive-post {
   display: grid !important;
   grid-template-columns: auto auto minmax(0, 1fr) auto;
-  gap: 0 1rem;
-  align-items: baseline;
+  gap: 0 1.1rem;
+  align-items: center;
   height: auto !important;
-  padding: 0.75rem 0.9rem !important;
-  margin-bottom: 0.4rem;
+  padding: 0.85rem 1rem !important;
+  margin-bottom: 0.45rem;
   border: 1px solid var(--ef-rule) !important;
+  border-left: 2px solid transparent !important;
   border-radius: 0 !important;
-  background: color-mix(in srgb, var(--ef-panel) 70%, transparent);
+  background: color-mix(in srgb, var(--ef-panel) 78%, transparent);
   font-variant-numeric: tabular-nums;
 }
-.archive-post:hover { border-color: var(--ef-ink) !important; }
+.archive-post:hover { border-color: var(--ef-rule) !important; border-left-color: var(--ef-signal) !important; background: color-mix(in srgb, var(--ef-panel) 92%, transparent); }
 .archive-post:hover { background: color-mix(in srgb, var(--ef-ink) 4%, transparent); }
 /* b. 归档：年份组头 → 章节行 */
 .archive-year-toggle {
@@ -625,7 +626,7 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
   border-radius: 0 !important;
   font-variant-numeric: tabular-nums;
 }
-.archive-year-block + .archive-year-block { margin-top: 0.4rem; }
+.archive-year-block + .archive-year-block { margin-top: 1.3rem; }
 /* c. 分类：卡片网格 → 单列 ledger 行 */
 .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
   grid-template-columns: minmax(0, 1fr) !important;
