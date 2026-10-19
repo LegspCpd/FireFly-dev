@@ -926,3 +926,43 @@ friend-filter button.ef-chip[data-active] {
 /* 桌面端整体放大一档（站主：界面太小了） */
 @media (min-width: 768px) { html { font-size: 17px; } }
 @media (max-width: 767px) { html { font-size: 16.5px; } }
+
+/* ==== 48) 文章列表：封面卡片网格 ====
+   站主要文章页像 2x.nz/blog。站点 8 篇文章都没有 image 字段（hasCover=false），
+   所以卡片本身没有封面。这里不动主题组件，用纯 CSS 给无封面卡片补一条
+   「装饰封面带」：套件自带的等高线 SVG 作底，零外部请求、必然加载成功。 */
+.post-card-wrapper.no-cover {
+  padding-top: 6.5rem !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 6.5rem !important;
+  background-position: top center !important;
+  background-image: url('/endfield-ui/contours/contour-b.svg') !important;
+  background-color: color-mix(in srgb, var(--ef-panel) 90%, transparent) !important;
+  border: 1px solid var(--ef-rule) !important;
+}
+.post-card-wrapper.no-cover:nth-child(3n + 2) {
+  background-image: url('/endfield-ui/contours/contour-a.svg') !important;
+  background-position: 30% 20% !important;
+}
+.post-card-wrapper.no-cover:nth-child(3n + 3) {
+  background-image: url('/endfield-ui/contours/contour-a.svg') !important;
+  background-position: 70% 60% !important;
+}
+
+/* 49) 地理纹理加强：站主要求全站可见，原来 17% 太淡 */
+:root { --ef-contour: color-mix(in srgb, #ededed 36%, transparent); }
+:root:not(.dark) { --ef-contour: color-mix(in srgb, #141414 22%, transparent); }
+
+/* 50) 首屏大号空心编号：压在内容之下、不撑破横向、窄屏隐藏 */
+.ef-chapter { overflow: hidden; }
+.ef-ch-no {
+  position: absolute !important;
+  right: clamp(0.5rem, 3vw, 2.5rem) !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 0 !important;
+  margin: 0 !important;
+  max-width: 46vw !important;
+  pointer-events: none !important;
+}
+.ef-ch-inner { z-index: 1; }

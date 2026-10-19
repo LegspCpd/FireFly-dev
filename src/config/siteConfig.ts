@@ -126,9 +126,10 @@ export const siteConfig: SiteConfig = {
 	// 文章列表布局配置
 	postListLayout: {
 		// 默认布局模式："list" 列表模式，"grid" 网格模式
-		defaultMode: "list",
+		// 站主要求文章页做成 2x.nz/blog 那种封面卡片网格，故默认改为 grid
+		defaultMode: "grid",
 		// 移动端默认布局模式
-		mobileDefaultMode: "list",
+		mobileDefaultMode: "grid",
 		// 文章简介显示行数，设为 0 则不截断
 		descriptionLines: 2,
 		// 网格布局配置
