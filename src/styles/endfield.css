@@ -838,3 +838,42 @@ friend-filter button.ef-chip[data-active] {
 :is(.btn-regular, .btn-plain, .btn-card)[disabled] {
   opacity: 0.45 !important; cursor: not-allowed !important;
 }
+
+/* ===== 41) 相关文章 / 随机文章（文章页底部）统一到套件记录行语言 ===== */
+/* 静态行与内联脚本生成的行类名一致（group + gap-3 + px-3 py-3 + rounded-lg），
+   所以这一组规则对两边同时生效，不需要改组件 markup 或脚本。 */
+.card-base a.group.items-center {
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--ef-rule) !important;
+  border-top: 0 !important; border-left: 0 !important; border-right: 0 !important;
+  padding: 0.6rem 0.35rem !important;
+  transition: background-color 0.16s cubic-bezier(0.7, 0, 0.2, 1);
+}
+.card-base a.group.items-center:last-of-type { border-bottom: 0 !important; }
+.card-base a.group.items-center:hover {
+  background-color: color-mix(in srgb, var(--ef-signal) 14%, transparent) !important;
+}
+/* 编号块：方角细线（原来是圆角 + 主题色底） */
+.card-base a.group.items-center > div:first-child {
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: 1px solid var(--ef-rule) !important;
+  color: var(--ef-ink-2) !important;
+}
+.card-base a.group.items-center:hover > div:first-child {
+  border-color: var(--ef-signal) !important; color: var(--ef-ink) !important;
+}
+/* 分类小标：方角、无底色 */
+.card-base a.group.items-center span.rounded-sm {
+  border-radius: 0 !important; background: transparent !important;
+  border: 1px solid var(--ef-rule) !important; color: var(--ef-ink-2) !important;
+  padding: 0 0.35em !important;
+}
+/* 卡片头：细线分隔 + 去掉主题圆角徽标 */
+.card-base > div.flex.items-center.gap-2 {
+  border-bottom: 1px solid var(--ef-rule) !important;
+}
+.card-base > div.flex.items-center.gap-2 span.rounded-full {
+  border-radius: 0 !important; background: transparent !important;
+  border: 1px solid var(--ef-rule) !important; color: var(--ef-ink-2) !important;
+}
