@@ -40,9 +40,9 @@ const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18
                     <div>
                         <h2 class="ef-field ef-sub-head">Top 10</h2>
                         <ul class="ef-ledger">
-                            {topTags.map((t) => (
+                            {topTags.map((t, idx) => (
                                 <li>
-                                    <a href={getTagUrl(t.name)}>{t.name.trim()}</a>
+                                    <a class="ef-in-come" style={"--i: " + String(idx % 8)} href={getTagUrl(t.name)}>{t.name.trim()}</a>
                                     <span class="ef-field">{countLabel(t.count)}</span>
                                 </li>
                             ))}

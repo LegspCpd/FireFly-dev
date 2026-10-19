@@ -249,8 +249,9 @@ a, button, .btn-plain, .btn-regular, .post-card-wrapper, .ef-chip, .ef-tag {
   }
 }
 
-/* 页载入场动画已移除：改由 ScrollReveal 组件统一做滚动进场（snap 320ms + 38ms 错开） */
-/* （原 .post-card-wrapper 的页载入场动画已移除，改由 ScrollReveal 统一做滚动进场） */
+/* 入场动效一律走套件的 .ef-in-come（纯 CSS，snap 320ms + --i × 38ms 错开） */
+/* 自造的 ScrollReveal（IntersectionObserver + 60 行 JS）已删除；卡片不加 clip-path 系入场， */
+/* 否则会永久覆盖 .card-base 的切角 clip-path —— 套件的入场预设全部含 clip-path，故只用在简单行上。 */
 
 /* 弹窗进出：入场用 snap、退出用 mech（skill：退出约为入场的 0.6–0.7，且一律机械） */
 #friend-apply-panel {

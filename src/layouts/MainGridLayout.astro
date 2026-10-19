@@ -25,7 +25,6 @@ import { resolveNavMenuLinks } from "@/utils/nav-menu-utils";
 import { getEffectiveSidebarState } from "@/utils/sidebar-effective-utils";
 import Layout from "./Layout.astro";
 import BootScreen from "@components/common/BootScreen.astro";
-import ScrollReveal from "@components/common/ScrollReveal.astro";
 import HeroCanvas from "@components/common/HeroCanvas.astro";
 import EfHeader from "@components/common/EfHeader.astro";
 
@@ -113,7 +112,6 @@ const {
         <EfHeader />
 
         {isHomePageCheck && <BootScreen />}
-        <ScrollReveal />
 <WallpaperSection state={banner} backgroundImages={backgroundImages} title={title} bannerPostMeta={bannerPostMeta} />
 
 <!-- Main content -->
