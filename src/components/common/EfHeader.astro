@@ -22,6 +22,7 @@
     </nav>
 
     <div class="ef-header-actions">
+      <a class="ef-header-search no-styling" href="/search/" aria-label="搜索">搜索</a>
       <button type="button" class="ef-theme-toggle" aria-label="切换深浅色">
         <span data-ef-theme-label>深浅</span>
       </button>
@@ -67,10 +68,22 @@
   }
   .ef-header-cta { font-size: 0.82rem; padding: 0.4rem 0.9rem; }
   .ef-header-spacer { height: 3.2rem; }
+  .ef-header-search {
+    font-size: 0.8rem; color: var(--ef-ink-2); text-decoration: none;
+    padding: 0.35rem 0.6rem; border: 1px solid var(--ef-rule);
+  }
+  .ef-header-search:hover { color: var(--ef-ink); border-color: var(--ef-ink); }
+  /* 窄屏：页头折成两行 —— 第一行品牌 + 操作，第二行可横向滚动的导航（保证手机端能导航） */
   @media (max-width: 900px) {
-    .ef-header-nav { display: none; }
+    .ef-header-inner { flex-wrap: wrap; row-gap: 0.35rem; }
     .ef-header-cta { display: none; }
-    .ef-header-actions { margin-left: auto; }
+    .ef-header-nav {
+      order: 3; width: 100%; margin-left: 0;
+      overflow-x: auto; flex-wrap: nowrap; gap: 0.1rem;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .ef-header-nav::-webkit-scrollbar { display: none; }
+    .ef-header-nav a { white-space: nowrap; padding: 0.3rem 0.5rem; }
   }
 </style>
 

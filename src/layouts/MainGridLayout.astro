@@ -109,9 +109,9 @@ const {
 <Layout title={title} description={description || routeMeta.description} lang={lang} setOGTypeArticle={setOGTypeArticle ?? routeMeta.ogType === "article"} postSlug={postSlug} postCoverImage={postCoverImage} ogImageWidth={ogImageWidth} ogImageHeight={ogImageHeight} ogImageAlt={ogImageAlt} hasWallpaper={hasWallpaper} skipBreadcrumbStructuredData={skipBreadcrumbStructuredData}>
 
 <slot slot="head" name="head" />
-        {!isHomePageCheck && <HeaderTopRow navbarMode={navbarMode} navbarWidthFull={navbarWidthFull} />}
+        {/* 全站统一使用官网式页头（不再用主题导航栏） */}
         <EfBackdrop />
-        {isHomePageCheck && <EfHeader />}
+        <EfHeader />
 
         {isHomePageCheck && <BootScreen />}
         <ScrollReveal />
