@@ -257,7 +257,12 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
           [".card-base > :not(.ef-tri)", "ef-in-power", false],
           [".ef-ledger > li, .ef-page-list > li", "ef-in-come", true],
           [".archive-year-block", "ef-in-power", true],
-          ["footer .ef-footer, footer .ef-ids", "ef-in-power", false]
+          // 目录与翻页
+          [".immersive-toc, .floating-toc-wrapper", "ef-in-power", false],
+          [".responsive-pagination, .desktop-pagination, .mobile-pagination", "ef-in-come", true],
+          // 页脚：用元素选择器，不依赖类名（真正的页脚是 components/layout/Footer.astro，
+          // 先前的 "footer .ef-footer" 类名并不存在，等于空转）
+          ["footer", "ef-in-power", false]
         ];
         function play(el) {
           var cls = el.getAttribute("data-replay");
