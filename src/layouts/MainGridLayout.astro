@@ -121,8 +121,10 @@ const {
         {/* 列几何唯一真源 = computeGridColumns()，SSR 写在父级 #content-panel-inner 上
             （页脚作为兄弟节点也要拿到 --content-ratio-*）。子元素无需定位类：
             侧栏包裹层是 display:contents，真正的 grid item 是内层元素 */}
-        {/* skill：三色条标记「页面的开始」，全站只用这一处 + 详情标题下方 */}
-        <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
+        {/* 三色条：用户要求「不要每个页面都有」，因此只在首页出现。
+            套件原意是标记「页面的开始」并全站使用，但用户指令优先于套件。
+            详情标题下方（EfArticle）与友链页那两处仍保留，属页面自身元素。 */}
+        {isHomePageCheck && <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>}
         {isHomePageCheck && <HeroCanvas />}
         <div id="main-grid"
           class="transition duration-700 w-full left-0 right-0 grid mx-auto gap-4 px-2 md:px-4 ef-home-grid"
