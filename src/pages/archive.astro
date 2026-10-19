@@ -1,10 +1,16 @@
 ---
-import ArchivePanel from "@components/controls/ArchivePanel.astro";
+import PostPage from "@components/layout/PostPage.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { getSortedPosts } from "@/utils/content-utils";
+
+// 站主要求：文章页做成 2x.nz/blog 那种封面卡片网格。
+// 不复用归档面板（年份时间线），直接接主题自带的 PostPage —— 它只依赖 page.data，
+// 传一个含 data 的对象即可，卡片、封面、日期、标签、网格列数全部沿用主题实现。
+const posts = await getSortedPosts();
 ---
 
-<MainGridLayout title={i18n(I18nKey.archive)} description="博客文章归档 - 按时间线浏览所有文章，涵盖技术、生活、学习等内容">
-  <ArchivePanel />
+<MainGridLayout title={i18n(I18nKey.archive)} description="博客文章列表 - 封面卡片网格，按时间倒序浏览全部文章">
+  <PostPage page={{ data: posts }} />
 </MainGridLayout>
