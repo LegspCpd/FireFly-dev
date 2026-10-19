@@ -804,3 +804,12 @@ button, .btn { border-radius: 0 !important; }
 .ef-chip-row a.ef-chip { color: var(--ef-ink) !important; text-decoration: none; }
 .ef-chip-row a.ef-chip:hover { --fill: color-mix(in srgb, var(--ef-signal) 55%, var(--ef-chip)); color: var(--ef-ink) !important; }
 .ef-sub-head { margin: 0 0 0.4rem; color: var(--ef-ink-2) !important; }
+
+/* ===== 38) 友链页表单：交给套件 ef-form / ef-btn / ef-chip ===== */
+friend-filter { display: block; }
+/* 搜索框内有绝对定位图标，左侧留出图标位（其余交给套件 .ef-form 的输入框规则） */
+friend-filter input[data-search] { padding-left: 2.35rem !important; }
+/* 筛选片选中态：套件 is-active 的等价物（主题脚本用的是 data-active） */
+friend-filter button.ef-chip[data-active] {
+  --fill: var(--ef-signal); color: #161616 !important; font-weight: 700;
+}
