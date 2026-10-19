@@ -857,6 +857,8 @@ friend-filter button.ef-chip[data-active] {
 .card-base a.group.items-center > div:first-child {
   border-radius: 0 !important;
   background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
   border: 1px solid var(--ef-rule) !important;
   color: var(--ef-ink-2) !important;
 }
