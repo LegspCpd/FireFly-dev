@@ -13,6 +13,8 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
 ---
 
 <div id="ef-boot" data-ef-boot>
+  <!-- 官网加载屏的 KV 底图（素材来自官网 CDN，站主同意少量使用） -->
+  <div class="ef-boot-bg" aria-hidden="true"></div>
   <div class="ef-boot-rail" aria-hidden="true"><span></span></div>
   <div class="ef-boot-brand">
     <span class="ef-boot-brand-cn">LegspCpd</span>
@@ -31,7 +33,10 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
 <style>
   #ef-boot {
     position: fixed; inset: 0; z-index: 99999;
-    background: color-mix(in srgb, #141414 86%, transparent);
+    /* 官网原文：.__00-Loading_container__aBijT{...background-color:#141414;...z-index:100}
+       —— 是【完全不透明】的纯色底。此前写成 color-mix(#141414 86%, transparent)，
+       有 14% 透光，所以加载过程中后面的文章会透出来（站主两轮都指出这一点）。 */
+    background-color: #141414;
     color: #fff;
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
@@ -98,6 +103,23 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
     .ef-boot-brand-cn { font-size: 1.4rem; }
     .ef-boot-slogan { font-size: 1rem; }
     .ef-boot-meter { left: 18px; bottom: 26%; }
+  }
+
+  /* ---- 官网加载屏 KV 底图，照抄官方原文 ----
+     .__00-Loading_container__aBijT .__00-Loading_bg__mahvH {
+       position:absolute; top:0; left:0; width:100%; height:100%;
+       background-image:url(bg.9e174372.jpg); background-size:cover;
+       background-position:50%; background-repeat:no-repeat; filter:blur(8px) }
+     竖屏换 bg_m.529c4e62.jpg。素材取自官网 CDN（站主同意少量使用官方素材）。 */
+  #ef-boot { overflow: hidden; }
+  .ef-boot-bg {
+    position: absolute; inset: -2rem; z-index: 0;
+    background-image: url("/endfield-ui/official/loading-bg.jpg");
+    background-size: cover; background-position: 50%; background-repeat: no-repeat;
+    filter: blur(8px);
+  }
+  @media (orientation: portrait) {
+    .ef-boot-bg { background-image: url("/endfield-ui/official/loading-bg-m.jpg"); }
   }
 </style>
 
