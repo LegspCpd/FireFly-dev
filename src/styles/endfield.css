@@ -818,3 +818,9 @@ button, .btn { border-radius: 0 !important; }
   border-color: color-mix(in srgb, var(--ef-ink) 45%, transparent) !important;
   color: var(--ef-ink) !important;
 }
+
+/* ===== 35) 窄屏兜底：首屏大号空心编号必须隐藏（组件内 scoped 规则实测在线上未生效） ===== */
+@media (max-width: 860px) {
+  .ef-ch-no { display: none !important; }
+  .ef-ch-inner { margin-left: 0 !important; }
+}
