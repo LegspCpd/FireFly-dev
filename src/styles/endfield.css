@@ -913,3 +913,13 @@ friend-filter button.ef-chip[data-active] {
 
 /* ==== 46) 搜索页输入框：给左侧放大镜图标留位（占位文字原本压在图标上）==== */
 .ef-form input.pl-10, .ef-form input[class*='pl-10'] { padding-left: 2.6rem !important; }
+
+/* ==== 47) 背景：等高线纹理更明显 ====
+   站主反馈「背景经常加载不出来」。查证结论：套件的等高线层本身正常（线上 CSS 含 7 处
+   .ef-contours、两个 SVG 都是 200），但壁纸模式是 none 且图数组为空 —— 首页本来就没有背景图。
+   这里把套件自带的等高线纹理提上来当背景：纯 CSS + 本地 SVG，不发起任何网络请求，必然加载成功。 */
+:root { --ef-contour: color-mix(in srgb, #ededed 17%, transparent); }
+:root:not(.dark) { --ef-contour: color-mix(in srgb, #141414 13%, transparent); }
+/* 桌面端整体放大一档（站主：界面太小了） */
+@media (min-width: 768px) { html { font-size: 17px; } }
+@media (max-width: 767px) { html { font-size: 16.5px; } }
