@@ -128,30 +128,16 @@ const {
         <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
         {isHomePageCheck && <HeroCanvas />}
         <div id="main-grid"
-          class:list={["transition duration-700 w-full left-0 right-0 grid mx-auto gap-4 px-2 md:px-4 mobile-no-sidebar", isHomePageCheck && "ef-home-grid"]}
+          class="transition duration-700 w-full left-0 right-0 grid mx-auto gap-4 px-2 md:px-4 ef-home-grid"
           {...gridDataAttrs}
         >
 
-            {/* 首页只留展示：两侧栏各自不渲染（内容栏与 Swup 容器保持无条件渲染） */}
-            {!isHomePageCheck && (
-                <SidebarColumn
-                side="left"
-                position={sidebarLayoutConfig.position}
-                enable={sidebarLayoutConfig.enable}
-                hideSidebarOnPostPage={hideSidebarOnPostPage}
-                hasLeftComponents={hasLeftComponents}
-                hasRightComponents={hasRightComponents}
-                sidebarClass={sidebarClass}
-                headings={headings}
-                encrypted={encrypted}
-                />
-            )}
+            {/* 全面重写：主题侧栏（头像/公告/音乐/分类/标签/统计/日历等部件）整块移除 */}
 
             {/* 主内容区包装器 - 包含静态栏位和swup容器，作为单个grid item */}
             <div id="content-column" class={staticBarClass}>
                 {/* 分类导航栏 - 全站渲染并显示 */}
-                {!isHomePageCheck && shouldRenderCategoryBar && <div id="category-bar-wrapper"><CategoryBar currentPostCategory={postCategory} /></div>}
-                {/* 主内容区 - 始终渲染，确保 Swup 容器存在 */}
+                                {/* 主内容区 - 始终渲染，确保 Swup 容器存在 */}
                 <main
                     id="swup-container"
                     class="transition-main"
@@ -172,19 +158,7 @@ const {
                 )}
             </div>
 
-            {!isHomePageCheck && (
-                <SidebarColumn
-                side="right"
-                position={sidebarLayoutConfig.position}
-                enable={sidebarLayoutConfig.enable}
-                hideSidebarOnPostPage={hideSidebarOnPostPage}
-                hasLeftComponents={hasLeftComponents}
-                hasRightComponents={hasRightComponents}
-                sidebarClass={sidebarClass}
-                headings={headings}
-                encrypted={encrypted}
-            />
-            )}
+
 
         </div>
 
