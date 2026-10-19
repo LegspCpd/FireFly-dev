@@ -877,3 +877,13 @@ friend-filter button.ef-chip[data-active] {
   border-radius: 0 !important; background: transparent !important;
   border: 1px solid var(--ef-rule) !important; color: var(--ef-ink-2) !important;
 }
+
+/* ===== 42) 刻盘容器（套件 .ef-dial 是 width:100%，需要一个受控宽度的框）===== */
+.ef-dial-wrap {
+  display: grid; place-items: center;
+  margin: 0 auto 1.75rem;
+  width: min(100%, 22rem);
+}
+@media (max-width: 520px) {
+  .ef-dial-wrap { width: min(100%, 17rem); margin-bottom: 1.25rem; }
+}
