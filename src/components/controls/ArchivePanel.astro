@@ -50,6 +50,16 @@ const i18nStrings = {
 const tagsBaseUrl = url("/tags/");
 const categoriesBaseUrl = url("/categories/");
 const foldOnFilter = collapseAllButFirst;
+
+// 套件 ef-dial 的数据：每个年份一个分区，中心读数给总篇数
+const dialSections = groups.map((g, i) => ({
+  zh: String(g.year),
+  en: `${g.posts.length} posts`,
+  big: g.posts.length,
+  unit: "篇",
+  here: i === 0,
+}));
+const dialIdle = { label: "归档总量", big: posts.length, unit: "篇", sub: `${groups.length} 个年份` };
 ---
 
 <archive-panel
@@ -70,6 +80,17 @@ const foldOnFilter = collapseAllButFirst;
       </div>
     </div>
   </div>
+
+  {/* 套件 ef-dial：官方刻盘读数（年份分区 + 中心总篇数） */}
+  <figure class="ef-dial-wrap">
+    <svg
+      class="ef-dial"
+      data-archive-dial
+      data-sections={JSON.stringify(dialSections)}
+      data-idle={JSON.stringify(dialIdle)}
+      role="group"
+      aria-label="按年份归档"></svg>
+  </figure>
 
   {groups.map((group, groupIndex) => {
     const collapsed = collapseAllButFirst && groupIndex > 0;
@@ -127,6 +148,24 @@ const foldOnFilter = collapseAllButFirst;
     );
   })}
 </archive-panel>
+
+<script>
+  // public/ 下的运行时模块，构建期没有类型声明
+  // @ts-expect-error 运行时模块由 public 提供
+  import { drawDial } from "/endfield-ui/dial.js";
+
+  function mountDial() {
+    const svg = document.querySelector("[data-archive-dial]") as SVGSVGElement | null;
+    if (!svg || svg.dataset.ready === "1") return;
+    const sections = JSON.parse(svg.dataset.sections || "[]");
+    const idle = JSON.parse(svg.dataset.idle || "{}");
+    if (!sections.length) return;
+    drawDial(svg, { sections, idle });
+    svg.dataset.ready = "1";
+  }
+  mountDial();
+  document.addEventListener("swup:page:view", mountDial);
+</script>
 
 <style>
   archive-panel {
