@@ -656,3 +656,13 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 .card-base, .archive-panel, [class*="stats"] {
   font-variant-numeric: tabular-nums;
 }
+
+/* 27) 归档里的装饰性图标（箭头/方块）隐藏 —— skill：细线分区，不摆图标 */
+.archive-year-toggle svg,
+.archive-arrow svg,
+.archive-post svg,
+.archive-year-toggle .archive-arrow {
+  display: none !important;
+}
+/* 归档行里的分类色块也去掉（用文字即可） */
+.archive-post [class*="bg-\("] { background: transparent !important; }

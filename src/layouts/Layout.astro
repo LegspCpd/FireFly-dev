@@ -502,6 +502,9 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
         isDark ? darkTheme : lightTheme
       );
 
+      // 暴露两组代码主题名，供自建页头切换时复用同一机制（class + data-theme + colorScheme）
+      try { window.__ffTheme = { dark: darkTheme, light: lightTheme }; } catch (e) {}
+
       // Load the hue from local storage
       const hue = localStorage.getItem("hue") || configHue;
       document.documentElement.style.setProperty("--hue", hue);

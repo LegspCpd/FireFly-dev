@@ -99,7 +99,13 @@
     btn.addEventListener("click", function () {
       var root = document.documentElement;
       var next = root.classList.contains("dark") ? "light" : "dark";
-      root.classList.toggle("dark", next === "dark");
+      var isDark = next === "dark";
+      // 与主题初始化完全一致：class + data-theme（Expressive Code 主题名）+ colorScheme + localStorage
+      root.classList.toggle("dark", isDark);
+      var names = window.__ffTheme || {};
+      var name = isDark ? names.dark : names.light;
+      if (name) root.setAttribute("data-theme", name);
+      root.style.colorScheme = isDark ? "dark" : "light";
       try { localStorage.setItem("theme", next); } catch (e) {}
       sync();
     });
