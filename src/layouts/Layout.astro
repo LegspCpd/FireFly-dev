@@ -245,7 +245,14 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
           });
         }
         window.__efReplay = replay;
-        replay(document);
+        // 关键：本脚本在 <head> 里，首次执行时 <body> 尚未解析，
+        // 直接 replay(document) 找不到任何元素（实测 animationName 全为 none）。
+        function boot() { replay(document); }
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", boot);
+        } else {
+          boot();
+        }
         document.addEventListener("swup:page:view", function () { replay(document); });
       })();
     </script>
