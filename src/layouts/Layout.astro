@@ -267,9 +267,21 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
         function play(el) {
           var cls = el.getAttribute("data-replay");
           if (!cls) return;
+          // 保险一：文档隐藏时不要挂入场类。套件预设用 animation-fill-mode: backwards，
+          // 动画开始前元素停在 from（opacity:0）那一帧；后台标签页里动画被暂停，
+          // 就会永久停在不可见状态 —— 站主实测首页主视觉整块消失就是这个原因。
+          if (document.hidden) return;
           el.classList.remove(cls);
           void el.offsetWidth;
           el.classList.add(cls);
+          // 保险二：动画若没有真的跑起来（被节流/暂停），把类摘掉回落到自然状态（完全可见）。
+          setTimeout(function () {
+            var anims = el.getAnimations ? el.getAnimations() : [];
+            var ran = anims.some(function (a) {
+              return a.playState === "running" || a.playState === "finished";
+            });
+            if (!ran) el.classList.remove(cls);
+          }, 1400);
         }
         function replay(root) {
           (root || document).querySelectorAll("[data-replay]").forEach(play);
@@ -306,6 +318,10 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
         if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { boot(document); });
         else boot(document);
         document.addEventListener("swup:page:view", function () { boot(document); });
+        // 从后台切回前台时，把之前跳过的补齐
+        document.addEventListener("visibilitychange", function () {
+          if (!document.hidden) replay(document);
+        });
       })();
     </script>
     <style is:inline>
