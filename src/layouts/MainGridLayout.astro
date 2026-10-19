@@ -124,8 +124,6 @@ const {
         {/* 三色条：用户要求「不要每个页面都有」，因此只在首页出现。
             套件原意是标记「页面的开始」并全站使用，但用户指令优先于套件。
             详情标题下方（EfArticle）与友链页那两处仍保留，属页面自身元素。 */}
-        {isHomePageCheck && <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>}
-        {isHomePageCheck && <HeroCanvas />}
         <div id="main-grid"
           class="transition duration-700 w-full left-0 right-0 grid mx-auto gap-4 px-2 md:px-4 ef-home-grid"
           {...gridDataAttrs}
@@ -142,6 +140,11 @@ const {
                     class="transition-main"
                     data-current-post-category={postCategory || ""}
                 >
+                {/* 首页专属的整屏主视觉（含三色条）。必须放在 #swup-container 内部：
+                    放在外面时，swup 客户端跳转只替换容器内容，这几块会留在 DOM 里跟着走 ——
+                    站主反复反馈「首页大屏在其他页面也有」「三色条还在」就是这里。 */}
+                {isHomePageCheck && <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>}
+                {isHomePageCheck && <HeroCanvas />}
                 {/* 为每个页面提供一个隐藏的h1标题，用于SEO和可访问性 */}
                 <h1 class="sr-only">{heading || title}</h1>
                 <div id="content-wrapper" class="onload-animation transition-leaving">
