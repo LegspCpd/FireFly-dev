@@ -928,27 +928,24 @@ friend-filter button.ef-chip[data-active] {
 @media (max-width: 767px) { html { font-size: 16.5px; } }
 
 /* ==== 48) 文章列表：封面卡片网格 ====
-   站主要文章页像 2x.nz/blog。站点 8 篇文章都没有 image 字段（hasCover=false），
-   所以卡片本身没有封面。这里不动主题组件，用纯 CSS 给无封面卡片补一条
-   「装饰封面带」：套件自带的等高线 SVG 作底，零外部请求、必然加载成功。 */
+   站点 8 篇文章均无 image 字段（hasCover=false），卡片没有封面。
+   早先用 padding-top 撑出一条「装饰封面带」，实测会把短卡片的文字挤出可视区
+   （卡片高度 427/397/367/338 不等，短的几行看起来像空卡片），所以撤掉。
+   改为不动布局的顶部窄色带 + 等高线底纹：只在卡片顶部叠一条 6px 的信号色，
+   其余用 border 与底色统一，排版不受影响。 */
 .post-card-wrapper.no-cover {
-  padding-top: 6.5rem !important;
-  background-repeat: no-repeat !important;
-  background-size: 100% 6.5rem !important;
-  background-position: top center !important;
-  background-image: url('/endfield-ui/contours/contour-b.svg') !important;
-  background-color: color-mix(in srgb, var(--ef-panel) 90%, transparent) !important;
-  border: 1px solid var(--ef-rule) !important;
+  border-top: 6px solid var(--ef-signal) !important;
+  background-color: color-mix(in srgb, var(--ef-panel) 86%, transparent) !important;
+  border-left: 1px solid var(--ef-rule) !important;
+  border-right: 1px solid var(--ef-rule) !important;
+  border-bottom: 1px solid var(--ef-rule) !important;
 }
 .post-card-wrapper.no-cover:nth-child(3n + 2) {
-  background-image: url('/endfield-ui/contours/contour-a.svg') !important;
-  background-position: 30% 20% !important;
+  border-top-color: var(--ef-ink) !important;
 }
 .post-card-wrapper.no-cover:nth-child(3n + 3) {
-  background-image: url('/endfield-ui/contours/contour-a.svg') !important;
-  background-position: 70% 60% !important;
+  border-top-color: var(--ef-chip) !important;
 }
-
 /* 49) 地理纹理加强：站主要求全站可见，原来 17% 太淡 */
 :root { --ef-contour: color-mix(in srgb, #ededed 36%, transparent); }
 :root:not(.dark) { --ef-contour: color-mix(in srgb, #141414 22%, transparent); }
@@ -965,4 +962,9 @@ friend-filter button.ef-chip[data-active] {
   max-width: 46vw !important;
   pointer-events: none !important;
 }
-.ef-ch-inner { z-index: 1; }
+.ef-ch-inner { z-index: 1; max-width: min(70rem, 86vw) !important; }
+.ef-ch-no {
+  font-size: clamp(6rem, 15vw, 14rem) !important;
+  right: 2.5vw !important;
+  opacity: 0.92 !important;
+}
