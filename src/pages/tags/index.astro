@@ -15,9 +15,9 @@ const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18
 <MainGridLayout title={i18n(I18nKey.tags)} description={i18n(I18nKey.allTags)}>
     <div class="card-base p-8 md:p-10 mb-4">
         <!-- 眉标 + 页名 + 计数（官网骨架） -->
-        <p class="ef-eyebrow">// TAGS</p>
-        <h1 class="ef-page-name">{i18n(I18nKey.tags)}</h1>
-        <p class="ef-field ef-page-sub">
+        <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// TAGS</p>
+        <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{i18n(I18nKey.tags)}</h1>
+        <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">
             {i18n(I18nKey.allTags)} · {tags.length} {i18n(I18nKey.tagsCount)}
         </p>
 
