@@ -15,7 +15,7 @@
 
   <!-- 内容容器 -->
   <div class="ef-ch-inner">
-    <p class="ef-eyebrow">// 01 HOME</p>
+    <p class="ef-eyebrow ef-ch-eyebrow"><i aria-hidden="true"></i>// 01 HOME</p>
 
     <!-- 标题舞台：实心 + 空心 -->
     <div class="ef-ch-stage">
@@ -31,14 +31,26 @@
       <li>持续更新中</li>
     </ul>
 
-    <!-- CTA 面板（对应官网 downloader 面板的位置与分量） -->
-    <div class="ef-ch-cta">
-      <a class="ef-btn primary" href="/archive/">浏览全部文章</a>
-      <a class="ef-btn" href="/friends/">友链</a>
-      <a class="ef-btn" href="/about/">关于</a>
+    <!-- 入口面板：对应官网第 01 屏的 downloader 面板（标题 + 值行 + 行动） -->
+    <div class="ef-ch-panel">
+      <div class="ef-ch-panel-head">
+        <span class="ef-field">入口</span>
+        <span class="ef-tag">3</span>
+      </div>
+      <ul class="ef-ch-kv">
+        <li><span class="ef-field">文章</span><a href="/archive/">全部文章</a></li>
+        <li><span class="ef-field">关系</span><a href="/friends/">友链</a></li>
+        <li><span class="ef-field">站点</span><a href="/about/">关于</a></li>
+      </ul>
     </div>
   </div>
 
+  <!-- 大号空心章节编号（官网那种空心数字） -->
+  <p class="ef-ch-no" aria-hidden="true">01</p>
+  <!-- 右侧竖向章节指示条 -->
+  <div class="ef-ch-rail" aria-hidden="true">
+    <span class="is-current"></span>
+  </div>
   <div class="ef-tri ef-ch-tri" aria-hidden="true"><i></i><i></i><i></i></div>
   <p class="ef-ch-scroll ef-field" aria-hidden="true">Scroll ↓</p>
 </section>
@@ -85,6 +97,36 @@
   .ef-ch-facts { gap: 0 0.75rem; }
   .ef-ch-facts li + li::before { content: "│"; margin-right: 0.75rem; color: var(--ef-ink-2); }
   .ef-ch-cta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.5rem; }
+  /* 四角切角标记：官网面板的标志性细节 */
+  .ef-chapter::before,
+  .ef-chapter::after {
+    content: ""; position: absolute; width: 18px; height: 18px; pointer-events: none;
+    border-color: var(--ef-signal); border-style: solid; border-width: 0; z-index: 2;
+  }
+  .ef-chapter::before { top: 14px; left: 14px; border-top-width: 2px; border-left-width: 2px; }
+  .ef-chapter::after { bottom: 18px; right: 14px; border-bottom-width: 2px; border-right-width: 2px; }
+  /* 眉标前的黄色小标记 */
+  .ef-ch-eyebrow { display: flex; align-items: center; gap: 0.5rem; }
+  .ef-ch-eyebrow > i { display: inline-block; width: 10px; height: 10px; background: var(--ef-signal); }
+  /* 大号空心章节编号 */
+  .ef-ch-no {
+    position: absolute; right: clamp(1rem, 6vw, 5rem); top: 12%; margin: 0; z-index: 1;
+    font-size: clamp(5rem, 16vw, 12rem); font-weight: 800; font-stretch: 125%; line-height: 1;
+    color: transparent; -webkit-text-stroke: 2px color-mix(in srgb, var(--ef-ink) 30%, transparent);
+    user-select: none; pointer-events: none;
+  }
+  /* 右侧竖向指示条：当前章节一小段实心 */
+  .ef-ch-rail { position: absolute; right: clamp(0.6rem, 2.5vw, 1.6rem); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; z-index: 2; }
+  .ef-ch-rail > span { width: 3px; height: 46px; background: color-mix(in srgb, var(--ef-ink) 18%, transparent); }
+  .ef-ch-rail > span.is-current { background: var(--ef-signal); }
+  /* 入口面板 */
+  .ef-ch-panel { margin-top: 1.6rem; max-width: 26rem; border: 1px solid var(--ef-rule); background: color-mix(in srgb, var(--ef-panel) 70%, transparent); }
+  .ef-ch-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--ef-rule); }
+  .ef-ch-kv { margin: 0; padding: 0.25rem 0; list-style: none; }
+  .ef-ch-kv li { display: grid; grid-template-columns: 4rem minmax(0, 1fr); gap: 0.75rem; align-items: baseline; padding: 0.4rem 0.8rem; border-bottom: 1px solid color-mix(in srgb, var(--ef-rule) 60%, transparent); }
+  .ef-ch-kv li:last-child { border-bottom: 0; }
+  .ef-ch-kv a { color: var(--ef-ink); text-decoration: none; font-weight: 600; }
+  .ef-ch-kv a:hover { color: var(--ef-signal); }
   .ef-ch-tri { position: absolute; left: 0; right: 0; bottom: 0; }
   .ef-ch-scroll { position: absolute; right: clamp(1rem, 4vw, 3rem); bottom: 1.1rem; margin: 0; }
   #ef-chapter-01.no-webgl .ef-ch-bg::before {
