@@ -589,3 +589,8 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 .custom-md :is(pre, blockquote, table) {
   margin: 1.6rem 0;
 }
+
+/* 25) 首页只留展示：没有侧栏，网格改单列（Swup 容器保留，转场不受影响） */
+.ef-home-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}

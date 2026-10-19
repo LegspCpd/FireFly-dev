@@ -124,11 +124,13 @@ const {
         <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
         {isHomePageCheck && <HeroCanvas />}
         <div id="main-grid"
-          class="transition duration-700 w-full left-0 right-0 grid mx-auto gap-4 px-2 md:px-4 mobile-no-sidebar"
+          class:list={["transition duration-700 w-full left-0 right-0 grid mx-auto gap-4 px-2 md:px-4 mobile-no-sidebar", isHomePageCheck && "ef-home-grid"]}
           {...gridDataAttrs}
         >
 
-            <SidebarColumn
+            {/* 首页只留展示：两侧栏各自不渲染（内容栏与 Swup 容器保持无条件渲染） */}
+            {!isHomePageCheck && (
+                <SidebarColumn
                 side="left"
                 position={sidebarLayoutConfig.position}
                 enable={sidebarLayoutConfig.enable}
@@ -138,12 +140,13 @@ const {
                 sidebarClass={sidebarClass}
                 headings={headings}
                 encrypted={encrypted}
-            />
-                    
+                />
+            )}
+
             {/* 主内容区包装器 - 包含静态栏位和swup容器，作为单个grid item */}
             <div id="content-column" class={staticBarClass}>
                 {/* 分类导航栏 - 全站渲染并显示 */}
-                {shouldRenderCategoryBar && <div id="category-bar-wrapper"><CategoryBar currentPostCategory={postCategory} /></div>}
+                {!isHomePageCheck && shouldRenderCategoryBar && <div id="category-bar-wrapper"><CategoryBar currentPostCategory={postCategory} /></div>}
                 {/* 主内容区 - 始终渲染，确保 Swup 容器存在 */}
                 <main
                     id="swup-container"
@@ -158,14 +161,15 @@ const {
             </main>
 
                 {/* 移动端底部组件：<768px 时 #main-grid 是 display:block，必须排在页脚之前 */}
-                {sidebarLayoutConfig.mobileBottomComponents && sidebarLayoutConfig.mobileBottomComponents.length > 0 && (
+                {!isHomePageCheck && sidebarLayoutConfig.mobileBottomComponents && sidebarLayoutConfig.mobileBottomComponents.length > 0 && (
                     <div id="mobile-bottom-sidebar" class="block md:hidden mt-4">
                         <SideBar side="bottom" headings={headings} encrypted={encrypted}></SideBar>
                     </div>
                 )}
             </div>
 
-            <SidebarColumn
+            {!isHomePageCheck && (
+                <SidebarColumn
                 side="right"
                 position={sidebarLayoutConfig.position}
                 enable={sidebarLayoutConfig.enable}
@@ -176,6 +180,7 @@ const {
                 headings={headings}
                 encrypted={encrypted}
             />
+            )}
 
         </div>
 

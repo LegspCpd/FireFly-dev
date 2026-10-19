@@ -28,7 +28,9 @@ const heading =
 ---
 
 <MainGridLayout heading={heading}>
+{page.currentPage > 1 && (
   <PostPage page={page} />
+)}
   {
     page.total > page.size && (
       <Pagination
