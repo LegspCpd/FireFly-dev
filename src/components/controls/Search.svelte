@@ -204,7 +204,7 @@ $: if (initialized && (keywordMobile || keywordMobile === "")) {
 </button>
 
 <!-- search panel -->
-<div id="search-panel" class="float-panel float-panel-closed search-panel absolute md:w-120
+<div id="search-panel" class="ef-panel float-panel float-panel-closed search-panel absolute md:w-120
 top-20 left-4 md:left-[unset] right-4 shadow-2xl rounded-2xl p-2"
      data-floating-panel data-floating-panel-trigger="search-switch search-input-desktop" inert aria-hidden="true">
 

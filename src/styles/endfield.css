@@ -888,3 +888,8 @@ friend-filter button.ef-chip[data-active] {
 @media (max-width: 520px) {
   .ef-dial-wrap { width: min(100%, 17rem); margin-bottom: 1.25rem; }
 }
+
+/* ==== 43) 搜索面板：挂套件 .ef-panel（方角细线 + 顶部指示条），压掉主题圆角 ==== */
+#search-panel { border-radius: 0 !important; backdrop-filter: none !important; }
+#search-panel input { border-radius: 0 !important; }
+#search-panel .rounded-xl, #search-panel .rounded-lg { border-radius: 0 !important; }
