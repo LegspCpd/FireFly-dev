@@ -745,3 +745,58 @@ button, .btn { border-radius: 0 !important; }
 .friend-card img { border-radius: 0 !important; }
 /* 友链页里的代码块/说明块统一成细线面板 */
 .friends-grid ~ .card-base, .friend-card + .card-base { border-radius: 0 !important; box-shadow: none !important; }
+
+/* ===== 32) 收尾：标签进度条只看色彩、页头按钮统一 ===== */
+/* Top10 进度：轨道细线、填充一律黄（skill：黄只做填充），不依赖主题类名 */
+[class*="h-2"][class*="rounded-full"] { height: 2px !important; background: var(--ef-rule) !important; }
+[class*="h-2"][class*="rounded-full"] > * { background: var(--ef-signal) !important; }
+
+/* 页头里的按钮（搜索 / 主题）统一成方角细线小钮，去掉主题的浅底 */
+.ef-header-inner button, .ef-header-inner .ef-theme-toggle {
+  border-radius: 0 !important;
+  border: 1px solid var(--ef-rule) !important;
+  background: color-mix(in srgb, var(--ef-panel) 70%, transparent) !important;
+  color: var(--ef-ink-2) !important;
+  padding: 0.28rem 0.7rem !important;
+  font-size: 0.82rem !important;
+  box-shadow: none !important;
+}
+.ef-header-inner button:hover, .ef-header-inner .ef-theme-toggle:hover {
+  color: var(--ef-ink) !important;
+  border-color: color-mix(in srgb, var(--ef-ink) 45%, transparent) !important;
+}
+
+/* ===== 33) 正文自带目录块 + 评论区 ===== */
+#post-container .custom-md h2#目录 {
+  font-size: 0.82rem !important; letter-spacing: 0.1em;
+  color: var(--ef-ink-2) !important; margin: 1.6rem 0 0.5rem !important;
+}
+#post-container .custom-md h2#目录 + ul {
+  list-style: none !important; margin: 0 0 1.8rem !important; padding: 0 !important;
+  border: 1px solid var(--ef-rule);
+  background: color-mix(in srgb, var(--ef-panel) 78%, transparent);
+  column-gap: 0;
+}
+#post-container .custom-md h2#目录 + ul li {
+  margin: 0 !important; padding: 0 !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--ef-rule) 70%, transparent);
+}
+#post-container .custom-md h2#目录 + ul li:last-child { border-bottom: 0; }
+#post-container .custom-md h2#目录 + ul li a {
+  display: block; padding: 0.42rem 0.85rem;
+  border-left: 2px solid transparent;
+  color: var(--ef-ink-2) !important; text-decoration: none !important;
+  font-size: 0.86rem; line-height: 1.6;
+}
+#post-container .custom-md h2#目录 + ul li a:hover {
+  border-left-color: var(--ef-signal); color: var(--ef-ink) !important;
+  background: color-mix(in srgb, var(--ef-panel) 92%, transparent);
+}
+
+/* 评论区：同款细线面板，去掉主题的圆角与阴影 */
+#post-comments {
+  border: 1px solid var(--ef-rule) !important;
+  background: color-mix(in srgb, var(--ef-panel) 78%, transparent) !important;
+  border-radius: 0 !important; box-shadow: none !important;
+}
+#post-comments * { border-radius: 0 !important; }
