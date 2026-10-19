@@ -2,12 +2,15 @@
 import type { GetStaticPaths } from "astro";
 import Pagination from "@/components/common/Pagination.astro";
 import PostPage from "@/components/layout/PostPage.astro";
-import { siteConfig } from "@/config";
+import EfChapters from "@components/common/EfChapters.astro";
+import { getEnabledFriends, siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import "@/styles/banner-home.css";
-import { getSortedPosts } from "@/utils/content-utils";
+import { getCategoryList, getSortedPosts, getTagList } from "@/utils/content-utils";
+import { formatDateToYYYYMMDD } from "@/utils/date-utils";
+import { getPostUrlBySlug } from "@/utils/url-utils";
 export const getStaticPaths = (async ({ paginate }) => {
 	const allBlogPosts = await getSortedPosts();
 	// 使用配置中的文章数量
@@ -20,6 +23,34 @@ const { page } = Astro.props;
 
 const len = page.data.length;
 
+// ===== 首页章节数据（官网式章节制；仅第 1 页需要）=====
+const isFirstPage = page.currentPage === 1;
+const _all = isFirstPage ? await getSortedPosts() : [];
+const chapterPosts = _all.slice(0, 8).map((p: any, i: number) => ({
+	no: String(_all.length - i).padStart(3, "0"),
+	date: formatDateToYYYYMMDD(p.data.published).replace(/-/g, "."),
+	name: p.data.title,
+	url: getPostUrlBySlug(p.id),
+	words: String((p.body || "").replace(/\s+/g, "").length),
+}));
+const chapterCats = isFirstPage
+	? (await getCategoryList()).map((c: any) => ({ name: c.name, count: c.count ?? 0, url: c.url }))
+	: [];
+const chapterTags = isFirstPage
+	? (await getTagList()).map((t: any) => ({ name: t.name, count: t.count ?? 0, url: t.url }))
+	: [];
+const chapterLinks = isFirstPage
+	? getEnabledFriends().slice(0, 6).map((x: any) => ({ name: x.name, url: x.url, desc: x.description }))
+	: [];
+const chapterStats = isFirstPage
+	? [
+			{ key: "文章", value: String(_all.length) + " 篇" },
+			{ key: "分类", value: String(chapterCats.length) + " 个" },
+			{ key: "标签", value: String(chapterTags.length) + " 个" },
+			{ key: "友链", value: String(chapterLinks.length) + " 位" },
+		]
+	: [];
+
 // 列表页隐藏的 h1：首屏用站点标题，后续页用「首页 · 页码」，避免空 h1
 const heading =
 	page.currentPage === 1
@@ -28,6 +59,15 @@ const heading =
 ---
 
 <MainGridLayout heading={heading}>
+{isFirstPage && (
+  <EfChapters
+    posts={chapterPosts}
+    categories={chapterCats}
+    tags={chapterTags}
+    links={chapterLinks}
+    stats={chapterStats}
+  />
+)}
 {page.currentPage > 1 && (
   <PostPage page={page} />
 )}

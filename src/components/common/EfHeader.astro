@@ -96,6 +96,19 @@
       var dark = document.documentElement.classList.contains("dark");
       if (label) label.textContent = dark ? "浅色" : "深色";
     }
+
+    // 页头在 Swup 容器之外、切页不会被重建：手动更新「当前位置」标记
+    function markCurrent() {
+      var path = location.pathname.replace(/\/+$/, "") || "/";
+      var links = document.querySelectorAll(".ef-header-nav a");
+      for (var i = 0; i < links.length; i++) {
+        var href = links[i].getAttribute("href") || "";
+        var p = href.replace(/\/+$/, "") || "/";
+        var hit = p === "/" ? path === "/" : (path === p || path.indexOf(p + "/") === 0);
+        if (hit) links[i].setAttribute("aria-current", "page");
+        else links[i].removeAttribute("aria-current");
+      }
+    }
     btn.addEventListener("click", function () {
       var root = document.documentElement;
       var next = root.classList.contains("dark") ? "light" : "dark";
@@ -110,5 +123,7 @@
       sync();
     });
     sync();
+    markCurrent();
+    document.addEventListener("swup:page:view", function () { setTimeout(markCurrent, 0); });
   })();
 </script>
