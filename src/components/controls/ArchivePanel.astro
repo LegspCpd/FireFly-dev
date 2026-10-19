@@ -90,7 +90,7 @@ const foldOnFilter = collapseAllButFirst;
           </div>
           <div class="w-[70%] md:w-[80%] transition text-left text-50 flex items-center gap-2
                       group-hover/yr:text-(--primary)">
-            <span class="archive-year-count">{group.posts.length}</span>
+            <span class="archive-year-count" data-fx-load aria-label={String(group.posts.length)}>{group.posts.length}</span>
             {" "}
             <span class="archive-year-count-label">{i18n(group.posts.length === 1 ? I18nKey.postCount : I18nKey.postsCount)}</span>
             <span class="archive-arrow" style={collapsed ? "transform: rotate(-90deg)" : ""}>
