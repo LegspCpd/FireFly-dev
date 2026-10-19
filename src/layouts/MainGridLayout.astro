@@ -111,7 +111,9 @@ const {
 
         <EfHeader />
 
-        {isHomePageCheck && <BootScreen />}
+        {/* 加载屏全站挂载（站主要求）。它位于 #swup-container 之外，所以客户端跳转不会重放，
+            只有用户手动刷新/直接打开时才会完整走一遍 —— 正是「每次刷新都加载」的语义。 */}
+        <BootScreen />
 <WallpaperSection state={banner} backgroundImages={backgroundImages} title={title} bannerPostMeta={bannerPostMeta} />
 
 <!-- Main content -->

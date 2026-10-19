@@ -105,11 +105,11 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
   (function () {
     var el = document.getElementById("ef-boot");
     if (!el) return;
+    // 站主要求：每次手动刷新都要完整走一遍加载屏，而不是「一个会话只放一次」。
+    // 原来这行读 sessionStorage 就是「加载一次之后就不加载了」的原因，已去掉读写。
+    // 只保留 reduced-motion 的无障碍逃生口。
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var seen = false;
-    try { seen = sessionStorage.getItem("ef-boot") === "1"; } catch (e) {}
-    if (reduce || seen) { el.remove(); return; }
-    try { sessionStorage.setItem("ef-boot", "1"); } catch (e) {}
+    if (reduce) { el.remove(); return; }
     document.documentElement.style.overflow = "hidden";
     var pct = document.getElementById("ef-boot-pct");
     var t0 = Date.now();
