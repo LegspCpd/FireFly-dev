@@ -148,11 +148,14 @@ const dateText = published ? published.toISOString().slice(0, 10).replace(/-/g, 
       var links = [];
       for (var i = 0; i < hs.length; i++) {
         var el = hs[i];
+        var raw = (el.textContent || "").replace(/#\s*$/, "").trim();
+        // 跳过正文里那个「目录」标题与空标题
+        if (!raw || /^(目录|table of contents|toc)$/i.test(raw)) continue;
         if (!el.id) el.id = "ef-h-" + i;
         var li = document.createElement("li");
         var a = document.createElement("a");
         a.href = "#" + el.id;
-        a.textContent = el.textContent.replace(/^#+\s*/, "").trim().slice(0, 40);
+        a.textContent = raw.slice(0, 40);
         if (el.tagName === "H3") a.className = "is-3";
         a.dataset.id = el.id;
         li.appendChild(a); toc.appendChild(li); links.push(a);
