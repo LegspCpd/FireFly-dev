@@ -800,3 +800,21 @@ button, .btn { border-radius: 0 !important; }
   border-radius: 0 !important; box-shadow: none !important;
 }
 #post-comments * { border-radius: 0 !important; }
+
+/* ===== 34) 页脚与右下角浮动控件 ===== */
+.site-footer { border-top: 1px solid var(--ef-rule); margin-top: 1.5rem; }
+.site-footer .text-50, .site-footer [class*="text-50"] { color: var(--ef-ink-2) !important; }
+.site-footer a { color: var(--ef-ink) !important; text-decoration: none; }
+.site-footer a:hover { color: var(--ef-signal) !important; }
+.floating-controls-container { gap: 0.4rem !important; }
+.floating-controls-container > *, .floating-controls-container button, .floating-controls-container > * > * {
+  border-radius: 0 !important;
+  border: 1px solid var(--ef-rule) !important;
+  background: color-mix(in srgb, var(--ef-panel) 90%, transparent) !important;
+  box-shadow: none !important;
+  color: var(--ef-ink-2) !important;
+}
+.floating-controls-container > *:hover, .floating-controls-container button:hover {
+  border-color: color-mix(in srgb, var(--ef-ink) 45%, transparent) !important;
+  color: var(--ef-ink) !important;
+}
