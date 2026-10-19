@@ -593,21 +593,6 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 
 /* a. 归档：每篇文章行 → 记录行 */
 /* 文章：站主要「像以前那样有板块的」，不是一条一条（细线行留给分类） */
-.archive-post {
-  display: grid !important;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
-  gap: 0 1.1rem;
-  align-items: center;
-  height: auto !important;
-  padding: 0.85rem 1rem !important;
-  margin-bottom: 0.45rem;
-  border: 1px solid var(--ef-rule) !important;
-  border-left: 2px solid transparent !important;
-  border-radius: 0 !important;
-  background: color-mix(in srgb, var(--ef-panel) 78%, transparent);
-  font-variant-numeric: tabular-nums;
-}
-.archive-post:hover { border-color: var(--ef-rule) !important; border-left-color: var(--ef-signal) !important; background: color-mix(in srgb, var(--ef-panel) 92%, transparent); }
 .archive-post:hover { background: color-mix(in srgb, var(--ef-ink) 4%, transparent); }
 /* b. 归档：年份组头 → 章节行 */
 .archive-year-toggle {
@@ -663,7 +648,6 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
   display: none !important;
 }
 /* 归档行里的分类色块也去掉（用文字即可） */
-.archive-post [class*="bg-\("] { background: transparent !important; }
 
 /* 28) 归档年份行里的描边小圆点（h-3 w-3 outline-3）：纯装饰，且被全局去圆角变成了方块 —— 直接隐藏 */
 .archive-year-toggle [class*="outline-(--primary)"] { display: none !important; }
@@ -684,14 +668,6 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 
 /* ===== 30) 挑剩下的主题件：按浏览器实测逐个去掉 ===== */
 
-/* 归档文章行里的 1x1 分类色点（hover 长成 h-5）—— 分类名已经用文字给出，色点只是噪声 */
-[class*="group-hover:h-5"] { display: none !important; }
-
-/* 分类页每行：左边图标圆底 + 右边大箭头，全部去掉；名称与计数排成一行 */
-.grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > .card-base > .shrink-0 { display: none !important; }
-.grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > .card-base > .flex-1 {
-  display: flex !important; align-items: baseline; justify-content: space-between; gap: 1rem;
-}
 .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > .card-base h2 { margin: 0 !important; }
 .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > .card-base p { margin: 0 !important; }
 

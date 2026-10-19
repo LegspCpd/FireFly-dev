@@ -102,50 +102,20 @@ const foldOnFilter = collapseAllButFirst;
         </button>
 
         <div class="archive-year-content" hidden={collapsed}>
-          {group.posts.map((post) => (
+          {group.posts.map((post, idx) => (
             <a
               href={getPostUrlBySlug(post.id)}
               aria-label={post.data.title}
-              class="archive-post group btn-plain block! h-10 w-full rounded-lg hover:text-[initial]"
+              class="archive-post ef-record ef-in-come"
+              style={`--i: ${idx % 8}`}
               data-tags={JSON.stringify(post.data.tags || [])}
               data-category={post.data.category || ""}
             >
-              <div class="flex flex-row justify-start items-center h-full">
-                {/* date */}
-                <div class="w-[15%] md:w-[10%] transition text-sm text-right text-50">
-                  {formatDate(post.data.published)}
-                </div>
-
-                {/* dot and line */}
-                <div class="w-[15%] md:w-[10%] relative dash-line h-full flex items-center">
-                  <div class="transition-all mx-auto w-1 h-1 rounded-sm group-hover:h-5
-                              bg-[oklch(0.5_0.05_var(--hue))] group-hover:bg-(--primary)
-                              outline-4 z-50 outline-(--card-bg)
-                              group-hover:outline-(--btn-plain-bg-hover)
-                              group-active:outline-(--btn-plain-bg-active)"></div>
-                </div>
-
-                {/* post title */}
-                <div class="w-[70%] md:max-w-[65%] md:w-[65%] text-left font-bold
-                            group-hover:translate-x-1 transition-all group-hover:text-(--primary)
-                            text-75 pr-8 whitespace-nowrap text-ellipsis overflow-hidden flex items-center gap-2">
-                  {post.data.category && (
-                    <span class="shrink-0 inline-block text-xs font-medium px-1.5 py-0.5 rounded-sm
-                                 bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))]
-                                 text-(--primary) group-hover:bg-(--primary) group-hover:text-white!
-                                 transition-colors">
-                      {post.data.category}
-                    </span>
-                  )}
-                  <span class="truncate">{post.data.title}</span>
-                </div>
-
-                {/* tag list */}
-                <div class="hidden md:block md:w-[15%] text-left text-sm transition
-                            whitespace-nowrap text-ellipsis overflow-hidden text-30">
-                  {formatTag(post.data.tags || [])}
-                </div>
-              </div>
+              {/* 套件 ef-record 的四列：tag / field(time) / name / field —— 与本站 分类/日期/标题/标签 一对一 */}
+              <span class="ef-tag">{post.data.category || "未分类"}</span>
+              <time class="ef-field">{formatDate(post.data.published)}</time>
+              <span class="name ef-read">{post.data.title}</span>
+              <span class="ef-field">{formatTag(post.data.tags || [])}</span>
             </a>
           ))}
         </div>
