@@ -1,0 +1,158 @@
+---
+// 首页首屏：WebGL 几何主视觉（纯几何/文字构成，不用美术图）
+//   - 手写 fragment shader：等高线 + 细网格 + 黄色扫描带，鼠标与滚动视差
+//   - 无第三方库（不引 Three.js），Shader 只有几 KB
+//   - 优雅降级：无 WebGL / 减少动态效果 → 静止一帧或纯 CSS 网格底纹
+//   - 线色随主题（浅色墨线 / 暗色亮线），黄带恒用强调色 #fffa00
+---
+
+<section id="ef-hero" data-ef-hero>
+  <canvas id="ef-hero-canvas" aria-hidden="true"></canvas>
+  <div class="ef-hero-inner">
+    <p class="ef-eyebrow">// LEGSPCPD BLOG</p>
+    <h1 class="ef-hero-title">工程师的笔记本</h1>
+    <p class="ef-hero-lede">Cloudflare / EdgeOne / 自建服务 —— 记录配置、踩坑与取舍。</p>
+    <ul class="ef-facts ef-field ef-hero-facts">
+      <li><span data-ef-count="posts">—</span> 篇文章</li>
+      <li><span data-ef-count="tags">—</span> 个标签</li>
+      <li><span data-ef-count="words">—</span> 字</li>
+    </ul>
+    <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
+  </div>
+  <p class="ef-hero-scroll ef-field" aria-hidden="true">Scroll ↓</p>
+</section>
+
+<style>
+  #ef-hero {
+    position: relative;
+    min-height: clamp(28rem, 72vh, 44rem);
+    display: flex; align-items: center;
+    overflow: hidden;
+    background: var(--ef-paper);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--ef-cut)), calc(100% - var(--ef-cut)) 100%, 0 100%);
+  }
+  #ef-hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .ef-hero-inner { position: relative; z-index: 1; padding: clamp(1.5rem, 5vw, 4rem); max-width: 46rem; }
+  .ef-hero-title {
+    margin: 0.4rem 0 0.6rem;
+    font-size: clamp(1.9rem, 5vw, 3.4rem);
+    font-weight: 800; font-stretch: 118%; line-height: 1.14; letter-spacing: -0.01em;
+    color: var(--ef-ink);
+  }
+  .ef-hero-lede { margin: 0 0 1.2rem; font-size: 1.0625rem; line-height: 1.7; color: var(--ef-ink-2); max-width: 34rem; }
+  .ef-hero-facts { gap: 0 0.75rem; }
+  .ef-hero-facts li + li::before { content: "│"; margin-right: 0.75rem; color: var(--ef-ink-2); }
+  #ef-hero .ef-tri { margin-top: 1.4rem; max-width: 18rem; }
+  .ef-hero-scroll { position: absolute; right: clamp(1rem, 4vw, 3rem); bottom: 1.2rem; margin: 0; }
+  /* 降级：没有 WebGL 时用 CSS 网格底纹 */
+  #ef-hero.no-webgl {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--ef-ink) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--ef-ink) 7%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var hero = document.getElementById("ef-hero");
+    var cv = document.getElementById("ef-hero-canvas");
+    if (!hero || !cv) return;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    var VS = "attribute vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }";
+    var FS = [
+      "precision mediump float;",
+      "uniform vec2 uRes; uniform float uTime; uniform vec2 uMouse; uniform float uScroll; uniform float uDark;",
+      "float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
+      "float noise(vec2 p){ vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);",
+      "  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y); }",
+      "float fbm(vec2 p){ float v = 0.0; float a = 0.5; for (int i = 0; i < 4; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; } return v; }",
+      "float lineAt(float v, float w){ float d = abs(fract(v) - 0.5); return 1.0 - smoothstep(0.5 - w, 0.5, d); }",
+      "void main(){",
+      "  vec2 p = (gl_FragCoord.xy - uRes * 0.5) / uRes.y;",
+      "  p += uMouse * 0.035; p.y += uScroll * 0.06;",
+      "  float grid = max(lineAt(p.x * 12.0, 0.02), lineAt(p.y * 12.0, 0.02));",
+      "  float h = fbm(p * 1.5 + vec2(uTime * 0.012, uTime * 0.006));",
+      "  float contour = lineAt(h * 13.0, 0.035);",
+      "  float ink = grid * 0.10 + contour * 0.30;",
+      "  float band = smoothstep(0.75, 1.0, sin((p.x * 0.5 + p.y * 0.35 - uTime * 0.05) * 3.14159) * 0.5 + 0.5);",
+      "  vec3 lineCol = mix(vec3(0.086), vec3(0.929), uDark);",
+      "  vec3 col = mix(lineCol, vec3(1.0, 0.980, 0.0), band);",
+      "  float a = clamp(ink + band * 0.22, 0.0, 0.85);",
+      "  gl_FragColor = vec4(col, a);",
+      "}",
+    ].join("\n");
+
+    var gl = null;
+    try { gl = cv.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: false }); } catch (e) { gl = null; }
+    if (!gl) { hero.classList.add("no-webgl"); return; }
+
+    function sh(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
+    var prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { hero.classList.add("no-webgl"); return; }
+    gl.useProgram(prog);
+
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, "aPos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    var uRes = gl.getUniformLocation(prog, "uRes");
+    var uTime = gl.getUniformLocation(prog, "uTime");
+    var uMouse = gl.getUniformLocation(prog, "uMouse");
+    var uScroll = gl.getUniformLocation(prog, "uScroll");
+    var uDark = gl.getUniformLocation(prog, "uDark");
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    var mouse = [0, 0], target = [0, 0], t0 = performance.now(), visible = true;
+    window.addEventListener("pointermove", function (e) {
+      var r = hero.getBoundingClientRect();
+      target[0] = (e.clientX - r.left) / r.width - 0.5;
+      target[1] = 0.5 - (e.clientY - r.top) / r.height;
+    }, { passive: true });
+    document.addEventListener("visibilitychange", function () { visible = !document.hidden; });
+
+    function dpr() { return Math.min(window.devicePixelRatio || 1, 2); }
+    function resize() {
+      var w = hero.clientWidth, h = hero.clientHeight, d = dpr();
+      cv.width = Math.max(1, Math.round(w * d)); cv.height = Math.max(1, Math.round(h * d));
+      gl.viewport(0, 0, cv.width, cv.height);
+    }
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+
+    function frame(now) {
+      if (!visible) { requestAnimationFrame(frame); return; }
+      mouse[0] += (target[0] - mouse[0]) * 0.06;
+      mouse[1] += (target[1] - mouse[1]) * 0.06;
+      var dark = document.documentElement.classList.contains("dark") ? 1 : 0;
+      gl.uniform2f(uRes, cv.width, cv.height);
+      gl.uniform1f(uTime, reduce ? 0 : (now - t0) / 1000);
+      gl.uniform2f(uMouse, mouse[0], mouse[1]);
+      gl.uniform1f(uScroll, reduce ? 0 : Math.min(1, window.scrollY / 600));
+      gl.uniform1f(uDark, dark);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    // 事实数字：取自页面里已有的统计（若有），否则从 DOM 现算
+    try {
+      var posts = document.querySelectorAll(".post-card-wrapper").length;
+      var tags = document.querySelectorAll("#tags a, .tag-cloud a").length;
+      var wordsEl = document.querySelector("[data-ef-words]");
+      var set = function (k, v) { var el = hero.querySelector("[data-ef-count=\"" + k + "\"]"); if (el && v) el.textContent = v; };
+      set("posts", posts ? String(posts) : "");
+      set("tags", tags ? String(tags) : "");
+      set("words", wordsEl ? wordsEl.getAttribute("data-ef-words") : "");
+    } catch (e) {}
+  })();
+</script>

@@ -26,6 +26,7 @@ import { getEffectiveSidebarState } from "@/utils/sidebar-effective-utils";
 import Layout from "./Layout.astro";
 import BootScreen from "@components/common/BootScreen.astro";
 import ScrollReveal from "@components/common/ScrollReveal.astro";
+import HeroCanvas from "@components/common/HeroCanvas.astro";
 
 import "@/styles/expressive-code.css";
 
@@ -121,6 +122,7 @@ const {
             侧栏包裹层是 display:contents，真正的 grid item 是内层元素 */}
         {/* skill：三色条标记「页面的开始」，全站只用这一处 + 详情标题下方 */}
         <div class="ef-tri" aria-hidden="true"><i></i><i></i><i></i></div>
+        {isHomePageCheck && <HeroCanvas />}
         <div id="main-grid"
           class="transition duration-700 w-full left-0 right-0 grid mx-auto gap-4 px-2 md:px-4 mobile-no-sidebar"
           {...gridDataAttrs}
