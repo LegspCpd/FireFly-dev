@@ -78,18 +78,33 @@ const rail = [
 	<EfHeader />
 
 	<nav class="ef-rail" aria-label="主导航">
-		<a class="ef-rail-brand" href="/" aria-label="LegspCpd BLOG"><span>终</span></a>
+		<a class="ef-rail-logo" href="/" aria-label="LegspCpd BLOG"><span>终末地</span></a>
 		<ul class="ef-rail-list">
-			{rail.map((item) => (
+			{rail.slice(0, 4).map((item) => (
 				<li>
-					<a class={"ef-rail-item" + (on(item.href) ? " is-on" : "")} href={item.href} aria-label={item.label} title={item.label}>
-						<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter">
+					<a class={"ef-rail-item" + (on(item.href) ? " is-on" : "")} href={item.href}>
+						<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square" stroke-linejoin="miter">
 							<path d={item.d} />
 						</svg>
+						<span class="ef-rail-label">{item.label}</span>
 					</a>
 				</li>
 			))}
 		</ul>
+		<div class="ef-rail-sep" aria-hidden="true"></div>
+		<ul class="ef-rail-list">
+			{rail.slice(4).map((item) => (
+				<li>
+					<a class={"ef-rail-item" + (on(item.href) ? " is-on" : "")} href={item.href}>
+						<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square" stroke-linejoin="miter">
+							<path d={item.d} />
+						</svg>
+						<span class="ef-rail-label">{item.label}</span>
+					</a>
+				</li>
+			))}
+		</ul>
+		<a class="ef-rail-cta" href="/archive/"><span>全部文章</span></a>
 	</nav>
 
 	<main id="ef-main" class="ef-shell-main">

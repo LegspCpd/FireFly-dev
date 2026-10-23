@@ -88,7 +88,8 @@
 .ef-shell-links a:hover { color: var(--ef-signal); }
 .ef-shell-meta { margin: 0; margin-inline-start: auto; color: var(--ef-ink-2); }
 
-/* 左侧竖排图标栏：官网 operator 页那条。自绘几何线框图标，不含游戏素材。 */
+/* 左侧竖排图标栏：按官网 operator 页那条重做 —— 浅色底、黑 logo 块、灰色图标、
+   悬停展开显示标签、分两组、底部黑色 CTA。图标全部自绘几何线框。 */
 .ef-rail {
   position: fixed;
   left: 0;
@@ -97,40 +98,67 @@
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.1rem;
-  padding: 0.5rem 0.35rem;
-  border: 1px solid var(--ef-rule);
+  align-items: stretch;
+  width: 3.4rem;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-left: 0;
-  background: color-mix(in srgb, var(--ef-paper) 88%, transparent);
-  backdrop-filter: blur(6px);
-}
-.ef-rail-brand {
-  display: grid;
-  place-items: center;
-  width: 2.1rem;
-  height: 2.1rem;
-  margin-bottom: 0.35rem;
-  background: var(--ef-signal);
+  background: #f4f4f2;
   color: #141414;
-  font-family: var(--ef-font-wide);
-  font-size: 1.05rem;
-  line-height: 1;
-  text-decoration: none;
+  transition: width 0.22s cubic-bezier(0.2, 0, 0, 1);
 }
-.ef-rail-list { display: flex; flex-direction: column; gap: 0.1rem; margin: 0; padding: 0; list-style: none; }
-.ef-rail-item {
+.ef-rail:hover { width: 11.5rem; }
+.ef-rail-logo {
   display: grid;
   place-items: center;
-  width: 2.1rem;
-  height: 2.1rem;
-  color: var(--ef-ink-2);
+  height: 3.4rem;
+  background: #141414;
+  color: #fff;
+  font-family: var(--ef-font-wide);
+  font-size: 0.72rem;
+  line-height: 1;
+  letter-spacing: 0.05em;
   text-decoration: none;
+}
+.ef-rail-logo span { display: block; width: 2.4em; text-align: center; word-break: break-all; }
+.ef-rail-list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.ef-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  height: 3.1rem;
+  padding-left: 0.95rem;
+  color: #8a8a86;
+  text-decoration: none;
+  white-space: nowrap;
   transition: color 0.16s, background-color 0.16s;
 }
-.ef-rail-item svg { width: 1.05rem; height: 1.05rem; }
-.ef-rail-item:hover { color: var(--ef-ink); background: color-mix(in srgb, var(--ef-chip) 70%, transparent); }
-.ef-rail-item.is-on { color: #141414; background: var(--ef-signal); }
+.ef-rail-item svg { flex: none; width: 1.15rem; height: 1.15rem; }
+.ef-rail-item:hover { color: #141414; background: #e8e8e5; }
+.ef-rail-item.is-on { color: #141414; background: #dededb; }
+.ef-rail-item.is-on svg { stroke-width: 2.1; }
+.ef-rail-label {
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.ef-rail:hover .ef-rail-label { opacity: 1; }
+.ef-rail-sep { height: 1px; margin: 0.35rem 0.7rem; background: rgba(0, 0, 0, 0.1); }
+.ef-rail-cta {
+  display: grid;
+  place-items: center;
+  margin: 0.6rem 0.55rem 0.75rem;
+  min-height: 4.5rem;
+  background: #141414;
+  color: var(--ef-signal);
+  font-family: var(--ef-font-wide);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+}
+.ef-rail-cta span { writing-mode: vertical-rl; }
+.ef-rail:hover .ef-rail-cta span { writing-mode: horizontal-tb; }
 @media (max-width: 900px) { .ef-rail { display: none; } }
 
 /* 分页条（新架构自绘，不用主题 Pagination） */
