@@ -326,3 +326,23 @@
 #ef-main.ef-light .card-base a { color: #141414; }
 #ef-main.ef-light .card-base h1, #ef-main.ef-light .card-base h2,
 #ef-main.ef-light .card-base h3 { color: #141414; }
+
+/* 浅色页里任何还在用暗色主题文字色的元素都要拉回深色，
+   否则会出现「浅字压白卡」（分类/标签页的账目表就是这样）。 */
+#ef-main.ef-light a,
+#ef-main.ef-light .ef-ledger a,
+#ef-main.ef-light .ef-page-list a,
+#ef-main.ef-light .ef-ledger li,
+#ef-main.ef-light .ef-page-list li,
+#ef-main.ef-light .ef-ledger,
+#ef-main.ef-light .ef-page-list,
+#ef-main.ef-light p,
+#ef-main.ef-light span,
+#ef-main.ef-light li,
+#ef-main.ef-light h1, #ef-main.ef-light h2, #ef-main.ef-light h3, #ef-main.ef-light h4 {
+  color: #141414;
+}
+#ef-main.ef-light .ef-eyebrow,
+#ef-main.ef-light .ef-field,
+#ef-main.ef-light .ef-page-sub,
+#ef-main.ef-light .ef-sec-count { color: #6b6a66; }
