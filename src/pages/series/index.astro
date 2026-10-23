@@ -11,12 +11,11 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
 ---
 
 <MainGridLayout title={i18n(I18nKey.series)} description={i18n(I18nKey.allSeries)}>
-    <!-- 页面标题 -->
+    <!-- 官网骨架：眉标 + 页名 + 副字段（与 categories / tags / friends / about 逐字同一套） -->
     <div class="card-base px-8 py-6 mb-4">
-        <div class="text-2xl font-bold text-(--primary) mb-2">
-            {i18n(I18nKey.series)}
-        </div>
-        <p class="text-30 text-sm">
+        <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// SERIES</p>
+        <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{i18n(I18nKey.series)}</h1>
+        <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">
             {i18n(I18nKey.allSeries)} · {totalPosts} {i18n(I18nKey.postsCount)}
         </p>
     </div>
