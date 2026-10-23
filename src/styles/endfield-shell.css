@@ -270,3 +270,16 @@
 .ef-ch-title { margin-top: 0.1rem !important; }
 .ef-ch-panel { display: none !important; }  /* 入口面板与右下卡片簇重复 */
 .ef-ch-facts { margin-top: 1rem; }
+
+/* 窄窗口：竖排栏会压住内容，1100px 以下收掉；主视觉字号与内边距一起收 */
+@media (max-width: 1100px) {
+  .ef-rail { display: none !important; }
+  .ef-shell-main { padding-top: 3.4rem; }
+}
+@media (max-width: 640px) {
+  .ef-ch-title { font-size: clamp(2.2rem, 13vw, 3.4rem) !important; }
+  .ef-ch-inner { padding-inline: 1.1rem !important; }
+  .ef-ch-cards { display: none !important; }
+  .ef-ch-band { font-size: 0.62rem; letter-spacing: 0.08em; }
+  .ef-header-inner { padding: 0.6rem 0.9rem !important; }
+}
