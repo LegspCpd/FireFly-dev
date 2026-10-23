@@ -12,5 +12,11 @@ const posts = await getSortedPosts();
 ---
 
 <MainGridLayout title={i18n(I18nKey.archive)} description="博客文章列表 - 封面卡片网格，按时间倒序浏览全部文章">
+  <!-- 官网骨架：眉标 + 页名 + 副字段（此前这一页是唯一没有页头的） -->
+  <div class="card-base p-8 md:p-10 mb-4">
+    <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// ARCHIVE</p>
+    <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{i18n(I18nKey.archive)}</h1>
+    <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">{posts.length} 篇文章 · 按时间倒序</p>
+  </div>
   <PostPage page={{ data: posts }} />
 </MainGridLayout>
