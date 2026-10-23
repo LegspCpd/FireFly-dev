@@ -107,7 +107,7 @@ const rail = [
 		<a class="ef-rail-cta" href="/archive/"><span>全部文章</span></a>
 	</nav>
 
-	<main id="ef-main" class="ef-shell-main">
+	<main id="ef-main" class={"ef-shell-main" + (path === "/" ? "" : " ef-light")}>
 		<div class="ef-wrap">
 			<slot />
 		</div>

@@ -283,3 +283,37 @@
   .ef-ch-band { font-size: 0.62rem; letter-spacing: 0.08em; }
   .ef-header-inner { padding: 0.6rem 0.9rem !important; }
 }
+
+/* ===== CJK 巨字的显示体处理 =====
+   官网标题是窄体重黑。没有同款字体时，用字重 + 轻微横向压缩 + 紧字距逼近，
+   比换成别的字族更接近原味。 */
+.ef-ch-title {
+  font-weight: 900 !important;
+  font-stretch: 87% !important;
+  transform: scaleX(0.94);
+  transform-origin: left center;
+  letter-spacing: -0.03em !important;
+}
+.ef-sec-title, .ef-page-name, .ef-post-title { font-weight: 800; letter-spacing: -0.02em; }
+
+/* ===== 内页浅色纸张（官网 operator 页基调）=====
+   首页是实景暗底，其余页面走奶白纸张 + 深色字 + 信号黄分隔。 */
+.ef-light { background: #f2f1ec; color: #141414; }
+.ef-light .ef-sec { border-top-color: rgba(0, 0, 0, 0.1); }
+.ef-light .ef-sec-title, .ef-light .ef-page-name, .ef-light .ef-post-title { color: #141414; }
+.ef-light .ef-eyebrow { color: #6b6a66; }
+.ef-light .ef-field, .ef-light .ef-sec-count { color: #6b6a66; }
+.ef-light .card-base {
+  background: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #141414 !important;
+}
+.ef-light a { color: #141414; }
+.ef-light .ef-ledger li { border-color: rgba(0, 0, 0, 0.1); }
+.ef-light .ef-chip { background: #e6e5e0; color: #141414; }
+.ef-light .ef-post { background: #fff; border-color: rgba(0, 0, 0, 0.08); }
+.ef-light .ef-post-title { color: #141414; }
+.ef-light .ef-post-desc, .ef-light .ef-post-date { color: #5f5e59; }
+.ef-light .ef-pager .ef-btn { background: #141414; color: var(--ef-signal); }
+.ef-light .ef-shell-foot { border-top-color: rgba(0, 0, 0, 0.1); }
+.ef-light .ef-shell-links a, .ef-light .ef-shell-meta { color: #6b6a66; }
