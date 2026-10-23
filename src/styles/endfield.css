@@ -972,3 +972,44 @@ friend-filter button.ef-chip[data-active] {
   right: 2.5vw !important;
   opacity: 0.92 !important;
 }
+
+/* ==== 51) 官网字体（Gilroy + Novecentosanswide，取自官网 CDN，站主同意少量使用）==== 
+   官网正文字体是 Gilroy（几何无衬线）、标题是 Novecentosanswide（宽体）；中文走系统字体。
+   这两点正是「像不像官网」感知上最大的一块 —— 此前全站用的是系统 sans。
+   字体文件 7~17KB/款，共约 64KB。 */
+@font-face {
+  font-family: "EF Gilroy";
+  src: url("/endfield-ui/official/font/Gilroy-Medium.woff2") format("woff2");
+  font-weight: 400 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "EF Gilroy";
+  src: url("/endfield-ui/official/font/Gilroy-ExtraBold.woff2") format("woff2");
+  font-weight: 600 900; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "EF Wide";
+  src: url("/endfield-ui/official/font/Novecentosanswide-Medium.woff2") format("woff2");
+  font-weight: 400 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "EF Wide";
+  src: url("/endfield-ui/official/font/Novecentosanswide-DemiBold.woff2") format("woff2");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "EF Wide";
+  src: url("/endfield-ui/official/font/Novecentosanswide-Bold.woff2") format("woff2");
+  font-weight: 700 900; font-style: normal; font-display: swap;
+}
+:root {
+  --ef-font-sans: "EF Gilroy", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --ef-font-wide: "EF Wide", "EF Gilroy", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-sans: var(--ef-font-sans);
+}
+body, button, input, select, textarea { font-family: var(--ef-font-sans); }
+h1, h2, h3, h4,
+.ef-ch-title, .ef-ch-hollow, .ef-article-title, .ef-eyebrow,
+.ef-hollow-no, .ef-bar-title, .ef-wordmark, .ef-section-title {
+  font-family: var(--ef-font-wide);
+}
