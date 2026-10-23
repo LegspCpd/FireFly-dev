@@ -4,7 +4,7 @@ import ProjectCard from "@/components/pages/projects/ProjectCard.astro";
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import "@/styles/pages/common.css";
 import { getSortedProjects } from "@/utils/content-utils";
 import {
@@ -42,7 +42,7 @@ const statusFilters = PROJECT_STATUS_KEYS.map((key) => {
 });
 ---
 
-<MainGridLayout title={title} description={description}>
+<EndfieldLayout title={title} description={description}>
 	<section class="page-shell">
 		<!-- 标题面板 -->
 		<header class="card-base page-header">
@@ -192,4 +192,4 @@ const statusFilters = PROJECT_STATUS_KEYS.map((key) => {
 		}
 	</script>
 
-</MainGridLayout>
+</EndfieldLayout>

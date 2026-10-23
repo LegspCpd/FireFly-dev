@@ -7,7 +7,7 @@ import KatexManager from "@components/features/KatexManager.astro";
 import License from "@components/misc/License.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import "@/styles/banner-post.css";
 import {
 	getRelatedPosts,
@@ -206,7 +206,7 @@ const postNo = _idx >= 0 ? _sortedForNo.length - _idx : null;
 const seriesData = await getSeriesPosts(entry);
 ---
 
-<MainGridLayout
+<EndfieldLayout
   title={entry.data.title}
   description={entry.data.description?.trim() || remarkPluginFrontmatter.excerpt?.trim() || entry.data.title}
   lang={entry.data.lang}
@@ -719,4 +719,4 @@ const seriesData = await getSeriesPosts(entry);
 
   <!-- 评论 -->
   {entry.data.comment && !entry.data.password && <Comment post={entry} />}
-</MainGridLayout>
+</EndfieldLayout>

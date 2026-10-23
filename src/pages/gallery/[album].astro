@@ -5,7 +5,7 @@ import PhotoCard from "@/components/pages/gallery/PhotoCard.astro";
 import { galleryConfig, siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import "@/styles/pages/gallery-album.css";
 import { getAlbumCover, scanAlbumPhotos } from "@/utils/gallery-utils";
 import { getLqipProps } from "@/utils/lqip-utils";
@@ -39,7 +39,7 @@ const coverLqipProps = cover
 	: { style: "" };
 ---
 
-<MainGridLayout title={albumMeta.name} description={albumMeta.description || ""}>
+<EndfieldLayout title={albumMeta.name} description={albumMeta.description || ""}>
   <!-- 相册封面横幅 -->
   <div class="w-full rounded-(--radius-large) overflow-hidden relative">
     {cover ? (
@@ -171,4 +171,4 @@ const coverLqipProps = cover
     </div>
   </div>
 
-</MainGridLayout>
+</EndfieldLayout>

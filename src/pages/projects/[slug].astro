@@ -6,7 +6,7 @@ import CoverImage from "@/components/common/CoverImage.astro";
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getSortedProjects } from "@/utils/content-utils";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import {
@@ -59,7 +59,7 @@ const statusMeta = status ? getProjectStatusMeta(status) : null;
 const visibleTags = tags || [];
 ---
 
-<MainGridLayout
+<EndfieldLayout
   title={title}
   description={description || title}
   lang={entry.data.lang || undefined}
@@ -200,4 +200,4 @@ const visibleTags = tags || [];
       </div>
     </div>
   </div>
-</MainGridLayout>
+</EndfieldLayout>

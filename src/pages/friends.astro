@@ -12,7 +12,7 @@ import {
 } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import "@/styles/pages/common.css";
 import "@/styles/pages/friends.css";
 
@@ -45,7 +45,7 @@ const description =
 	friendsPageConfig.description || i18n(I18nKey.friendsDescription);
 ---
 
-<MainGridLayout title={title} description={description}>
+<EndfieldLayout title={title} description={description}>
   <div
     class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32"
   >
@@ -839,4 +839,4 @@ const description =
   </script>
 
 
-</MainGridLayout>
+</EndfieldLayout>

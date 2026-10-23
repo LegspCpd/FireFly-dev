@@ -15,6 +15,20 @@ interface Props {
 	ogImageHeight?: number;
 	ogImageAlt?: string;
 	skipBreadcrumbStructuredData?: boolean;
+	/* 文章页会透传这些，新壳只用到其中一部分，其余接收后忽略即可 */
+	postCategory?: string;
+	headings?: import("astro").MarkdownHeading[];
+	encrypted?: boolean;
+	heading?: string;
+	hasWallpaper?: boolean;
+	bannerPostMeta?: {
+		title: string;
+		description?: string;
+		published: Date;
+		updated?: Date;
+		words?: number;
+		minutes?: number;
+	};
 }
 
 const {
@@ -28,6 +42,7 @@ const {
 	ogImageHeight,
 	ogImageAlt,
 	skipBreadcrumbStructuredData,
+	hasWallpaper,
 } = Astro.props;
 
 const path = Astro.url.pathname;
@@ -56,6 +71,7 @@ const rail = [
 	ogImageHeight={ogImageHeight}
 	ogImageAlt={ogImageAlt}
 	skipBreadcrumbStructuredData={skipBreadcrumbStructuredData}
+	hasWallpaper={hasWallpaper}
 >
 	<slot slot="head" name="head" />
 	<BootScreen />
@@ -77,7 +93,9 @@ const rail = [
 	</nav>
 
 	<main id="ef-main" class="ef-shell-main">
-		<slot />
+		<div class="ef-wrap">
+			<slot />
+		</div>
 	</main>
 
 	<footer class="ef-shell-foot">

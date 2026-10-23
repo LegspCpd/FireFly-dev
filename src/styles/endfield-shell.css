@@ -136,3 +136,28 @@
 /* 分页条（新架构自绘，不用主题 Pagination） */
 .ef-pager { display: flex; align-items: center; justify-content: center; gap: 1rem; padding-block: clamp(1.5rem, 4vw, 2.5rem); }
 .ef-pager .ef-field { color: var(--ef-ink-2); font-variant-numeric: tabular-nums; }
+
+/* ===== 兼容层：旧页面里的主题类，在新壳里统一成官网面板 =====
+   迁完之后这些类会逐步消失，此处保证过渡期不出现主题样式残留。 */
+#ef-main .card-base {
+  background: color-mix(in srgb, var(--ef-panel) 92%, transparent) !important;
+  border: 1px solid var(--ef-rule) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin-block: 0 !important;
+}
+#ef-main .card-base + .card-base { margin-top: 0.75rem !important; }
+#ef-main [class*="rounded-"] { border-radius: 0 !important; }
+
+/* 官网式奶白内容页：正文以浅色纸张呈现，配信号黄页头 */
+.ef-sheet {
+  background: #f2f1ec;
+  color: #141414;
+  border-top: 6px solid var(--ef-signal);
+  padding: clamp(1.25rem, 4vw, 3rem);
+}
+.ef-sheet a { color: #141414; text-decoration-color: var(--ef-signal); text-decoration-thickness: 2px; }
+.ef-sheet h1, .ef-sheet h2, .ef-sheet h3 { font-family: var(--ef-font-wide); color: #141414; }
+.ef-sheet .ef-eyebrow { color: #6b6a66; }
+.ef-sheet code { background: #e4e3dd; }
+.ef-sheet blockquote { border-color: var(--ef-signal); color: #46453f; }

@@ -2,11 +2,11 @@
 import { Icon } from "astro-icon/components";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { url } from "@/utils/url-utils";
 ---
 
-<MainGridLayout title={i18n(I18nKey.notFound)} description={i18n(I18nKey.notFoundDescription)}>
+<EndfieldLayout title={i18n(I18nKey.notFound)} description={i18n(I18nKey.notFoundDescription)}>
     <meta slot="head" name="robots" content="noindex, nofollow" />
     <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-96">
         <div class="card-base z-10 px-9 py-12 relative w-full flex flex-col items-center justify-center text-center">
@@ -48,7 +48,7 @@ import { url } from "@/utils/url-utils";
             </div>
         </div>
     </div>
-</MainGridLayout>
+</EndfieldLayout>
 
 <style>
     /* 添加一些动画效果 */

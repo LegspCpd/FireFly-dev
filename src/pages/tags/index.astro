@@ -1,7 +1,7 @@
 ---
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getTagList } from "@/utils/content-utils";
 import { getTagUrl } from "@/utils/url-utils";
 
@@ -12,7 +12,7 @@ const topTags = [...tags].sort((a, b) => b.count - a.count).slice(0, 10);
 const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18nKey.postsCount)}`;
 ---
 
-<MainGridLayout title={i18n(I18nKey.tags)} description={i18n(I18nKey.allTags)}>
+<EndfieldLayout title={i18n(I18nKey.tags)} description={i18n(I18nKey.allTags)}>
     <div class="card-base p-8 md:p-10 mb-4">
         <!-- 眉标 + 页名 + 计数（官网骨架） -->
         <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// TAGS</p>
@@ -65,4 +65,4 @@ const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18
             <p class="ef-empty ef-field">{i18n(I18nKey.noData)}</p>
         )}
     </div>
-</MainGridLayout>
+</EndfieldLayout>
