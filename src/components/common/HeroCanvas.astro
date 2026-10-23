@@ -12,8 +12,9 @@ const tagTotal = allTags.length;
 ---
 
 <section id="ef-chapter-01" data-ef-hero class="ef-chapter">
-  <!-- 官网第 01 屏的整张实景主视觉（官方素材 media/01.aae95e75.png，站主同意少量使用） -->
+  <!-- 纯几何主视觉：不用任何游戏实机图与角色立绘 -->
   <div class="ef-ch-kv-bg" aria-hidden="true"></div>
+  <div class="ef-ch-figure" aria-hidden="true"><i></i><i></i><i></i></div>
   <!-- 内容容器 -->
   <div class="ef-ch-inner">
     <p class="ef-eyebrow ef-ch-eyebrow" data-replay="ef-in-power" style="--i: 0"><i aria-hidden="true"></i>// 01 HOME</p>
@@ -21,7 +22,8 @@ const tagTotal = allTags.length;
     <!-- 标题舞台：实心 + 空心 -->
     <div class="ef-ch-stage">
       <h1 class="ef-ch-title" data-replay="ef-in-power" style="--i: 1">LC BLOG</h1>
-      <p class="ef-ch-hollow" data-replay="ef-in-drive" style="animation-delay: 140ms" aria-hidden="true">LEGSPCPD BLOG</p>
+      <div class="ef-ch-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+        <p class="ef-ch-hollow" data-replay="ef-in-drive" style="animation-delay: 140ms" aria-hidden="true">LEGSPCPD BLOG</p>
     </div>
 
     <p class="ef-ch-lede" data-replay="ef-in-power" style="--i: 2">Cloudflare / EdgeOne / 自建服务 —— 记录配置、踩坑与取舍。</p>
@@ -50,6 +52,7 @@ const tagTotal = allTags.length;
   <p class="ef-ch-no" aria-hidden="true">01</p>
   <!-- 右侧竖向章节指示条 -->
   <p class="ef-ch-scroll ef-field" aria-hidden="true">Scroll ↓</p>
+  <div class="ef-ch-band" aria-hidden="true"><span>LegspCpd // Endfield</span><span>BLOG — 2026</span></div>
 </section>
 
 <style>
@@ -147,22 +150,6 @@ const tagTotal = allTags.length;
     background-size: 48px 48px;
   }
 
-  /* ---- 官网式满屏主视觉 ----
-     官方 .ef 章节是把实景图铺满整屏，再压一层深色渐变保证文字可读；
-     此前这里是深色底 + 一个居中面板，所以整体显得小而空。 */
-  .ef-ch-kv-bg {
-    position: absolute; inset: 0; z-index: 0;
-    background-image: url("/endfield-ui/official/no-01.png");
-    background-size: cover; background-position: 50% 42%; background-repeat: no-repeat;
-  }
-  .ef-ch-kv-bg::after {
-    content: ""; position: absolute; inset: 0;
-    background: linear-gradient(90deg,
-      color-mix(in srgb, var(--ef-paper) 96%, transparent) 0%,
-      color-mix(in srgb, var(--ef-paper) 88%, transparent) 34%,
-      color-mix(in srgb, var(--ef-paper) 46%, transparent) 66%,
-      color-mix(in srgb, var(--ef-paper) 70%, transparent) 100%);
-  }
   .ef-chapter { position: relative; }
   /* 实景铺满后，面板若还是 82% 不透明会把整张主视觉盖住（官网是把文字直接压在图上、 */
   /* 只靠左侧深色渐变保证可读）。这里降到 42% 并保留细边框与切角。 */
@@ -170,5 +157,55 @@ const tagTotal = allTags.length;
     background: color-mix(in srgb, var(--ef-panel) 42%, transparent);
     border-color: color-mix(in srgb, var(--ef-ink) 22%, transparent);
   }
+
+  /* ---- 纯几何主视觉（站主要求：不用游戏实机图与角色立绘）---- */
+  /* 实景主视觉 + 左侧深色渐变（几何色带叠在其上） */
+  .ef-ch-kv-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-image: url("/endfield-ui/official/no-01.png");
+    background-size: cover; background-position: 50% 45%;
+  }
+  .ef-ch-kv-bg::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg,
+      color-mix(in srgb, var(--ef-paper) 95%, transparent) 0%,
+      color-mix(in srgb, var(--ef-paper) 84%, transparent) 36%,
+      color-mix(in srgb, var(--ef-paper) 34%, transparent) 72%,
+      color-mix(in srgb, var(--ef-paper) 62%, transparent) 100%);
+  }
+  .ef-ch-figure { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .ef-ch-figure i { position: absolute; display: block; }
+  /* 三条斜切色带：信号黄、官方蓝、极淡描边，对应官网的黄蓝撞色 */
+  .ef-ch-figure i:nth-child(1) {
+    top: -10%; right: 6%; width: clamp(8rem, 22vw, 26rem); height: 130%;
+    background: var(--ef-signal); opacity: 0.1;
+    transform: skewX(-14deg);
+  }
+  .ef-ch-figure i:nth-child(2) {
+    top: -10%; right: 24%; width: clamp(2.5rem, 6vw, 7rem); height: 130%;
+    background: var(--ef-blue, #1d5bd8); opacity: 0.16;
+    transform: skewX(-14deg);
+  }
+  .ef-ch-figure i:nth-child(3) {
+    inset: 0;
+    background-image: linear-gradient(to right, color-mix(in srgb, var(--ef-ink) 8%, transparent) 1px, transparent 1px);
+    background-size: clamp(4rem, 8vw, 8rem) 100%;
+    opacity: 0.5;
+  }
+  /* 标题下的黄蓝双色条 */
+  .ef-ch-bar { display: flex; gap: 4px; margin: 0.9rem 0 1.1rem; }
+  .ef-ch-bar i { display: block; height: 4px; }
+  .ef-ch-bar i:nth-child(1) { width: 4.5rem; background: var(--ef-signal); }
+  .ef-ch-bar i:nth-child(2) { width: 1.75rem; background: var(--ef-blue, #1d5bd8); }
+  .ef-ch-bar i:nth-child(3) { width: 0.75rem; background: var(--ef-ink); opacity: 0.35; }
+  /* 底部信息带：整条信号黄，压一行小字（官网底部那条黄带的做法） */
+  .ef-ch-band {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.7rem clamp(1rem, 4vw, 3rem);
+    background: var(--ef-signal); color: #141414;
+    font-family: var(--ef-font-wide); font-size: clamp(0.7rem, 1vw, 0.85rem); letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .ef-ch-band span:last-child { font-variant-numeric: tabular-nums; letter-spacing: 0.06em; }
 </style>
 

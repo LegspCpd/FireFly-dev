@@ -13,8 +13,8 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
 ---
 
 <div id="ef-boot" data-ef-boot>
-  <!-- 官网加载屏的 KV 底图（素材来自官网 CDN，站主同意少量使用） -->
   <div class="ef-boot-bg" aria-hidden="true"></div>
+  <!-- 官网加载屏的 KV 底图（素材来自官网 CDN，站主同意少量使用） -->
   <div class="ef-boot-rail" aria-hidden="true"><span></span></div>
   <div class="ef-boot-brand">
     <span class="ef-boot-brand-cn">LegspCpd</span>
@@ -112,8 +112,7 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
        background-position:50%; background-repeat:no-repeat; filter:blur(8px) }
      竖屏换 bg_m.529c4e62.jpg。素材取自官网 CDN（站主同意少量使用官方素材）。 */
   #ef-boot { overflow: hidden; }
-  /* 官方那片 #fffa00 是整屏盖住的，必须压在 KV 与所有内容之上，否则会透出正文 */
-  #ef-boot.is-leaving::after { z-index: 3; }
+  /* 官网 Loading 的实景底图：cover + blur(8px)，竖屏换 bg_m */
   .ef-boot-bg {
     position: absolute; inset: -2rem; z-index: 0;
     background-image: url("/endfield-ui/official/loading-bg.jpg");
@@ -122,6 +121,12 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
   }
   @media (orientation: portrait) {
     .ef-boot-bg { background-image: url("/endfield-ui/official/loading-bg-m.jpg"); }
+  }
+  /* 官方那片 #fffa00 是整屏盖住的，必须压在 KV 与所有内容之上，否则会透出正文 */
+  #ef-boot.is-leaving::after { z-index: 3; }
+  
+  @media (orientation: portrait) {
+    
   }
 </style>
 
