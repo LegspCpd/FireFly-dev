@@ -359,3 +359,13 @@
 #ef-main.ef-light .ef-eyebrow, #ef-main.ef-light .ef-field,
 #ef-main.ef-light .ef-page-sub, #ef-main.ef-light .ef-sec-count,
 #ef-main.ef-light .ef-boot-status { color: #6b6a66 !important; }
+
+/* 友链卡片这类自定义 markup 用的是 div，上一轮的兜底没覆盖到，
+   线上实测 /friends/ 仍有 4 处 rgb(237,237,237) / oklch(0.708) 浅字压在奶白底上。 */
+#ef-main.ef-light div, #ef-main.ef-light strong, #ef-main.ef-light em,
+#ef-main.ef-light .ef-friend, #ef-main.ef-light .ef-friend * {
+  color: #141414 !important;
+}
+#ef-main.ef-light .ef-field, #ef-main.ef-light .ef-eyebrow,
+#ef-main.ef-light .ef-page-sub, #ef-main.ef-light .ef-sec-count,
+#ef-main.ef-light .ef-friend-desc { color: #6b6a66 !important; }
