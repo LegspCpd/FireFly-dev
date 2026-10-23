@@ -1024,3 +1024,24 @@ html body {
   --font-sans: var(--ef-font-sans) !important;
   font-family: var(--ef-font-sans);
 }
+
+/* ==== 53) 页脚：官网式 ==== 
+   主题页脚是虚线分隔 + 居中细字。官网的做法是一条实线，线上压一段信号黄。
+   这里不动 Footer.astro 的结构，只在视觉层替换。 */
+.site-footer {
+  position: relative;
+  border-top: 1px solid var(--ef-rule);
+}
+.site-footer::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 6rem;
+  height: 3px;
+  background: var(--ef-signal);
+}
+/* 主题那条虚线分隔与它重复，去掉 */
+.site-footer .border-dashed {
+  display: none !important;
+}
