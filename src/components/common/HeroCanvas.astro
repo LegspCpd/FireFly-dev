@@ -153,9 +153,11 @@ const tagTotal = allTags.length;
   .ef-chapter { position: relative; }
   /* 实景铺满后，面板若还是 82% 不透明会把整张主视觉盖住（官网是把文字直接压在图上、 */
   /* 只靠左侧深色渐变保证可读）。这里降到 42% 并保留细边框与切角。 */
+  /* 官网首页的文字是直接压在实景上的，没有盒子；靠左侧渐变保证可读即可。 */
   .ef-ch-inner {
-    background: color-mix(in srgb, var(--ef-panel) 42%, transparent);
-    border-color: color-mix(in srgb, var(--ef-ink) 22%, transparent);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
   }
 
   /* ---- 纯几何主视觉（站主要求：不用游戏实机图与角色立绘）---- */
