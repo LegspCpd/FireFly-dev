@@ -189,3 +189,7 @@
 .ef-sheet .ef-eyebrow { color: #6b6a66; }
 .ef-sheet code { background: #e4e3dd; }
 .ef-sheet blockquote { border-color: var(--ef-signal); color: #46453f; }
+
+/* 竖排栏已承担全站导航，顶栏的横向导航重复，去掉，只留品牌与动作区 */
+.ef-header-nav { display: none !important; }
+.ef-header-inner { justify-content: space-between; }
