@@ -1018,6 +1018,9 @@ h1, h2, h3, h4,
    main.css 在 body 上定义 --font-sans: 'Saira'…，且它的加载顺序在 endfield.css 之后，
    所以 :root 上的同名校量赢不了（实测 body 计算值仍是 Saira）。用 html body 提一级特异性。 */
 html body {
-  --font-sans: var(--ef-font-sans);
+  /* 变量级 !important：主题在某些内层元素上挂了 font-sans 工具类，
+     只改 body 的 font-family 会被内层类覆盖（实测正文仍是 Saira）。
+     直接压住变量本身，内层 resolve 出来就是官网字体。 */
+  --font-sans: var(--ef-font-sans) !important;
   font-family: var(--ef-font-sans);
 }
