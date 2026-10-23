@@ -268,5 +268,5 @@
 /* 版本章与标题的行距、以及去掉与右下卡片簇重复的入口面板 */
 .ef-ch-ver { margin-bottom: 0.75rem; }
 .ef-ch-title { margin-top: 0.1rem !important; }
-.ef-ch-kv { display: none !important; }
+.ef-ch-panel { display: none !important; }  /* 入口面板与右下卡片簇重复 */
 .ef-ch-facts { margin-top: 1rem; }
