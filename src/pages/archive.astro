@@ -1,22 +1,21 @@
 ---
-import PostPage from "@components/layout/PostPage.astro";
-import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import EndfieldPostGrid from "@components/layout/EndfieldPostGrid.astro";
+import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getSortedPosts } from "@/utils/content-utils";
 
-// 站主要求：文章页做成 2x.nz/blog 那种封面卡片网格。
-// 不复用归档面板（年份时间线），直接接主题自带的 PostPage —— 它只依赖 page.data，
-// 传一个含 data 的对象即可，卡片、封面、日期、标签、网格列数全部沿用主题实现。
+// 新架构：整页由 EndfieldLayout + 官网式区块构成，不再经过 MainGridLayout / PostPage / 侧边栏。
 const posts = await getSortedPosts();
 ---
 
-<MainGridLayout title={i18n(I18nKey.archive)} description="博客文章列表 - 封面卡片网格，按时间倒序浏览全部文章">
-  <!-- 官网骨架：眉标 + 页名 + 副字段（此前这一页是唯一没有页头的） -->
-  <div class="card-base p-8 md:p-10 mb-4">
-    <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// ARCHIVE</p>
-    <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{i18n(I18nKey.archive)}</h1>
-    <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">{posts.length} 篇文章 · 按时间倒序</p>
-  </div>
-  <PostPage page={{ data: posts }} />
-</MainGridLayout>
+<EndfieldLayout title="归档" description="全部文章，按时间倒序">
+	<div class="ef-wrap">
+		<section class="ef-sec">
+			<div class="ef-sec-head">
+				<p class="ef-eyebrow" data-replay="ef-in-power">// ARCHIVE</p>
+				<h1 class="ef-sec-title" data-replay="ef-in-power" style="--i: 1">归档</h1>
+				<p class="ef-sec-count ef-field" data-replay="ef-in-power" style="--i: 2">{posts.length} 篇文章</p>
+			</div>
+			<EndfieldPostGrid posts={posts} columns={3} />
+		</section>
+	</div>
+</EndfieldLayout>

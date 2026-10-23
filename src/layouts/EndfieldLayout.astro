@@ -1,0 +1,65 @@
+---
+import BootScreen from "@components/common/BootScreen.astro";
+import EfHeader from "@components/common/EfHeader.astro";
+import "@/styles/endfield-shell.css";
+import Layout from "./Layout.astro";
+
+interface Props {
+	title?: string;
+	description?: string;
+	lang?: string;
+	setOGTypeArticle?: boolean;
+	postSlug?: string;
+	postCoverImage?: string;
+	ogImageWidth?: number;
+	ogImageHeight?: number;
+	ogImageAlt?: string;
+	skipBreadcrumbStructuredData?: boolean;
+}
+
+const {
+	title,
+	description,
+	lang,
+	setOGTypeArticle,
+	postSlug,
+	postCoverImage,
+	ogImageWidth,
+	ogImageHeight,
+	ogImageAlt,
+	skipBreadcrumbStructuredData,
+} = Astro.props;
+---
+
+<Layout
+	title={title}
+	description={description}
+	lang={lang}
+	setOGTypeArticle={setOGTypeArticle}
+	postSlug={postSlug}
+	postCoverImage={postCoverImage}
+	ogImageWidth={ogImageWidth}
+	ogImageHeight={ogImageHeight}
+	ogImageAlt={ogImageAlt}
+	skipBreadcrumbStructuredData={skipBreadcrumbStructuredData}
+>
+	<slot slot="head" name="head" />
+	<BootScreen />
+	<EfHeader />
+	<main id="ef-main" class="ef-shell-main">
+		<slot />
+	</main>
+	<footer class="ef-shell-foot">
+		<div class="ef-wrap ef-shell-foot-inner">
+			<p class="ef-shell-mark">LegspCpd<span>// BLOG</span></p>
+			<ul class="ef-shell-links">
+				<li><a href="/archive/">文章</a></li>
+				<li><a href="/categories/">分类</a></li>
+				<li><a href="/tags/">标签</a></li>
+				<li><a href="/series/">系列</a></li>
+				<li><a href="/about/">关于</a></li>
+			</ul>
+			<p class="ef-shell-meta">&copy; {new Date().getFullYear()} LegspCpd</p>
+		</div>
+	</footer>
+</Layout>

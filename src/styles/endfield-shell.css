@@ -1,0 +1,89 @@
+/* ===== endfield-shell.css =====
+   新架构的页面骨架：区块、容器、卡片网格、页脚。
+   刻意不依赖 MainGridLayout / 侧边栏 / 主题卡片体系。 */
+
+.ef-shell-main {
+  display: block;
+  width: 100%;
+  min-height: 60vh;
+  padding-top: clamp(1.5rem, 4vw, 3rem);
+}
+
+.ef-wrap {
+  width: min(96rem, 100%);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 3rem);
+}
+
+/* 区块：官网那种「一条细线一段内容」的节奏 */
+.ef-sec {
+  padding-block: clamp(2rem, 5vw, 4rem);
+  border-top: 1px solid var(--ef-rule);
+}
+.ef-sec:first-child { border-top: 0; padding-top: clamp(1rem, 2vw, 1.5rem); }
+
+.ef-sec-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.25rem;
+  margin-bottom: clamp(1.25rem, 3vw, 2.25rem);
+}
+.ef-sec-title {
+  margin: 0;
+  font-family: var(--ef-font-wide);
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--ef-ink);
+}
+.ef-sec-count {
+  margin-inline-start: auto;
+  color: var(--ef-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 卡片网格：新卡片，不用主题 PostCard */
+.ef-grid { display: grid; gap: clamp(0.75rem, 1.4vw, 1.25rem); grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr)); }
+.ef-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ef-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .ef-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) {
+  .ef-grid-3, .ef-grid-2, .ef-grid { grid-template-columns: 1fr; }
+}
+
+.ef-post {
+  position: relative;
+  border: 1px solid var(--ef-rule);
+  border-top: 6px solid var(--ef-signal);
+  background: color-mix(in srgb, var(--ef-panel) 86%, transparent);
+  transition: border-color 0.2s, background-color 0.2s, transform 0.2s;
+}
+.ef-post:nth-child(3n + 2) { border-top-color: var(--ef-ink); }
+.ef-post:nth-child(3n + 3) { border-top-color: var(--ef-chip); }
+.ef-post:hover { border-color: var(--ef-ink-2); background: color-mix(in srgb, var(--ef-panel) 96%, transparent); transform: translateY(-2px); }
+.ef-post-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  color: inherit;
+  text-decoration: none;
+}
+.ef-post-date { margin: 0; color: var(--ef-ink-2); font-variant-numeric: tabular-nums; }
+.ef-post-title { margin: 0; font-family: var(--ef-font-wide); font-size: clamp(1.05rem, 1.5vw, 1.3rem); line-height: 1.3; color: var(--ef-ink); }
+.ef-post-link:hover .ef-post-title { color: var(--ef-signal); }
+.ef-post-desc { margin: 0; color: var(--ef-ink-2); line-height: 1.65; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ef-post-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: auto 0 0; padding: 0; list-style: none; }
+.ef-post-tags .ef-chip a { color: inherit; text-decoration: none; }
+
+/* 页脚 */
+.ef-shell-foot { border-top: 1px solid var(--ef-rule); margin-top: clamp(3rem, 8vw, 6rem); padding-block: clamp(1.5rem, 3vw, 2.5rem); }
+.ef-shell-foot-inner { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem 1.5rem; }
+.ef-shell-mark { margin: 0; font-family: var(--ef-font-wide); font-size: 1.15rem; letter-spacing: 0.01em; }
+.ef-shell-mark span { color: var(--ef-signal); margin-inline-start: 0.35rem; }
+.ef-shell-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0; padding: 0; list-style: none; }
+.ef-shell-links a { color: var(--ef-ink-2); text-decoration: none; }
+.ef-shell-links a:hover { color: var(--ef-signal); }
+.ef-shell-meta { margin: 0; margin-inline-start: auto; color: var(--ef-ink-2); }

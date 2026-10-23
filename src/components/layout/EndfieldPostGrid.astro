@@ -1,0 +1,25 @@
+---
+import EndfieldPostCard from "./EndfieldPostCard.astro";
+import { getPostUrlBySlug } from "@/utils/url-utils";
+
+interface Props {
+	posts: any[];
+	columns?: 2 | 3;
+}
+
+const { posts, columns = 3 } = Astro.props;
+const gridClass = columns === 3 ? "ef-grid ef-grid-3" : columns === 2 ? "ef-grid ef-grid-2" : "ef-grid";
+---
+
+<div class={gridClass}>
+	{posts.map((post) => (
+		<EndfieldPostCard
+			url={getPostUrlBySlug(post.id)}
+			title={post.data.title}
+			published={post.data.published}
+			description={post.data.description}
+			tags={post.data.tags}
+			category={post.data.category}
+		/>
+	))}
+</div>
