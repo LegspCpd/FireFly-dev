@@ -346,4 +346,16 @@
 .ef-rail-social { display: flex; gap: 0.3rem; padding: 0 0.7rem 0.7rem; }
 .ef-rail-social i { width: 1.15rem; height: 1.15rem; border: 1px solid rgba(0, 0, 0, 0.18); }
 .ef-rail-social i:hover { background: var(--ef-signal); border-color: var(--ef-signal); }
-@media (max-width: 1400px) { .ef-rail { width: 3.6rem; } .ef-rail-label, .ef-rail-social { display: none; } }
+@media (max-width: 1150px) { .ef-rail { width: 3.6rem; } .ef-rail-label, .ef-rail-social { display: none; } }
+
+/* 兜底：无论谁把 --ef-ink 写在链路上，浅色页一律压回深色。
+   （前两轮用普通权重没压过，线上实测仍是 237,237,237 落在白卡上） */
+#ef-main.ef-light a, #ef-main.ef-light .ef-ledger a,
+#ef-main.ef-light .ef-page-list a, #ef-main.ef-light .ef-ledger li a,
+#ef-main.ef-light li, #ef-main.ef-light p, #ef-main.ef-light span,
+#ef-main.ef-light h1, #ef-main.ef-light h2, #ef-main.ef-light h3 {
+  color: #141414 !important;
+}
+#ef-main.ef-light .ef-eyebrow, #ef-main.ef-light .ef-field,
+#ef-main.ef-light .ef-page-sub, #ef-main.ef-light .ef-sec-count,
+#ef-main.ef-light .ef-boot-status { color: #6b6a66 !important; }
