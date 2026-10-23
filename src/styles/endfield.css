@@ -1013,3 +1013,11 @@ h1, h2, h3, h4,
 .ef-hollow-no, .ef-bar-title, .ef-wordmark, .ef-section-title {
   font-family: var(--ef-font-wide);
 }
+
+/* 52) 正文也换成官网 Gilroy
+   main.css 在 body 上定义 --font-sans: 'Saira'…，且它的加载顺序在 endfield.css 之后，
+   所以 :root 上的同名校量赢不了（实测 body 计算值仍是 Saira）。用 html body 提一级特异性。 */
+html body {
+  --font-sans: var(--ef-font-sans);
+  font-family: var(--ef-font-sans);
+}
