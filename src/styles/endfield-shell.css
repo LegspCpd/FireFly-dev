@@ -99,7 +99,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: 3.4rem;
+  width: 12.5rem;
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-left: 0;
@@ -107,7 +107,7 @@
   color: #141414;
   transition: width 0.22s cubic-bezier(0.2, 0, 0, 1);
 }
-.ef-rail:hover { width: 11.5rem; }
+.ef-rail { border-left: 3px solid var(--ef-signal); }
 .ef-rail-logo {
   display: grid;
   place-items: center;
@@ -137,12 +137,7 @@
 .ef-rail-item:hover { color: #141414; background: #e8e8e5; }
 .ef-rail-item.is-on { color: #141414; background: #dededb; }
 .ef-rail-item.is-on svg { stroke-width: 2.1; }
-.ef-rail-label {
-  font-size: 0.82rem;
-  letter-spacing: 0.02em;
-  opacity: 0;
-  transition: opacity 0.18s;
-}
+.ef-rail-label { font-size: 0.84rem; letter-spacing: 0.02em; }
 .ef-rail:hover .ef-rail-label { opacity: 1; }
 .ef-rail-sep { height: 1px; margin: 0.35rem 0.7rem; background: rgba(0, 0, 0, 0.1); }
 .ef-rail-cta {
@@ -157,8 +152,7 @@
   letter-spacing: 0.1em;
   text-decoration: none;
 }
-.ef-rail-cta span { writing-mode: vertical-rl; }
-.ef-rail:hover .ef-rail-cta span { writing-mode: horizontal-tb; }
+.ef-rail-cta span { letter-spacing: 0.18em; }
 @media (max-width: 900px) { .ef-rail { display: none; } }
 
 /* 分页条（新架构自绘，不用主题 Pagination） */
@@ -346,3 +340,10 @@
 #ef-main.ef-light .ef-field,
 #ef-main.ef-light .ef-page-sub,
 #ef-main.ef-light .ef-sec-count { color: #6b6a66; }
+
+/* 底部组与社交方块（对照官网那条：底部一组次级入口 + 黑 CTA + 一排小方块） */
+.ef-rail-foot { display: flex; flex-direction: column; margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px solid rgba(0, 0, 0, 0.1); }
+.ef-rail-social { display: flex; gap: 0.3rem; padding: 0 0.7rem 0.7rem; }
+.ef-rail-social i { width: 1.15rem; height: 1.15rem; border: 1px solid rgba(0, 0, 0, 0.18); }
+.ef-rail-social i:hover { background: var(--ef-signal); border-color: var(--ef-signal); }
+@media (max-width: 1400px) { .ef-rail { width: 3.6rem; } .ef-rail-label, .ef-rail-social { display: none; } }
