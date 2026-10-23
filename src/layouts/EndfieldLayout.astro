@@ -118,11 +118,11 @@ const rail = [
 		<div class="ef-rail-social" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 	</nav>
 
+	<div id="swup-container">
 	<main id="ef-main" class={"ef-shell-main" + (path === "/" ? "" : " ef-light")}>
-		<div class="ef-wrap">
-			<slot />
-		</div>
+		<div class="ef-wrap"><slot /></div>
 	</main>
+</div>
 
 	<footer class="ef-shell-foot">
 		<div class="ef-wrap ef-shell-foot-inner">

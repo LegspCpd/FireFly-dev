@@ -394,3 +394,13 @@
 .ef-rail-logo { display: none !important; }
 .ef-rail-cta, .ef-rail-social { display: none !important; }
 .ef-rail { border-left: 0 !important; }
+
+/* 官网竖排栏的行为：默认只露图标，鼠标移上去才展开显示文字，移开缩回。
+   我这里做成了常显，又宽又丑，改回官网行为。 */
+.ef-rail { width: 3.6rem; }
+.ef-rail:hover { width: 12.5rem; }
+.ef-rail-label { opacity: 0; transition: opacity 0.18s; white-space: nowrap; }
+.ef-rail:hover .ef-rail-label { opacity: 1; }
+.ef-rail-foot, .ef-rail-sep { opacity: 0; transition: opacity 0.18s; }
+.ef-rail:hover .ef-rail-foot, .ef-rail:hover .ef-rail-sep { opacity: 1; }
+@media (max-width: 1150px) { .ef-rail { width: 3.2rem; } .ef-rail:hover { width: 3.2rem; } }
