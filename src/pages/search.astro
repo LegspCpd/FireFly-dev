@@ -13,7 +13,12 @@ const description = "";
     <!-- 搜索结果页不应被索引 -->
     <meta slot="head" name="robots" content="noindex, nofollow" />
     <div class="min-h-[80vh]">
-        <AdvancedSearch client:load title={title} description={description} />
+        <!-- 官网骨架：眉标 + 页名（AdvancedSearch 自身的标题传空，避免重复一层） -->
+        <div class="card-base p-8 md:p-10 mb-4">
+            <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// SEARCH</p>
+            <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{title}</h1>
+        </div>
+        <AdvancedSearch client:load title="" description="" />
     </div>
 </MainGridLayout>
 

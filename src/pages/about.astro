@@ -31,6 +31,10 @@ const jsonLd = buildProfilePage({
     <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full ">
+            <!-- 官网骨架：眉标 + 页名 + 副字段（与 categories / tags / friends 同一套） -->
+            <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// ABOUT</p>
+            <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{i18n(I18nKey.about)}</h1>
+            <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">{profileConfig.bio}</p>
             <Markdown class="mt-2">
                 <Content />
             </Markdown>
