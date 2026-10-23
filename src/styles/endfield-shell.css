@@ -317,3 +317,7 @@
 .ef-light .ef-pager .ef-btn { background: #141414; color: var(--ef-signal); }
 .ef-light .ef-shell-foot { border-top-color: rgba(0, 0, 0, 0.1); }
 .ef-light .ef-shell-links a, .ef-light .ef-shell-meta { color: #6b6a66; }
+
+/* 页脚在 main 之外，浅色页也要跟着转浅，否则底部会突然出现一大块深色 */
+.ef-light + .ef-shell-foot { background: #f2f1ec; }
+.ef-light + .ef-shell-foot .ef-shell-mark { color: #141414; }
