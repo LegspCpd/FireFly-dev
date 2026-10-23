@@ -404,3 +404,25 @@
 .ef-rail-foot, .ef-rail-sep { opacity: 0; transition: opacity 0.18s; }
 .ef-rail:hover .ef-rail-foot, .ef-rail:hover .ef-rail-sep { opacity: 1; }
 @media (max-width: 1150px) { .ef-rail { width: 3.2rem; } .ef-rail:hover { width: 3.2rem; } }
+
+/* 官网首页背景是两层（照 index.html 的用法，不是我瞎选图）：
+   底：blurred_logo.*.png 全屏铺满并模糊 —— 铺氛围
+   上：01.aae95e75.png 角色原图 contain 靠右 —— 完整显示不裁切
+   我之前把 01.png 直接 cover 铺满，结果裁出来的全是工业场景，人看不见。 */
+.ef-ch-kv-bg {
+  background-image: url("/endfield-ui/official/blurred_logo.png") !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  filter: blur(2px) brightness(0.85);
+}
+.ef-ch-kv-art {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image: url("/endfield-ui/official/01.png");
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  background-size: contain;
+  pointer-events: none;
+}
+.ef-ch-inner { position: relative; z-index: 2; }
