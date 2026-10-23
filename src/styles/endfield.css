@@ -1045,20 +1045,3 @@ html body {
 .site-footer .border-dashed {
   display: none !important;
 }
-
-/* ==== 54) 官网实测色板（从 css/*.css 统计，不猜）====
-   #191919 暗底 87 次 / #fffa00 信号黄 58 / #35373c 深灰蓝 15 /
-   #f2f2f2 纸张 13 / #e5e5e5 浅边 13 / #00ffa2 绿 9 / #ff1aac 品红 6 / #999 #d9d9d9 #666 灰阶 */
-:root {
-  --ef-paper: #191919;
-  --ef-panel: #232323;
-  --ef-rule: #35373c;
-  --ef-ink2: #999999;
-  --ef-chip: #333333;
-  --ef-accent2: #00ffa2;
-  --ef-accent3: #ff1aac;
-  --ef-paper-light: #f2f2f2;
-  --ef-line-light: #e5e5e5;
-  --ef-ink-light: #191919;
-  --ef-ink-light2: #666666;
-}

@@ -101,10 +101,10 @@
   align-items: stretch;
   width: 12.5rem;
   overflow: hidden;
-  border: 1px solid var(--ef-line-light, #e5e5e5);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-left: 0;
-  background: var(--ef-paper-light, #f2f2f2);
-  color: #191919;
+  background: #f4f4f2;
+  color: #141414;
   transition: width 0.22s cubic-bezier(0.2, 0, 0, 1);
 }
 .ef-rail { border-left: 3px solid var(--ef-signal); }
@@ -112,7 +112,7 @@
   display: grid;
   place-items: center;
   height: 3.4rem;
-  background: #191919;
+  background: #141414;
   color: #fff;
   font-family: var(--ef-font-wide);
   font-size: 0.72rem;
@@ -128,24 +128,24 @@
   gap: 0.85rem;
   height: 3.1rem;
   padding-left: 0.95rem;
-  color: #999;
+  color: #8a8a86;
   text-decoration: none;
   white-space: nowrap;
   transition: color 0.16s, background-color 0.16s;
 }
 .ef-rail-item svg { flex: none; width: 1.15rem; height: 1.15rem; }
-.ef-rail-item:hover { color: #191919; background: #e5e5e5; }
-.ef-rail-item.is-on { color: #191919; background: #d9d9d9; }
+.ef-rail-item:hover { color: #141414; background: #e8e8e5; }
+.ef-rail-item.is-on { color: #141414; background: #dededb; }
 .ef-rail-item.is-on svg { stroke-width: 2.1; }
 .ef-rail-label { font-size: 0.84rem; letter-spacing: 0.02em; }
 .ef-rail:hover .ef-rail-label { opacity: 1; }
-.ef-rail-sep { height: 1px; margin: 0.35rem 0.7rem; background: var(--ef-line-light, #e5e5e5); }
+.ef-rail-sep { height: 1px; margin: 0.35rem 0.7rem; background: rgba(0, 0, 0, 0.1); }
 .ef-rail-cta {
   display: grid;
   place-items: center;
   margin: 0.6rem 0.55rem 0.75rem;
   min-height: 4.5rem;
-  background: #191919;
+  background: #141414;
   color: var(--ef-signal);
   font-family: var(--ef-font-wide);
   font-size: 0.78rem;
@@ -173,16 +173,16 @@
 
 /* 官网式奶白内容页：正文以浅色纸张呈现，配信号黄页头 */
 .ef-sheet {
-  background: var(--ef-paper-light, #f2f2f2);
-  color: #191919;
+  background: #f2f1ec;
+  color: #141414;
   border-top: 6px solid var(--ef-signal);
   padding: clamp(1.25rem, 4vw, 3rem);
 }
-.ef-sheet a { color: #191919; text-decoration-color: var(--ef-signal); text-decoration-thickness: 2px; }
-.ef-sheet h1, .ef-sheet h2, .ef-sheet h3 { font-family: var(--ef-font-wide); color: #191919; }
-.ef-sheet .ef-eyebrow { color: var(--ef-ink-light2, #666); }
-.ef-sheet code { background: #e5e5e5; }
-.ef-sheet blockquote { border-color: var(--ef-signal); color: #35373c; }
+.ef-sheet a { color: #141414; text-decoration-color: var(--ef-signal); text-decoration-thickness: 2px; }
+.ef-sheet h1, .ef-sheet h2, .ef-sheet h3 { font-family: var(--ef-font-wide); color: #141414; }
+.ef-sheet .ef-eyebrow { color: #6b6a66; }
+.ef-sheet code { background: #e4e3dd; }
+.ef-sheet blockquote { border-color: var(--ef-signal); color: #46453f; }
 
 /* 竖排栏已承担全站导航，顶栏的横向导航重复，去掉，只留品牌与动作区 */
 .ef-header-nav { display: none !important; }
@@ -227,7 +227,7 @@
   gap: 0.4rem;
   margin-bottom: 0.9rem;
   padding: 0.28rem 0.6rem;
-  background: var(--ef-accent2, #00ffa2);
+  background: var(--ef-blue, #1d5bd8);
   color: #fff;
   font-family: var(--ef-font-wide);
   font-size: 0.72rem;
@@ -248,7 +248,7 @@
   min-width: 5.6rem;
   padding: 0.8rem 0.9rem;
   border: 1px solid color-mix(in srgb, var(--ef-ink) 22%, transparent);
-  background: color-mix(in srgb, #191919 78%, transparent);
+  background: color-mix(in srgb, #141414 78%, transparent);
   color: var(--ef-ink);
   font-family: var(--ef-font-wide);
   font-size: 0.78rem;
@@ -292,34 +292,34 @@
 
 /* ===== 内页浅色纸张（官网 operator 页基调）=====
    首页是实景暗底，其余页面走奶白纸张 + 深色字 + 信号黄分隔。 */
-.ef-light { background: var(--ef-paper-light, #f2f2f2); color: #191919; }
-.ef-light .ef-sec { border-top-color: var(--ef-line-light, #e5e5e5); }
-.ef-light .ef-sec-title, .ef-light .ef-page-name, .ef-light .ef-post-title { color: #191919; }
-.ef-light .ef-eyebrow { color: var(--ef-ink-light2, #666); }
-.ef-light .ef-field, .ef-light .ef-sec-count { color: var(--ef-ink-light2, #666); }
+.ef-light { background: #f2f1ec; color: #141414; }
+.ef-light .ef-sec { border-top-color: rgba(0, 0, 0, 0.1); }
+.ef-light .ef-sec-title, .ef-light .ef-page-name, .ef-light .ef-post-title { color: #141414; }
+.ef-light .ef-eyebrow { color: #6b6a66; }
+.ef-light .ef-field, .ef-light .ef-sec-count { color: #6b6a66; }
 /* 权重必须高过兼容层的 #ef-main .card-base，否则深字压暗卡读不了 */
 #ef-main.ef-light .card-base {
   background: #fff !important;
-  border: 1px solid var(--ef-line-light, #e5e5e5) !important;
-  color: #191919 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #141414 !important;
 }
-.ef-light a { color: #191919; }
-.ef-light .ef-ledger li { border-color: var(--ef-line-light, #e5e5e5); }
-.ef-light .ef-chip { background: #e5e5e5; color: #191919; }
-.ef-light .ef-post { background: #fff; border-color: var(--ef-line-light, #e5e5e5); }
-.ef-light .ef-post-title { color: #191919; }
-.ef-light .ef-post-desc, .ef-light .ef-post-date { color: var(--ef-ink-light2, #666); }
-.ef-light .ef-pager .ef-btn { background: #191919; color: var(--ef-signal); }
-.ef-light .ef-shell-foot { border-top-color: var(--ef-line-light, #e5e5e5); }
-.ef-light .ef-shell-links a, .ef-light .ef-shell-meta { color: var(--ef-ink-light2, #666); }
+.ef-light a { color: #141414; }
+.ef-light .ef-ledger li { border-color: rgba(0, 0, 0, 0.1); }
+.ef-light .ef-chip { background: #e6e5e0; color: #141414; }
+.ef-light .ef-post { background: #fff; border-color: rgba(0, 0, 0, 0.08); }
+.ef-light .ef-post-title { color: #141414; }
+.ef-light .ef-post-desc, .ef-light .ef-post-date { color: #5f5e59; }
+.ef-light .ef-pager .ef-btn { background: #141414; color: var(--ef-signal); }
+.ef-light .ef-shell-foot { border-top-color: rgba(0, 0, 0, 0.1); }
+.ef-light .ef-shell-links a, .ef-light .ef-shell-meta { color: #6b6a66; }
 
 /* 页脚在 main 之外，浅色页也要跟着转浅，否则底部会突然出现一大块深色 */
-.ef-light + .ef-shell-foot { background: var(--ef-paper-light, #f2f2f2); }
-.ef-light + .ef-shell-foot .ef-shell-mark { color: #191919; }
+.ef-light + .ef-shell-foot { background: #f2f1ec; }
+.ef-light + .ef-shell-foot .ef-shell-mark { color: #141414; }
 
-#ef-main.ef-light .card-base a { color: #191919; }
+#ef-main.ef-light .card-base a { color: #141414; }
 #ef-main.ef-light .card-base h1, #ef-main.ef-light .card-base h2,
-#ef-main.ef-light .card-base h3 { color: #191919; }
+#ef-main.ef-light .card-base h3 { color: #141414; }
 
 /* 浅色页里任何还在用暗色主题文字色的元素都要拉回深色，
    否则会出现「浅字压白卡」（分类/标签页的账目表就是这样）。 */
@@ -334,17 +334,17 @@
 #ef-main.ef-light span,
 #ef-main.ef-light li,
 #ef-main.ef-light h1, #ef-main.ef-light h2, #ef-main.ef-light h3, #ef-main.ef-light h4 {
-  color: #191919;
+  color: #141414;
 }
 #ef-main.ef-light .ef-eyebrow,
 #ef-main.ef-light .ef-field,
 #ef-main.ef-light .ef-page-sub,
-#ef-main.ef-light .ef-sec-count { color: var(--ef-ink-light2, #666); }
+#ef-main.ef-light .ef-sec-count { color: #6b6a66; }
 
 /* 底部组与社交方块（对照官网那条：底部一组次级入口 + 黑 CTA + 一排小方块） */
-.ef-rail-foot { display: flex; flex-direction: column; margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px solid var(--ef-line-light, #e5e5e5); }
+.ef-rail-foot { display: flex; flex-direction: column; margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px solid rgba(0, 0, 0, 0.1); }
 .ef-rail-social { display: flex; gap: 0.3rem; padding: 0 0.7rem 0.7rem; }
-.ef-rail-social i { width: 1.15rem; height: 1.15rem; border: 1px solid #d9d9d9; }
+.ef-rail-social i { width: 1.15rem; height: 1.15rem; border: 1px solid rgba(0, 0, 0, 0.18); }
 .ef-rail-social i:hover { background: var(--ef-signal); border-color: var(--ef-signal); }
 @media (max-width: 1150px) { .ef-rail { width: 3.6rem; } .ef-rail-label, .ef-rail-social { display: none; } }
 
@@ -354,18 +354,18 @@
 #ef-main.ef-light .ef-page-list a, #ef-main.ef-light .ef-ledger li a,
 #ef-main.ef-light li, #ef-main.ef-light p, #ef-main.ef-light span,
 #ef-main.ef-light h1, #ef-main.ef-light h2, #ef-main.ef-light h3 {
-  color: #191919 !important;
+  color: #141414 !important;
 }
 #ef-main.ef-light .ef-eyebrow, #ef-main.ef-light .ef-field,
 #ef-main.ef-light .ef-page-sub, #ef-main.ef-light .ef-sec-count,
-#ef-main.ef-light .ef-boot-status { color: var(--ef-ink-light2, #666) !important; }
+#ef-main.ef-light .ef-boot-status { color: #6b6a66 !important; }
 
 /* 友链卡片这类自定义 markup 用的是 div，上一轮的兜底没覆盖到，
    线上实测 /friends/ 仍有 4 处 rgb(237,237,237) / oklch(0.708) 浅字压在奶白底上。 */
 #ef-main.ef-light div, #ef-main.ef-light strong, #ef-main.ef-light em,
 #ef-main.ef-light .ef-friend, #ef-main.ef-light .ef-friend * {
-  color: #191919 !important;
+  color: #141414 !important;
 }
 #ef-main.ef-light .ef-field, #ef-main.ef-light .ef-eyebrow,
 #ef-main.ef-light .ef-page-sub, #ef-main.ef-light .ef-sec-count,
-#ef-main.ef-light .ef-friend-desc { color: var(--ef-ink-light2, #666) !important; }
+#ef-main.ef-light .ef-friend-desc { color: #6b6a66 !important; }
