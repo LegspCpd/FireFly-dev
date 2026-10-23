@@ -369,3 +369,28 @@
 #ef-main.ef-light .ef-field, #ef-main.ef-light .ef-eyebrow,
 #ef-main.ef-light .ef-page-sub, #ef-main.ef-light .ef-sec-count,
 #ef-main.ef-light .ef-friend-desc { color: #6b6a66 !important; }
+
+/* ============================================================
+   仿官网的装饰一律下架（用户规则：能用就用，不能用就空着）
+   以下这些是照着官网抄的装饰，抄不像就成了负担，全部关掉，
+   页面只留「内容 + 导航 + 页脚」这三样能用的东西。
+   ============================================================ */
+.ef-ch-bar,          /* 黄蓝撞色条 */
+.ef-ch-band,         /* 底部信号黄信息带 */
+.ef-ch-ver,          /* 核心记录版本章 */
+.ef-ch-figure,       /* 斜切几何色带 */
+.ef-ch-cards,        /* 右下卡片簇 */
+.ef-ch-marker,       /* 角标 */
+.ef-ch-hollow,       /* 空心叠字 */
+.ef-ch-no {          /* // 01 HOME 编号 */
+  display: none !important;
+}
+/* 主视觉只剩：底图 + 标题 + 一句说明 + 计数 */
+.ef-ch-inner { padding-block: clamp(3rem, 14vh, 9rem) !important; }
+.ef-ch-title { margin: 0 !important; }
+.ef-ch-lede { margin-top: 1rem !important; }
+.ef-ch-facts { margin-top: 1.25rem !important; }
+/* 竖排栏：保留能用的导航，去掉那个黑色 logo 方块与底部黑 CTA、社交方块 */
+.ef-rail-logo { display: none !important; }
+.ef-rail-cta, .ef-rail-social { display: none !important; }
+.ef-rail { border-left: 0 !important; }
