@@ -87,3 +87,52 @@
 .ef-shell-links a { color: var(--ef-ink-2); text-decoration: none; }
 .ef-shell-links a:hover { color: var(--ef-signal); }
 .ef-shell-meta { margin: 0; margin-inline-start: auto; color: var(--ef-ink-2); }
+
+/* 左侧竖排图标栏：官网 operator 页那条。自绘几何线框图标，不含游戏素材。 */
+.ef-rail {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  z-index: 45;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.5rem 0.35rem;
+  border: 1px solid var(--ef-rule);
+  border-left: 0;
+  background: color-mix(in srgb, var(--ef-paper) 88%, transparent);
+  backdrop-filter: blur(6px);
+}
+.ef-rail-brand {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  margin-bottom: 0.35rem;
+  background: var(--ef-signal);
+  color: #141414;
+  font-family: var(--ef-font-wide);
+  font-size: 1.05rem;
+  line-height: 1;
+  text-decoration: none;
+}
+.ef-rail-list { display: flex; flex-direction: column; gap: 0.1rem; margin: 0; padding: 0; list-style: none; }
+.ef-rail-item {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  color: var(--ef-ink-2);
+  text-decoration: none;
+  transition: color 0.16s, background-color 0.16s;
+}
+.ef-rail-item svg { width: 1.05rem; height: 1.05rem; }
+.ef-rail-item:hover { color: var(--ef-ink); background: color-mix(in srgb, var(--ef-chip) 70%, transparent); }
+.ef-rail-item.is-on { color: #141414; background: var(--ef-signal); }
+@media (max-width: 900px) { .ef-rail { display: none; } }
+
+/* 分页条（新架构自绘，不用主题 Pagination） */
+.ef-pager { display: flex; align-items: center; justify-content: center; gap: 1rem; padding-block: clamp(1.5rem, 4vw, 2.5rem); }
+.ef-pager .ef-field { color: var(--ef-ink-2); font-variant-numeric: tabular-nums; }
