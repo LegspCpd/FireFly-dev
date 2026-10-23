@@ -193,3 +193,74 @@
 /* 竖排栏已承担全站导航，顶栏的横向导航重复，去掉，只留品牌与动作区 */
 .ef-header-nav { display: none !important; }
 .ef-header-inner { justify-content: space-between; }
+
+/* ===== 顶栏：官网顶部没有导航条，只有竖排栏里的 logo 块。
+   这里把顶栏拆成「浮在右上角的控件簇」，无底色无边框。 ===== */
+.ef-header {
+  position: fixed !important;
+  top: 0;
+  left: auto !important;
+  right: 0;
+  width: auto !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  z-index: 60;
+}
+.ef-header-inner {
+  justify-content: flex-end !important;
+  gap: 0.5rem;
+  padding: 0.9rem clamp(1rem, 4vw, 3rem) !important;
+}
+/* 品牌已经在竖排栏的黑块里，顶栏不要再出现一次 */
+.ef-header-brand { display: none !important; }
+.ef-header-actions { display: flex; gap: 0.4rem; }
+.ef-header-actions > * { border-radius: 0 !important; }
+
+/* ===== 首页主视觉排版：官网那种 CJK 巨字 + 版本章 + 右下卡片簇 ===== */
+.ef-ch-title {
+  font-size: clamp(3rem, 10.5vw, 8.5rem) !important;
+  line-height: 0.88 !important;
+  letter-spacing: -0.025em !important;
+  font-weight: 800 !important;
+}
+.ef-ch-inner { padding-top: clamp(2rem, 8vw, 6rem) !important; }
+/* 版本章：官网在标题上方放一枚小方章（核心章节版本） */
+.ef-ch-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+  padding: 0.28rem 0.6rem;
+  background: var(--ef-blue, #1d5bd8);
+  color: #fff;
+  font-family: var(--ef-font-wide);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+/* 右下角卡片簇：官网首页右下是几个深色方块（下载/平台） */
+.ef-ch-cards {
+  position: absolute;
+  right: clamp(1rem, 4vw, 3rem);
+  bottom: 3.4rem;
+  z-index: 3;
+  display: flex;
+  gap: 0.5rem;
+}
+.ef-ch-cards a {
+  display: grid;
+  place-items: center;
+  min-width: 5.6rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--ef-ink) 22%, transparent);
+  background: color-mix(in srgb, #141414 78%, transparent);
+  color: var(--ef-ink);
+  font-family: var(--ef-font-wide);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  backdrop-filter: blur(4px);
+}
+.ef-ch-cards a:hover { border-color: var(--ef-signal); color: var(--ef-signal); }
+@media (max-width: 900px) { .ef-ch-cards { display: none; } }
