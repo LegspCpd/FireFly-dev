@@ -12,6 +12,8 @@ const tagTotal = allTags.length;
 ---
 
 <section id="ef-chapter-01" data-ef-hero class="ef-chapter">
+  <!-- 官网第 01 屏的整张实景主视觉（官方素材 media/01.aae95e75.png，站主同意少量使用） -->
+  <div class="ef-ch-kv-bg" aria-hidden="true"></div>
   <!-- 内容容器 -->
   <div class="ef-ch-inner">
     <p class="ef-eyebrow ef-ch-eyebrow" data-replay="ef-in-power" style="--i: 0"><i aria-hidden="true"></i>// 01 HOME</p>
@@ -54,7 +56,7 @@ const tagTotal = allTags.length;
   .ef-chapter {
     position: relative;
     background: transparent;
-    min-height: clamp(38rem, 88vh, 58rem);
+    min-height: clamp(40rem, 94vh, 66rem);
     display: flex; align-items: center;
     overflow: hidden;
     border-bottom: 1px solid var(--ef-rule);
@@ -143,6 +145,27 @@ const tagTotal = allTags.length;
       linear-gradient(to right, color-mix(in srgb, var(--ef-ink) 7%, transparent) 1px, transparent 1px),
       linear-gradient(to bottom, color-mix(in srgb, var(--ef-ink) 7%, transparent) 1px, transparent 1px);
     background-size: 48px 48px;
+  }
+
+  /* ---- 官网式满屏主视觉 ----
+     官方 .ef 章节是把实景图铺满整屏，再压一层深色渐变保证文字可读；
+     此前这里是深色底 + 一个居中面板，所以整体显得小而空。 */
+  .ef-ch-kv-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-image: url("/endfield-ui/official/no-01.png");
+    background-size: cover; background-position: 50% 42%; background-repeat: no-repeat;
+  }
+  .ef-ch-kv-bg::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg,
+      color-mix(in srgb, var(--ef-paper) 96%, transparent) 0%,
+      color-mix(in srgb, var(--ef-paper) 88%, transparent) 34%,
+      color-mix(in srgb, var(--ef-paper) 46%, transparent) 66%,
+      color-mix(in srgb, var(--ef-paper) 70%, transparent) 100%);
+  }
+  .ef-chapter { position: relative; }
+  .ef-ch-inner {
+    background: color-mix(in srgb, var(--ef-panel) 82%, transparent);
   }
 </style>
 
