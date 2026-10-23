@@ -303,7 +303,8 @@
 .ef-light .ef-sec-title, .ef-light .ef-page-name, .ef-light .ef-post-title { color: #141414; }
 .ef-light .ef-eyebrow { color: #6b6a66; }
 .ef-light .ef-field, .ef-light .ef-sec-count { color: #6b6a66; }
-.ef-light .card-base {
+/* 权重必须高过兼容层的 #ef-main .card-base，否则深字压暗卡读不了 */
+#ef-main.ef-light .card-base {
   background: #fff !important;
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
   color: #141414 !important;
@@ -321,3 +322,7 @@
 /* 页脚在 main 之外，浅色页也要跟着转浅，否则底部会突然出现一大块深色 */
 .ef-light + .ef-shell-foot { background: #f2f1ec; }
 .ef-light + .ef-shell-foot .ef-shell-mark { color: #141414; }
+
+#ef-main.ef-light .card-base a { color: #141414; }
+#ef-main.ef-light .card-base h1, #ef-main.ef-light .card-base h2,
+#ef-main.ef-light .card-base h3 { color: #141414; }
