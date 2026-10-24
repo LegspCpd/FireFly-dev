@@ -72,14 +72,18 @@ export const siteConfig: SiteConfig = {
 	// 注意：不要指向 public 下不存在的文件（曾经指向 /favicon/favicon.ico，
 	// 那里只有 PNG，导致标签图标 404、OG 图只能拿透明图兜底）。
 	favicon: [
-		{ src: "https://hub.legspcpd.top/file/1787274091485_ico.png" },
+		{ src: "/favicon.ico", sizes: "any" },
+		{ src: "/favicon-32.png", sizes: "32x32" },
+		{ src: "/apple-touch-icon.png", sizes: "180x180" },
+		{ src: "/icon-192.png", sizes: "192x192" },
+		{ src: "/icon-512.png", sizes: "512x512" },
 	],
 
 	// 导航栏配置
 	navbar: {
 		logo: {
 			type: "url",
-			value: "https://hub.legspcpd.top/file/1787274091485_ico.png",
+			value: "/lc-icon-1024.png",
 			alt: "Logo",
 		},
 		title: "LegspCpd Blog",
