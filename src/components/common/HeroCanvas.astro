@@ -1,220 +1,272 @@
 ---
 import { getSortedPosts, getTagList } from "@/utils/content-utils";
 
-// 首屏统计：构建期算真值（此前用 data-ef-count 占位但没有任何脚本去填，线上一直显示破折号）
+// 首页第 01 屏 —— 照官网首屏的骨相重做：左侧版心巨字 + 空心斜纹小字 + 一句说明 +
+// 数值行 + 官网同款按钮；右侧竖排标记。纯几何与文字，不含任何图片（站主要求先去图）。
 const [allPosts, allTags] = await Promise.all([getSortedPosts(), getTagList()]);
 const postTotal = allPosts.length;
 const tagTotal = allTags.length;
-// 首页第 01 屏 —— 按《终末地》官网第 01 章节的真实骨架重做：
-//   bg 背景层（WebGL 几何）+ 横向/纵向遮罩 + 标题舞台（实心大字 + 空心大字）
-//   + 内容容器（说明 + 字段行 + CTA 面板）；章节编号 // 01 HOME 用 skill 的眉标写法。
-//   纯几何/文字构成，不用美术图；背景与文字随主题。
+const catTotal = new Set(allPosts.map((p) => p.data.category).filter(Boolean)).size;
+const latest = allPosts[0]?.data.published ? new Date(allPosts[0].data.published) : null;
+const latestLabel = latest
+	? "+" + latest.getFullYear() + "." + String(latest.getMonth() + 1).padStart(2, "0")
+	: "持续更新";
 ---
 
-<section id="ef-chapter-01" data-ef-hero class="ef-chapter">
-  <!-- 纯几何主视觉：不用任何游戏实机图与角色立绘 -->
-  <div class="ef-ch-kv-bg" aria-hidden="true"></div>
-      <div class="ef-ch-kv-art" aria-hidden="true"></div>
-  <div class="ef-ch-figure" aria-hidden="true"><i></i><i></i><i></i></div>
-  <!-- 内容容器 -->
-  <div class="ef-ch-inner">
-    <p class="ef-eyebrow ef-ch-eyebrow" data-replay="ef-in-power" style="--i: 0"><i aria-hidden="true"></i>// 01 HOME</p>
+<section class="ef-hero">
+	<div class="ef-hero-inner">
+		<p class="ef-hero-eyebrow"><i aria-hidden="true"></i>// 01 HOME</p>
 
-    <!-- 标题舞台：实心 + 空心 -->
-    <div class="ef-ch-stage">
-      <span class="ef-ch-ver" data-replay="ef-in-power" style="--i: 0">核心记录版本</span>
-      <h1 class="ef-ch-title" data-replay="ef-in-power" style="--i: 1">自建服务记录</h1>
-        <div class="ef-ch-bar" aria-hidden="true"><i></i><i></i><i></i></div>
-        <p class="ef-ch-hollow" data-replay="ef-in-drive" style="animation-delay: 140ms" aria-hidden="true">记录配置 · 踩坑 · 取舍</p>
-    </div>
+		<h1 class="ef-hero-title">自建服务记录</h1>
+		<p class="ef-hero-hollow" aria-hidden="true">CONFIG · PITFALL · TRADEOFF</p>
 
-    <p class="ef-ch-lede" data-replay="ef-in-power" style="--i: 2">Cloudflare / EdgeOne / 自建服务 —— 记录配置、踩坑与取舍。</p>
+		<p class="ef-hero-lede">
+			Cloudflare / EdgeOne / 自建服务 —— 记录配置、踩坑与取舍。
+		</p>
 
-    <ul class="ef-facts ef-field ef-ch-facts" data-replay="ef-in-power" style="--i: 3">
-      <li><b class="ef-num" data-fx-load aria-label={String(postTotal)}>{postTotal}</b> 篇文章</li>
-      <li><b class="ef-num" data-fx-load aria-label={String(tagTotal)}>{tagTotal}</b> 个标签</li>
-      <li>持续更新中</li>
-    </ul>
+		<ul class="ef-hero-facts">
+			<li><b>{postTotal}</b><span>篇文章</span></li>
+			<li><b>{tagTotal}</b><span>个标签</span></li>
+			<li><b>{catTotal}</b><span>个分类</span></li>
+			<li><b>{latestLabel}</b><span>最近更新</span></li>
+		</ul>
 
-    <!-- 入口面板：对应官网第 01 屏的 downloader 面板（标题 + 值行 + 行动） -->
-    <div class="ef-ch-panel" data-replay="ef-in-power" style="--i: 4">
-      <div class="ef-ch-panel-head">
-        <span class="ef-field">入口</span>
-        <span class="ef-tag">3</span>
-      </div>
-      <ul class="ef-ch-kv">
-        <li><span class="ef-field">文章</span><a href="/archive/">全部文章</a></li>
-        <li><span class="ef-field">关系</span><a href="/friends/">友链</a></li>
-        <li><span class="ef-field">站点</span><a href="/about/">关于</a></li>
-      </ul>
-    </div>
-  </div>
+		<div class="ef-hero-actions">
+			<a class="ef-hero-btn" href="/archive/">
+				<span>浏览全部文章</span><i aria-hidden="true">→</i>
+			</a>
+			<a class="ef-hero-btn ef-hero-btn--ghost" href="/about/">关于本站</a>
+		</div>
+	</div>
 
-  <!-- 大号空心章节编号（官网那种空心数字） -->
-  <p class="ef-ch-no" aria-hidden="true">01</p>
-  <!-- 右侧竖向章节指示条 -->
-  <p class="ef-ch-scroll ef-field" aria-hidden="true">Scroll ↓</p>
-  <div class="ef-ch-band" aria-hidden="true"><span>LegspCpd // Endfield</span><span>BLOG — 2026</span></div>
-  <div class="ef-ch-cards">
-    <a href="/archive/">全部文章</a>
-    <a href="/categories/">分类</a>
-    <a href="/tags/">标签</a>
-  </div>
+	<div class="ef-hero-side" aria-hidden="true">
+		<p class="ef-hero-side-mark">LEGSPCPD</p>
+		<p class="ef-hero-side-scroll">SCROLL<span>↓</span></p>
+	</div>
 </section>
 
 <style>
-  .ef-chapter {
-    position: relative;
-    background: transparent;
-    min-height: clamp(40rem, 94vh, 66rem);
-    display: flex; align-items: center;
-    overflow: hidden;
-    border-bottom: 1px solid var(--ef-rule);
-  }
-  .ef-ch-bg { position: absolute; inset: 0; }
-  .ef-ch-bg canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  /* 两层遮罩：横向压暗两端、纵向压暗底部，让标题区始终干净 */
-  .ef-ch-mask-h { position: absolute; inset: 0; background: linear-gradient(90deg, var(--ef-paper) 0%, color-mix(in srgb, var(--ef-paper) 86%, transparent) 26%, transparent 52%, transparent 70%, color-mix(in srgb, var(--ef-paper) 80%, transparent) 100%); }
-  .ef-ch-mask-v { position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--ef-paper) 70%, transparent) 0%, transparent 26%, transparent 52%, var(--ef-paper) 100%); }
-  .ef-ch-inner {
-    position: relative; z-index: 1;
-    /* 文字底色：让标题区始终可读（站主反馈文字与背景重合看不清） */
-    max-width: min(92rem, 94vw);
-    margin-left: auto;
-    margin-right: auto;
-    padding: clamp(2.2rem, 4.2vw, 4rem) clamp(2rem, 4.4vw, 4.2rem);
-    /* 站主反复反馈「主视觉经常整块看不见」。实测：DOM 里每个子元素都是
-       opacity:1 / visibility:visible / 无动画 / clipPath:none、文字也在，但截图是空框 ——
-       即渲染层问题，不是样式问题。这里的 backdrop-filter 与下面的 clip-path 同时存在，
-       是 Chromium 已知的合成缺陷组合，表现恰好就是「时有时无」。
-       保留切角（终末地特征），去掉 backdrop 模糊，改用足够不透明的底色。 */
-    background: color-mix(in srgb, var(--ef-panel) 96%, transparent);
-    border: 1px solid var(--ef-rule);
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
-  }
-  .ef-ch-stage { position: relative; margin: 0.35rem 0 0.5rem; }
-  .ef-ch-title {
-    position: relative; z-index: 1;
-    margin: 0;
-    font-size: clamp(3.2rem, 9vw, 7.4rem);
-    font-weight: 800; font-stretch: 120%; line-height: 1.1; letter-spacing: -0.015em;
-    color: var(--ef-ink);
-  }
-  /* 空心大字：描边不填充，压在实心标题下方（skill：字标「实心加空心」） */
-  .ef-ch-hollow {
-    margin: 0.1rem 0 0;
-    font-size: clamp(1.5rem, 3.2vw, 2.6rem);
-    font-weight: 800; font-stretch: 125%; letter-spacing: 0.1em; line-height: 1;
-    opacity: 0.9;
-    color: transparent;
-    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--ef-ink) 55%, transparent);
-    text-stroke: 1.5px color-mix(in srgb, var(--ef-ink) 55%, transparent);
-    user-select: none;
-  }
-  .ef-ch-lede { margin: 1.15rem 0 1.2rem; font-size: clamp(1.25rem, 2.1vw, 1.75rem); line-height: 1.8; color: color-mix(in srgb, var(--ef-ink) 88%, transparent); max-width: 60rem; }
-  .ef-ch-facts { gap: 0 1.3rem; margin-top: 0.2rem; font-size: 1.2rem; }
-  .ef-ch-facts li + li::before { content: "│"; margin-right: 0.75rem; color: var(--ef-ink-2); }
-  .ef-ch-cta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.5rem; }
-  /* 四角切角标记：官网面板的标志性细节 */
-  .ef-chapter::before,
-  .ef-chapter::after {
-    content: ""; position: absolute; width: 18px; height: 18px; pointer-events: none;
-    border-color: var(--ef-signal); border-style: solid; border-width: 0; z-index: 2;
-  }
-  .ef-chapter::before { top: 14px; left: 14px; border-top-width: 2px; border-left-width: 2px; }
-  .ef-chapter::after { bottom: 18px; right: 14px; border-bottom-width: 2px; border-right-width: 2px; }
-  /* 眉标前的黄色小标记 */
-  .ef-ch-eyebrow { display: flex; align-items: center; gap: 0.5rem; }
-  .ef-ch-eyebrow > i { display: inline-block; width: 10px; height: 10px; background: var(--ef-signal); }
-  /* 大号空心章节编号 */
-  .ef-ch-no {
-    position: absolute; right: clamp(1rem, 5vw, 4rem); top: 50%; transform: translateY(-52%);
-    margin: 0; z-index: 1;
-    font-size: clamp(6rem, 19vw, 15rem); font-weight: 800; font-stretch: 125%; line-height: 0.86;
-    color: transparent; -webkit-text-stroke: 2px color-mix(in srgb, var(--ef-ink) 26%, transparent);
-    user-select: none; pointer-events: none;
-  }
-  /* 入口面板 */
-  .ef-ch-panel { margin-top: 2.1rem; max-width: 48rem; border: 1px solid var(--ef-rule); background: color-mix(in srgb, var(--ef-panel) 70%, transparent); }
-  .ef-ch-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--ef-rule); }
-  .ef-ch-kv { margin: 0; padding: 0.25rem 0; list-style: none; }
-  .ef-ch-kv li { display: grid; grid-template-columns: 4rem minmax(0, 1fr); gap: 0.75rem; align-items: baseline; padding: 0.4rem 0.8rem; border-bottom: 1px solid color-mix(in srgb, var(--ef-rule) 60%, transparent); }
-  .ef-ch-kv li:last-child { border-bottom: 0; }
-  .ef-ch-kv a { color: var(--ef-ink); text-decoration: none; font-weight: 600; }
-  .ef-ch-kv a:hover { color: var(--ef-signal); }
-  .ef-ch-scroll { position: absolute; right: clamp(1rem, 4vw, 3rem); bottom: 1.1rem; margin: 0; }
-  /* 窄屏：空心大号编号会压到正文面板上（实测 500px 宽时完全重叠）→ 直接不显示 */
-  @media (max-width: 860px) {
-    .ef-ch-no { display: none; }
-    .ef-ch-inner { margin-left: 0; }
-    .ef-ch-chapter, .ef-chapter { min-height: clamp(30rem, 76vh, 44rem); }
-  }
-  #ef-chapter-01.no-webgl .ef-ch-bg::before {
-    content: ""; position: absolute; inset: 0;
-    background-image:
-      linear-gradient(to right, color-mix(in srgb, var(--ef-ink) 7%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in srgb, var(--ef-ink) 7%, transparent) 1px, transparent 1px);
-    background-size: 48px 48px;
-  }
+	.ef-hero {
+		position: relative;
+		min-height: calc(100dvh - 2px);
+		display: flex;
+		align-items: center;
+		overflow: hidden;
+		background: #191919;
+		color: #f2f2f2;
+		border-bottom: 1px solid #35373c;
+	}
 
-  .ef-chapter { position: relative; }
-  /* 实景铺满后，面板若还是 82% 不透明会把整张主视觉盖住（官网是把文字直接压在图上、 */
-  /* 只靠左侧深色渐变保证可读）。这里降到 42% 并保留细边框与切角。 */
-  /* 官网首页的文字是直接压在实景上的，没有盒子；靠左侧渐变保证可读即可。 */
-  .ef-ch-inner {
-    background: transparent;
-    border-color: transparent;
-    box-shadow: none;
-  }
+	.ef-hero-inner {
+		position: relative;
+		z-index: 2;
+		width: 100%;
+		max-width: calc(96 * var(--efu));
+		margin-inline: auto;
+		padding: calc(8 * var(--efu)) calc(4 * var(--efu)) calc(6 * var(--efu));
+	}
 
-  /* ---- 纯几何主视觉（站主要求：不用游戏实机图与角色立绘）---- */
-  /* 实景主视觉 + 左侧深色渐变（几何色带叠在其上） */
-  .ef-ch-kv-bg {
-    position: absolute; inset: 0; z-index: 0;
-    background-image: url("/endfield-ui/official/no-01.png");
-    background-size: cover; background-position: 50% 45%;
-  }
-  .ef-ch-kv-bg::after {
-    content: ""; position: absolute; inset: 0;
-    background: linear-gradient(90deg,
-      color-mix(in srgb, var(--ef-paper) 95%, transparent) 0%,
-      color-mix(in srgb, var(--ef-paper) 84%, transparent) 36%,
-      color-mix(in srgb, var(--ef-paper) 34%, transparent) 72%,
-      color-mix(in srgb, var(--ef-paper) 62%, transparent) 100%);
-  }
-  .ef-ch-figure { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-  .ef-ch-figure i { position: absolute; display: block; }
-  /* 三条斜切色带：信号黄、官方蓝、极淡描边，对应官网的黄蓝撞色 */
-  .ef-ch-figure i:nth-child(1) {
-    top: -10%; right: 6%; width: clamp(8rem, 22vw, 26rem); height: 130%;
-    background: var(--ef-signal); opacity: 0.1;
-    transform: skewX(-14deg);
-  }
-  .ef-ch-figure i:nth-child(2) {
-    top: -10%; right: 24%; width: clamp(2.5rem, 6vw, 7rem); height: 130%;
-    background: var(--ef-blue, #1d5bd8); opacity: 0.16;
-    transform: skewX(-14deg);
-  }
-  .ef-ch-figure i:nth-child(3) {
-    inset: 0;
-    background-image: linear-gradient(to right, color-mix(in srgb, var(--ef-ink) 8%, transparent) 1px, transparent 1px);
-    background-size: clamp(4rem, 8vw, 8rem) 100%;
-    opacity: 0.5;
-  }
-  /* 标题下的黄蓝双色条 */
-  .ef-ch-bar { display: flex; gap: 4px; margin: 0.9rem 0 1.1rem; }
-  .ef-ch-bar i { display: block; height: 4px; }
-  .ef-ch-bar i:nth-child(1) { width: 4.5rem; background: var(--ef-signal); }
-  .ef-ch-bar i:nth-child(2) { width: 1.75rem; background: var(--ef-blue, #1d5bd8); }
-  .ef-ch-bar i:nth-child(3) { width: 0.75rem; background: var(--ef-ink); opacity: 0.35; }
-  /* 底部信息带：整条信号黄，压一行小字（官网底部那条黄带的做法） */
-  .ef-ch-band {
-    position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-    padding: 0.7rem clamp(1rem, 4vw, 3rem);
-    background: var(--ef-signal); color: #141414;
-    font-family: var(--ef-font-wide); font-size: clamp(0.7rem, 1vw, 0.85rem); letter-spacing: 0.14em; text-transform: uppercase;
-  }
-  .ef-ch-band span:last-child { font-variant-numeric: tabular-nums; letter-spacing: 0.06em; }
+	/* 眉标：官网英文标签一律大写 + 字距 .14em，前面一枚黄方块 */
+	.ef-hero-eyebrow {
+		display: flex;
+		align-items: center;
+		gap: calc(0.75 * var(--efu));
+		margin: 0 0 calc(1.5 * var(--efu));
+		font-family: SansMedium, sans-serif;
+		font-size: calc(1.15 * var(--efu));
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: #999;
+	}
+	.ef-hero-eyebrow > i {
+		display: inline-block;
+		width: calc(0.7 * var(--efu));
+		height: calc(0.7 * var(--efu));
+		background: #fffa00;
+	}
+
+	/* 巨字：官网首屏是超大字重的中文标题，左对齐、极紧行高 */
+	.ef-hero-title {
+		margin: 0;
+		font-family: SansBold, Novecentosanswide-Bold, system-ui, sans-serif;
+		font-size: clamp(3rem, calc(11 * var(--efu)), 11rem);
+		line-height: 0.92;
+		letter-spacing: -0.02em;
+		color: #f2f2f2;
+	}
+
+	/* 空心斜纹小字：照官网 HallowText_hollowText 的写法（斜纹渐变 + 文字裁剪） */
+	.ef-hero-hollow {
+		margin: calc(0.9 * var(--efu)) 0 0;
+		font-family: Novecentosanswide-Bold, SansBold, sans-serif;
+		font-size: clamp(1rem, calc(2.6 * var(--efu)), 2.8rem);
+		line-height: 1;
+		letter-spacing: 0.02em;
+		white-space: nowrap;
+		background-image: linear-gradient(
+			-45deg,
+			transparent,
+			transparent 20.5805%,
+			#f2f2f2 0,
+			#f2f2f2 29.4195%,
+			transparent 0,
+			transparent 70.5805%,
+			#f2f2f2 0,
+			#f2f2f2 79.4195%,
+			transparent 0,
+			transparent
+		);
+		background-size: calc(0.5 * var(--efu)) calc(0.5 * var(--efu));
+		background-repeat: repeat;
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+		opacity: 0.55;
+		user-select: none;
+	}
+
+	.ef-hero-lede {
+		margin: calc(2 * var(--efu)) 0 0;
+		max-width: calc(46 * var(--efu));
+		font-size: clamp(0.95rem, calc(1.6 * var(--efu)), 1.5rem);
+		line-height: 1.8;
+		color: #d9d9d9;
+	}
+
+	/* 数值行：官网的字段行做法 —— 细线分隔、等宽数字 */
+	.ef-hero-facts {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 calc(2.5 * var(--efu));
+		margin: calc(2.5 * var(--efu)) 0 0;
+		padding: 0;
+		list-style: none;
+	}
+	.ef-hero-facts li {
+		display: flex;
+		align-items: baseline;
+		gap: calc(0.6 * var(--efu));
+		padding-block: calc(0.75 * var(--efu));
+		border-top: 1px solid #35373c;
+	}
+	.ef-hero-facts b {
+		font-family: Novecentosanswide-Bold, SansBold, sans-serif;
+		font-size: calc(2.1 * var(--efu));
+		line-height: 1;
+		color: #f2f2f2;
+		font-variant-numeric: tabular-nums;
+	}
+	.ef-hero-facts span {
+		font-size: calc(1.1 * var(--efu));
+		color: #999;
+		letter-spacing: 0.04em;
+	}
+
+	/* 按钮：官网按钮是 4px 圆角、深灰面 + #eee 字，hover 擦黄 */
+	.ef-hero-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: calc(0.875 * var(--efu));
+		margin-top: calc(2.5 * var(--efu));
+	}
+	.ef-hero-btn {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: calc(0.75 * var(--efu));
+		min-width: calc(18 * var(--efu));
+		height: calc(4.5 * var(--efu));
+		padding: 0 calc(2 * var(--efu));
+		border: 0;
+		border-radius: calc(0.25 * var(--efu));
+		background-color: #383838;
+		color: #eee;
+		font-family: SansMedium, system-ui, sans-serif;
+		font-size: calc(1.5 * var(--efu));
+		line-height: 1;
+		letter-spacing: 0.04em;
+		text-decoration: none;
+		transition: background-color 0.2s ease, color 0.2s ease;
+	}
+	.ef-hero-btn i {
+		font-style: normal;
+		transition: transform 0.25s;
+	}
+	.ef-hero-btn:hover {
+		background-color: #fffa00;
+		color: #191919;
+	}
+	.ef-hero-btn:hover i {
+		transform: translate3d(calc(0.4 * var(--efu)), 0, 0);
+	}
+	.ef-hero-btn--ghost {
+		background-color: transparent;
+		color: #d9d9d9;
+		box-shadow: inset 0 0 0 1px #35373c;
+	}
+	.ef-hero-btn--ghost:hover {
+		background-color: #f2f2f2;
+		color: #191919;
+		box-shadow: inset 0 0 0 1px #f2f2f2;
+	}
+
+	/* 右侧竖排标记（官网首屏右上角的章节/滚动提示） */
+	.ef-hero-side {
+		position: absolute;
+		right: calc(3 * var(--efu));
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: calc(2 * var(--efu));
+		z-index: 2;
+	}
+	.ef-hero-side-mark {
+		margin: 0;
+		writing-mode: vertical-rl;
+		font-family: Novecentosanswide-Bold, sans-serif;
+		font-size: calc(1.1 * var(--efu));
+		letter-spacing: 0.5em;
+		color: #35373c;
+		text-transform: uppercase;
+	}
+	.ef-hero-side-scroll {
+		margin: 0;
+		writing-mode: vertical-rl;
+		font-family: SansMedium, sans-serif;
+		font-size: calc(0.95 * var(--efu));
+		letter-spacing: 0.28em;
+		color: #999;
+	}
+	.ef-hero-side-scroll span {
+		display: block;
+		margin-top: calc(0.4 * var(--efu));
+		color: #fffa00;
+	}
+
+	@media (max-width: 1100px) {
+		.ef-hero-side {
+			display: none;
+		}
+	}
+	@media (max-width: 860px) {
+		.ef-hero {
+			min-height: auto;
+		}
+		.ef-hero-inner {
+			padding-block: calc(5 * var(--efu)) calc(4 * var(--efu));
+		}
+		.ef-hero-hollow {
+			white-space: normal;
+		}
+		.ef-hero-facts {
+			gap: 0 calc(1.5 * var(--efu));
+		}
+		.ef-hero-btn {
+			min-width: 0;
+			flex: 1 1 auto;
+		}
+	}
 </style>
-

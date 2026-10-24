@@ -1,452 +1,984 @@
-/* ===== endfield-shell.css =====
-   新架构的页面骨架：区块、容器、卡片网格、页脚。
-   刻意不依赖 MainGridLayout / 侧边栏 / 主题卡片体系。 */
+/* ==========================================================================
+   endfield-shell.css — 终末地官网版式外壳
+   --------------------------------------------------------------------------
+   来源：https://endfield.hypergryph.com/ 导出的 Next.js 压缩 CSS
+         （F:/web/endfield-official/css/*.css）与首页 DOM（index.html）。
+   本节带 Header_ 前缀的类名与规则是从官网逐个抠出来照抄的，只做两处机械改动：
+
+     1) 官网 html{font-size:min(.625vw,1.111111vh)} —— 官网的 1rem 是「视口单位」，
+        1920×1080 下 1rem = 12px。这里把每个 rem 换成 calc(N * var(--efu))，
+        1920×1080 下与官网像素尺寸完全相同，其它尺寸按官网同比例缩放。
+
+     2) 官网用 React 内联 transform 给每个导航项排位置（首项 12.875rem、步长 5rem、
+        项高 4.5rem）。这里改成文档流 + gap: .5rem，几何结果完全相同。
+
+   不做的事：不加 !important，不在旧类名上叠补丁。旧外壳的 .ef-rail / .ef-header
+   规则已整体删除（对应的 DOM 已不存在）。
+   ========================================================================== */
+
+/* ---------- 0. 官网字体 -------------------------------------------------
+   官网 @font-face 的实际字体族名是 SansMedium / SansBold / Gilroy-* /
+   Novecentosanswide-*。这里把本地已有的 woff2 用官网的名字注册一遍，
+   这样下面照抄的 font-family 声明可以原样保留。
+   中文没有对应的官方字体文件，落到系统 CJK 字体（与官网一致的做法）。 */
+
+@font-face {
+  font-family: SansMedium;
+  src: url("/endfield-ui/official/font/Gilroy-Medium.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: SansBold;
+  src: url("/endfield-ui/official/font/Gilroy-ExtraBold.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Novecentosanswide-Medium;
+  src: url("/endfield-ui/official/font/Novecentosanswide-Medium.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Novecentosanswide-DemiBold;
+  src: url("/endfield-ui/official/font/Novecentosanswide-DemiBold.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Novecentosanswide-Bold;
+  src: url("/endfield-ui/official/font/Novecentosanswide-Bold.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------- 1. 外壳与色板 -------------------------------------------------
+   官网实测色板（见用户给定清单）：
+     #191919 暗底 / #fffa00 信号黄 / #35373c 深灰蓝 / #f2f2f2 纸张
+     #e5e5e5 浅边 / #00ffa2 绿 / #ff1aac 品红 / #999 #d9d9d9 #666 灰阶 */
+
+.ef-shell {
+  /* 官网单位：1rem = min(.625vw, 1.111111vh)，钳到 9~12px 防止极端视口 */
+  --efu: clamp(9px, min(0.625vw, 1.111111vh), 12px);
+
+  --ef-black: #191919;
+  --ef-yellow: #fffa00;
+  --ef-steel: #35373c;
+  --ef-paper-2: #f2f2f2;
+  --ef-line-2: #e5e5e5;
+  --ef-mint: #00ffa2;
+  --ef-magenta: #ff1aac;
+  --ef-grey: #999;
+  --ef-grey-2: #d9d9d9;
+  --ef-grey-3: #666;
+
+  /* 与站点其余部分共用的旧 token，在壳内一律映射到官网色板 */
+  --ef-signal: var(--ef-yellow);
+  --ef-rail-w: calc(7.5 * var(--efu));
+  --ef-rail-w-open: calc(22.5 * var(--efu));
+
+  min-height: 100dvh;
+  background: var(--ef-black);
+  color: var(--ef-paper-2);
+  font-family:
+    SansMedium, "EF Gilroy", system-ui, -apple-system, "PingFang SC",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  font-size: clamp(15px, calc(1.45 * var(--efu)), 19px);
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 暗底（首页）：正文亮、面板比底色高一级 */
+.ef-shell {
+  --ef-ink: #f2f2f2;
+  --ef-ink-2: #999;
+  --ef-paper: #191919;
+  --ef-panel: #232323;
+  --ef-rule: #35373c;
+  --ef-chip: #35373c;
+  --ef-page-bg: #191919;
+  --ef-card-bg: #232323;
+  --deep-text: #f2f2f2;
+  --title-active: #f2f2f2;
+  --content-meta: #999;
+  --line-divider: #35373c;
+  --line-color: #35373c;
+  --page-bg: #191919;
+  --card-bg: #232323;
+  --float-panel-bg: #232323;
+  --btn-content: #f2f2f2;
+}
+
+/* 奶白纸张（内页）：纸底、墨字 */
+.ef-shell--light {
+  background: var(--ef-paper-2);
+  color: var(--ef-black);
+  --ef-ink: #191919;
+  --ef-ink-2: #666;
+  --ef-paper: #f2f2f2;
+  --ef-panel: #ffffff;
+  --ef-rule: #e5e5e5;
+  --ef-chip: #e5e5e5;
+  --ef-page-bg: #f2f2f2;
+  --ef-card-bg: #ffffff;
+  --deep-text: #191919;
+  --title-active: #191919;
+  --content-meta: #666;
+  --line-divider: #e5e5e5;
+  --line-color: #e5e5e5;
+  --page-bg: #f2f2f2;
+  --card-bg: #ffffff;
+  --float-panel-bg: #ffffff;
+  --btn-content: #191919;
+}
+
+/* 官网没有背景纹理，去掉模板的等高线层与壁纸层 */
+body.ef-contours::before,
+body.ef-contours::after {
+  display: none;
+}
+/* 站主要求：先不显示任何图片（竖排栏图标等一律走内联 SVG）。
+   要恢复内容里的图片（友链头像、正文配图），删掉这一条即可。 */
+.ef-shell img {
+  display: none;
+}
+/* 主题那条顶部渐变高光（Layout 渲染，180px 固定黑/白渐变，z-index 20）是 .ef-shell
+   的兄弟节点，压不住它，所以这里直接按类名关掉。只有本站的壳页面会加载这份样式表。 */
+.top-gradient-highlight {
+  display: none;
+}
+html {
+  background: #191919;
+  overflow-x: hidden;
+}
+
+/* ---------- 2. 版心 ------------------------------------------------------ */
+
+/* 官网结构：.SectionViewer{display:flex} + [左侧 7.5rem 竖排栏][内容 flex:1]。
+   这里竖排栏固定，内容永远让出 7.5rem，展开时栏浮在内容之上（官网同款）。 */
+.ef-shell #swup-container {
+  margin-left: var(--ef-rail-w);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #191919;
+}
+.ef-shell--light #swup-container {
+  background: var(--ef-paper-2);
+}
+
+/* 主题在 endfield.css 里给 [aria-current="page"] 刷了信号黄底，竖排栏里不要它：
+   官网的当前项是「灰块 + 左黑条」，不是黄块。 */
+.ef-shell .Header_pcHeaderContainer__Sy_8l a[aria-current="page"] {
+  background: transparent;
+  color: inherit;
+  font-weight: inherit;
+}
+.ef-shell .ef-rail-bottom a[aria-current="page"] {
+  background: transparent;
+}
 
 .ef-shell-main {
-  display: block;
+  flex: 1 1 auto;
   width: 100%;
   min-height: 60vh;
-  padding-top: clamp(1.5rem, 4vw, 3rem);
+  padding-bottom: calc(6 * var(--efu));
 }
 
 .ef-wrap {
-  width: min(96rem, 100%);
+  width: 100%;
+  max-width: calc(96 * var(--efu));
   margin-inline: auto;
-  padding-inline: clamp(1rem, 4vw, 3rem);
+  padding-inline: calc(4 * var(--efu));
 }
 
-/* 区块：官网那种「一条细线一段内容」的节奏 */
+/* ---------- 3. 竖排栏（官网 Header 模块原样搬用） ------------------------
+   官网原文：.Header_pcHeaderContainer__Sy_8l{position:relative;height:100vh;
+   width:7.5rem;z-index:50;color:#191919;background-color:#fff}
+   → 按需求改成 fixed + 顶天立地（top/bottom/left 贴边、100dvh）。 */
+
+.Header_pcHeaderContainer__Sy_8l {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100dvh;
+  width: var(--ef-rail-w);
+  z-index: 50;
+  color: #191919;
+  background-color: #fff;
+  overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+/* 官网行为：默认收起只见图标，悬停（或键盘聚焦）展开出文字，移开缩回 */
+.Header_pcHeaderContainer__Sy_8l:hover,
+.Header_pcHeaderContainer__Sy_8l:focus-within {
+  width: var(--ef-rail-w-open);
+}
+
+.Header_innerContainer__cW_Dv {
+  position: relative;
+  height: 100%;
+}
+
+/* 字标：官网 logo 位（top:1.25rem、宽 6.75rem、水平居中）。这里用站名字标，
+   形状与位置照官方 logo 槽位，不引入任何图片。 */
+.Header_logo__s3lE_ {
+  position: absolute;
+  top: calc(1.75 * var(--efu));
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  width: calc(6.75 * var(--efu));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(0.35 * var(--efu));
+  color: #191919;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.Header_logo__s3lE_ > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ef-rail-wordmark {
+  font-family: Novecentosanswide-Bold, SansBold, sans-serif;
+  font-size: calc(1.04 * var(--efu));
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.ef-rail-wordmark-en {
+  font-family: SansMedium, sans-serif;
+  font-size: calc(0.72 * var(--efu));
+  line-height: 1;
+  letter-spacing: 0.32em;
+  color: #999;
+}
+/* 字标下面一条官网那种黄块（收起时是唯一的高饱和点） */
+.Header_logo__s3lE_::after {
+  content: "";
+  display: block;
+  width: calc(2.5 * var(--efu));
+  height: calc(0.25 * var(--efu));
+  background: #fffa00;
+}
+
+/* 导航列表：官网首项 top 12.875rem、项高 4.5rem、步长 5rem（= 4.5 + 0.5） */
+.Header_navList__r2BGN {
+  position: absolute;
+  top: calc(12.875 * var(--efu));
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.5 * var(--efu));
+}
+
+.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB {
+  position: relative;
+  width: 100%;
+  height: calc(4.5 * var(--efu));
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+}
+/* 官网 hover 底：left 1.5rem、宽 19.5rem、#e5e5e5、圆角 4px */
+.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB::before {
+  content: "";
+  position: absolute;
+  left: calc(1.5 * var(--efu));
+  width: calc(19.5 * var(--efu));
+  height: 100%;
+  background-color: #e5e5e5;
+  opacity: 0;
+  border-radius: calc(0.25 * var(--efu));
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB:hover::before {
+  opacity: 1;
+}
+/* 当前页：官网 Header_overlay（灰块 + 左侧黑条） */
+.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB.Header_active__jzCyf::before {
+  opacity: 1;
+  background-color: #e6e6e6;
+}
+.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB.Header_active__jzCyf::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(0.375 * var(--efu));
+  height: 100%;
+  background: #191919;
+}
+
+/* 图标：官网 left 3.75rem、垂直居中、色 #d9d9d9 → hover #858585 → 当前 #191919 */
+.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB .Header_icon__3iDIG {
+  position: absolute;
+  left: calc(3.75 * var(--efu));
+  top: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  height: auto;
+  color: #d9d9d9;
+  transition: color 0.2s;
+  white-space: nowrap;
+  display: block;
+}
+.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB:hover .Header_icon__3iDIG {
+  color: #858585;
+}
+.Header_pcHeaderContainer__Sy_8l
+  .Header_navItem__c_fLB.Header_active__jzCyf
+  .Header_icon__3iDIG {
+  color: #191919;
+}
+/* 每项图标宽度照官网 data-key 的尺寸表 */
+.Header_pcHeaderContainer__Sy_8l [data-key="home"] .Header_icon__3iDIG {
+  width: calc(2.5 * var(--efu));
+}
+.Header_pcHeaderContainer__Sy_8l [data-key="operator"] .Header_icon__3iDIG {
+  width: calc(2.75 * var(--efu));
+}
+.Header_pcHeaderContainer__Sy_8l [data-key="lore"] .Header_icon__3iDIG {
+  width: calc(2.625 * var(--efu));
+}
+.Header_pcHeaderContainer__Sy_8l [data-key="information"] .Header_icon__3iDIG {
+  width: calc(2.6875 * var(--efu));
+}
+.Header_pcHeaderContainer__Sy_8l [data-key="calendar"] .Header_icon__3iDIG {
+  width: calc(2.625 * var(--efu));
+}
+.Header_pcHeaderContainer__Sy_8l [data-key="gameplay"] .Header_icon__3iDIG,
+.Header_pcHeaderContainer__Sy_8l [data-key="aicGameplay"] .Header_icon__3iDIG {
+  width: calc(2.5625 * var(--efu));
+}
+.Header_pcHeaderContainer__Sy_8l [data-key="notice"] .Header_icon__3iDIG {
+  width: calc(2.75 * var(--efu));
+}
+
+/* 文字：官网 left 6.9375rem、宽 13.25rem、SansMedium 1.125rem、收起时 opacity 0 */
+.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB .Header_textWrapper__o9aHt {
+  position: absolute;
+  width: calc(13.25 * var(--efu));
+  left: calc(6.9375 * var(--efu));
+  top: 50%;
+  pointer-events: none;
+  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-size: calc(1.125 * var(--efu));
+  line-height: 1.25;
+  opacity: 0;
+  transform: translate3d(-1rem, -50%, 0);
+  transition: opacity 0.2s, transform 0.3s;
+  color: #191919;
+  white-space: nowrap;
+}
+.Header_pcHeaderContainer__Sy_8l:hover
+  .Header_navItem__c_fLB
+  .Header_textWrapper__o9aHt,
+.Header_pcHeaderContainer__Sy_8l:focus-within
+  .Header_navItem__c_fLB
+  .Header_textWrapper__o9aHt {
+  opacity: 1;
+  transform: translate3d(0, -50%, 0);
+}
+
+/* 分组细线（官网 divider：#d9d9d9 细线，收起时不可见） */
+.Header_pcHeaderContainer__Sy_8l .Header_divider__tUYjO {
+  position: relative;
+  width: calc(2.5 * var(--efu));
+  height: 1px;
+  margin-inline: auto;
+  background-color: #d9d9d9;
+  transition: opacity 0.2s;
+  opacity: 0;
+}
+.Header_pcHeaderContainer__Sy_8l:hover .Header_divider__tUYjO {
+  opacity: 1;
+}
+
+/* ---------- 4. 竖排栏底部（官网 buttonFrame + buttonPreserveBg） --------- */
+
+.ef-rail-bottom {
+  position: absolute;
+  left: 0;
+  bottom: calc(2.25 * var(--efu));
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(2.1875 * var(--efu));
+}
+
+/* 官网 .Header_buttonFrameBg：宽 3.75rem、圆角 1.875rem、底 #f2f2f2。
+   官网是独立兄弟节点 + 固定高度（11.5625rem）；这边放进容器里 inset:0 撑满，
+   收起/展开都不用手算高度，视觉一致。 */
+.Header_buttonFrameBg__2UVLH {
+  position: absolute;
+  inset: 0;
+  border-radius: calc(1.875 * var(--efu));
+  background-color: #f2f2f2;
+  pointer-events: none;
+}
+.Header_buttonFrameContainer__Uvshp {
+  position: relative;
+  width: calc(3.75 * var(--efu));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(1.25 * var(--efu));
+  padding-block: calc(1.25 * var(--efu));
+}
+
+/* 官网 .Header_button：高 3rem，图标 1.75rem，色 #7c7c7c → hover #424242 */
+.Header_pcHeaderContainer__Sy_8l .Header_button__b0gdu {
+  position: relative;
+  width: 100%;
+  height: calc(3 * var(--efu));
+  display: flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+.Header_pcHeaderContainer__Sy_8l .Header_button__b0gdu .Header_icon__3iDIG {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  width: auto;
+  height: calc(1.75 * var(--efu));
+  color: #7c7c7c;
+  transition: color 0.2s;
+  display: block;
+}
+.Header_pcHeaderContainer__Sy_8l .Header_button__b0gdu:hover .Header_icon__3iDIG {
+  color: #424242;
+}
+/* 展开时按钮也出文字。按钮左边缘在 1.875rem（3.75rem 的胶囊居中），
+   6.9375 - 1.875 = 5.0625，与导航项的文字左边缘落在同一条竖线上。 */
+.Header_pcHeaderContainer__Sy_8l .Header_button__b0gdu .Header_textWrapper__o9aHt {
+  position: absolute;
+  left: calc(5.0625 * var(--efu));
+  top: 50%;
+  transform: translate3d(-1rem, -50%, 0);
+  opacity: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: SansMedium, system-ui, sans-serif;
+  font-size: calc(1.125 * var(--efu));
+  line-height: 1.25;
+  color: #191919;
+  transition: opacity 0.2s, transform 0.3s;
+}
+.Header_pcHeaderContainer__Sy_8l:hover
+  .Header_button__b0gdu
+  .Header_textWrapper__o9aHt,
+.Header_pcHeaderContainer__Sy_8l:focus-within
+  .Header_button__b0gdu
+  .Header_textWrapper__o9aHt {
+  opacity: 1;
+  transform: translate3d(0, -50%, 0);
+}
+
+/* 官网 .Header_buttonPreserveBg：黑底 4.5rem × 9.75rem、圆角 4px、竖排文字 */
+.Header_pcHeaderContainer__Sy_8l .Header_buttonPreserveBg__rEZGT {
+  position: relative;
+  width: calc(4.5 * var(--efu));
+  height: calc(9.75 * var(--efu));
+  border-radius: calc(0.25 * var(--efu));
+  overflow: hidden;
+  cursor: pointer;
+  background-color: #191919;
+  display: block;
+  text-decoration: none;
+  transition: width 0.3s, height 0.3s;
+}
+.Header_pcHeaderContainer__Sy_8l .Header_buttonPreserveBg__rEZGT:hover {
+  background-color: #191919;
+}
+/* 官网 hover：整块被 #fffa00 盖住（.Header_bg opacity 0 → 1） */
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonPreserveBg__rEZGT
+  .Header_bg___kVDv {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fffa00;
+  transition: opacity 0.2s;
+  opacity: 0;
+}
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonPreserveBg__rEZGT:hover
+  .Header_bg___kVDv {
+  opacity: 1;
+}
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonPreserveBg__rEZGT
+  .Header_tri__KNP87 {
+  position: absolute;
+  top: calc(1.25 * var(--efu));
+  left: calc(2.25 * var(--efu));
+  width: calc(1.9375 * var(--efu));
+  height: calc(1.75 * var(--efu));
+  color: #fff;
+  transition: color 0.3s;
+  transform: translate3d(-50%, 0, 0);
+}
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonPreserveBg__rEZGT:hover
+  .Header_tri__KNP87 {
+  color: #191919;
+}
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonPreserveBg__rEZGT
+  .Header_divider__tUYjO {
+  position: absolute;
+  top: calc(4.125 * var(--efu));
+  left: calc(2.25 * var(--efu));
+  width: calc(3 * var(--efu));
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: background-color 0.3s, opacity 0.2s;
+  transform: translate3d(-50%, 0, 0);
+  pointer-events: none;
+  opacity: 1;
+}
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonPreserveBg__rEZGT:hover
+  .Header_divider__tUYjO {
+  background-color: #191919;
+}
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonPreserveBg__rEZGT
+  .Header_text__52fEh {
+  position: absolute;
+  top: calc(5.625 * var(--efu));
+  left: calc(2.25 * var(--efu));
+  font-family: SansMedium, system-ui, sans-serif;
+  font-size: calc(1.25 * var(--efu));
+  width: calc(3.0625 * var(--efu));
+  text-align: center;
+  line-height: 1.125;
+  letter-spacing: 0.05em;
+  color: #fff;
+  transition: color 0.3s, opacity 0.2s;
+  transform: translate3d(-50%, 0, 0);
+}
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonPreserveBg__rEZGT:hover
+  .Header_text__52fEh {
+  color: #191919;
+}
+
+/* ---------- 5. 内容页排版（官网 SectionTitle 量级） --------------------- */
+
 .ef-sec {
-  padding-block: clamp(2rem, 5vw, 4rem);
+  padding-block: calc(4.5 * var(--efu));
   border-top: 1px solid var(--ef-rule);
 }
-.ef-sec:first-child { border-top: 0; padding-top: clamp(1rem, 2vw, 1.5rem); }
+.ef-sec:first-child {
+  border-top: 0;
+  padding-top: calc(3.5 * var(--efu));
+}
 
 .ef-sec-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.5rem 1.25rem;
-  margin-bottom: clamp(1.25rem, 3vw, 2.25rem);
+  align-items: flex-end;
+  gap: calc(0.75 * var(--efu)) calc(1.5 * var(--efu));
+  padding-bottom: calc(1.25 * var(--efu));
+  margin-bottom: calc(2.5 * var(--efu));
+  border-bottom: 1px solid var(--ef-rule);
 }
-.ef-sec-title {
+.ef-sec-title,
+.ef-page-name {
   margin: 0;
-  font-family: var(--ef-font-wide);
-  font-size: clamp(1.75rem, 4vw, 3rem);
+  font-family: SansBold, Novecentosanswide-Bold, system-ui, sans-serif;
+  font-size: calc(3.4 * var(--efu));
   line-height: 1;
   letter-spacing: -0.01em;
   color: var(--ef-ink);
 }
 .ef-sec-count {
   margin-inline-start: auto;
+  font-family: SansMedium, system-ui, sans-serif;
+  font-size: calc(1.25 * var(--efu));
   color: var(--ef-ink-2);
   font-variant-numeric: tabular-nums;
 }
 
-/* 卡片网格：新卡片，不用主题 PostCard */
-.ef-grid { display: grid; gap: clamp(0.75rem, 1.4vw, 1.25rem); grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr)); }
-.ef-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.ef-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (max-width: 1100px) { .ef-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 720px) {
-  .ef-grid-3, .ef-grid-2, .ef-grid { grid-template-columns: 1fr; }
+/* 眉标：官网英文标签一律 Gilroy 大写、字距 .14em */
+.ef-eyebrow {
+  margin: 0;
+  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-size: calc(1.1 * var(--efu));
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ef-ink-2);
+  line-height: 1.2;
 }
 
-.ef-post {
-  position: relative;
-  border: 1px solid var(--ef-rule);
-  border-top: 6px solid var(--ef-signal);
-  background: color-mix(in srgb, var(--ef-panel) 86%, transparent);
-  transition: border-color 0.2s, background-color 0.2s, transform 0.2s;
+/* ---------- 6. 卡片（官网 #f2f2f2 面 + 4px 圆角 + 黄块） ---------------- */
+
+.ef-grid {
+  display: grid;
+  gap: calc(1.25 * var(--efu));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-.ef-post:nth-child(3n + 2) { border-top-color: var(--ef-ink); }
-.ef-post:nth-child(3n + 3) { border-top-color: var(--ef-chip); }
-.ef-post:hover { border-color: var(--ef-ink-2); background: color-mix(in srgb, var(--ef-panel) 96%, transparent); transform: translateY(-2px); }
-.ef-post-link {
+.ef-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 1100px) {
+  .ef-grid,
+  .ef-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 720px) {
+  .ef-grid,
+  .ef-grid-2,
+  .ef-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ef-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  height: 100%;
-  padding: clamp(1rem, 2vw, 1.5rem);
+  gap: calc(0.85 * var(--efu));
+  padding: calc(2 * var(--efu));
+  background: var(--ef-panel);
+  border: 1px solid var(--ef-rule);
+  border-radius: calc(0.25 * var(--efu));
+  overflow: hidden;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.ef-card:hover {
+  border-color: var(--ef-ink);
+}
+/* 官网 hover 强调：左侧竖条黄块（.Header_bg 同款做法） */
+.ef-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: calc(0.375 * var(--efu));
+  background: var(--ef-signal);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.ef-card:hover::before {
+  transform: scaleY(1);
+}
+/* 标题是唯一的链接，::after 把可点区域铺满整张卡（标签链接再压在它上面） */
+.ef-card-link {
   color: inherit;
   text-decoration: none;
 }
-.ef-post-date { margin: 0; color: var(--ef-ink-2); font-variant-numeric: tabular-nums; }
-.ef-post-title { margin: 0; font-family: var(--ef-font-wide); font-size: clamp(1.05rem, 1.5vw, 1.3rem); line-height: 1.3; color: var(--ef-ink); }
-.ef-post-link:hover .ef-post-title { color: var(--ef-signal); }
-.ef-post-desc { margin: 0; color: var(--ef-ink-2); line-height: 1.65; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.ef-post-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: auto 0 0; padding: 0; list-style: none; }
-.ef-post-tags .ef-chip a { color: inherit; text-decoration: none; }
-
-/* 页脚 */
-.ef-shell-foot { border-top: 1px solid var(--ef-rule); margin-top: clamp(3rem, 8vw, 6rem); padding-block: clamp(1.5rem, 3vw, 2.5rem); }
-.ef-shell-foot-inner { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem 1.5rem; }
-.ef-shell-mark { margin: 0; font-family: var(--ef-font-wide); font-size: 1.15rem; letter-spacing: 0.01em; }
-.ef-shell-mark span { color: var(--ef-signal); margin-inline-start: 0.35rem; }
-.ef-shell-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0; padding: 0; list-style: none; }
-.ef-shell-links a { color: var(--ef-ink-2); text-decoration: none; }
-.ef-shell-links a:hover { color: var(--ef-signal); }
-.ef-shell-meta { margin: 0; margin-inline-start: auto; color: var(--ef-ink-2); }
-
-/* 左侧竖排图标栏：按官网 operator 页那条重做 —— 浅色底、黑 logo 块、灰色图标、
-   悬停展开显示标签、分两组、底部黑色 CTA。图标全部自绘几何线框。 */
-.ef-rail {
-  position: fixed;
-  left: 0;
-  top: 50%;
-  z-index: 45;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 12.5rem;
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-left: 0;
-  background: #f4f4f2;
-  color: #141414;
-  transition: width 0.22s cubic-bezier(0.2, 0, 0, 1);
-}
-.ef-rail { border-left: 3px solid var(--ef-signal); }
-.ef-rail-logo {
-  display: grid;
-  place-items: center;
-  height: 3.4rem;
-  background: #141414;
-  color: #fff;
-  font-family: var(--ef-font-wide);
-  font-size: 0.72rem;
-  line-height: 1;
-  letter-spacing: 0.05em;
-  text-decoration: none;
-}
-.ef-rail-logo span { display: block; width: 2.4em; text-align: center; word-break: break-all; }
-.ef-rail-list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
-.ef-rail-item {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  height: 3.1rem;
-  padding-left: 0.95rem;
-  color: #8a8a86;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: color 0.16s, background-color 0.16s;
-}
-.ef-rail-item svg { flex: none; width: 1.15rem; height: 1.15rem; }
-.ef-rail-item:hover { color: #141414; background: #e8e8e5; }
-.ef-rail-item.is-on { color: #141414; background: #dededb; }
-.ef-rail-item.is-on svg { stroke-width: 2.1; }
-.ef-rail-label { font-size: 0.84rem; letter-spacing: 0.02em; }
-.ef-rail:hover .ef-rail-label { opacity: 1; }
-.ef-rail-sep { height: 1px; margin: 0.35rem 0.7rem; background: rgba(0, 0, 0, 0.1); }
-.ef-rail-cta {
-  display: grid;
-  place-items: center;
-  margin: 0.6rem 0.55rem 0.75rem;
-  min-height: 4.5rem;
-  background: #141414;
-  color: var(--ef-signal);
-  font-family: var(--ef-font-wide);
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-decoration: none;
-}
-.ef-rail-cta span { letter-spacing: 0.18em; }
-@media (max-width: 900px) { .ef-rail { display: none; } }
-
-/* 分页条（新架构自绘，不用主题 Pagination） */
-.ef-pager { display: flex; align-items: center; justify-content: center; gap: 1rem; padding-block: clamp(1.5rem, 4vw, 2.5rem); }
-.ef-pager .ef-field { color: var(--ef-ink-2); font-variant-numeric: tabular-nums; }
-
-/* ===== 兼容层：旧页面里的主题类，在新壳里统一成官网面板 =====
-   迁完之后这些类会逐步消失，此处保证过渡期不出现主题样式残留。 */
-#ef-main .card-base {
-  background: color-mix(in srgb, var(--ef-panel) 92%, transparent) !important;
-  border: 1px solid var(--ef-rule) !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  margin-block: 0 !important;
-}
-#ef-main .card-base + .card-base { margin-top: 0.75rem !important; }
-#ef-main [class*="rounded-"] { border-radius: 0 !important; }
-
-/* 官网式奶白内容页：正文以浅色纸张呈现，配信号黄页头 */
-.ef-sheet {
-  background: #f2f1ec;
-  color: #141414;
-  border-top: 6px solid var(--ef-signal);
-  padding: clamp(1.25rem, 4vw, 3rem);
-}
-.ef-sheet a { color: #141414; text-decoration-color: var(--ef-signal); text-decoration-thickness: 2px; }
-.ef-sheet h1, .ef-sheet h2, .ef-sheet h3 { font-family: var(--ef-font-wide); color: #141414; }
-.ef-sheet .ef-eyebrow { color: #6b6a66; }
-.ef-sheet code { background: #e4e3dd; }
-.ef-sheet blockquote { border-color: var(--ef-signal); color: #46453f; }
-
-/* 竖排栏已承担全站导航，顶栏的横向导航重复，去掉，只留品牌与动作区 */
-.ef-header-nav { display: none !important; }
-.ef-header-inner { justify-content: space-between; }
-
-/* ===== 顶栏：官网顶部没有导航条，只有竖排栏里的 logo 块。
-   这里把顶栏拆成「浮在右上角的控件簇」，无底色无边框。 ===== */
-.ef-header {
-  position: fixed !important;
-  top: 0;
-  left: auto !important;
-  right: 0;
-  width: auto !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  z-index: 60;
-}
-.ef-header-inner {
-  justify-content: flex-end !important;
-  gap: 0.5rem;
-  padding: 0.9rem clamp(1rem, 4vw, 3rem) !important;
-}
-/* 品牌已经在竖排栏的黑块里，顶栏不要再出现一次 */
-.ef-header-brand { display: none !important; }
-.ef-header-actions { display: flex; gap: 0.4rem; }
-.ef-header-actions > * { border-radius: 0 !important; }
-
-/* ===== 首页主视觉排版：官网那种 CJK 巨字 + 版本章 + 右下卡片簇 ===== */
-.ef-ch-title {
-  font-size: clamp(3rem, 10.5vw, 8.5rem) !important;
-  line-height: 0.88 !important;
-  letter-spacing: -0.025em !important;
-  font-weight: 800 !important;
-}
-.ef-ch-inner { padding-top: clamp(2rem, 8vw, 6rem) !important; }
-/* 版本章：官网在标题上方放一枚小方章（核心章节版本） */
-.ef-ch-ver {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.9rem;
-  padding: 0.28rem 0.6rem;
-  background: var(--ef-blue, #1d5bd8);
-  color: #fff;
-  font-family: var(--ef-font-wide);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-}
-/* 右下角卡片簇：官网首页右下是几个深色方块（下载/平台） */
-.ef-ch-cards {
-  position: absolute;
-  right: clamp(1rem, 4vw, 3rem);
-  bottom: 3.4rem;
-  z-index: 3;
-  display: flex;
-  gap: 0.5rem;
-}
-.ef-ch-cards a {
-  display: grid;
-  place-items: center;
-  min-width: 5.6rem;
-  padding: 0.8rem 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--ef-ink) 22%, transparent);
-  background: color-mix(in srgb, #141414 78%, transparent);
-  color: var(--ef-ink);
-  font-family: var(--ef-font-wide);
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  text-decoration: none;
-  backdrop-filter: blur(4px);
-}
-.ef-ch-cards a:hover { border-color: var(--ef-signal); color: var(--ef-signal); }
-@media (max-width: 900px) { .ef-ch-cards { display: none; } }
-
-/* 版本章与标题的行距、以及去掉与右下卡片簇重复的入口面板 */
-.ef-ch-ver { margin-bottom: 0.75rem; }
-.ef-ch-title { margin-top: 0.1rem !important; }
-.ef-ch-panel { display: none !important; }  /* 入口面板与右下卡片簇重复 */
-.ef-ch-facts { margin-top: 1rem; }
-
-/* 窄窗口：竖排栏会压住内容，1100px 以下收掉；主视觉字号与内边距一起收 */
-@media (max-width: 1100px) {
-  .ef-rail { display: none !important; }
-  .ef-shell-main { padding-top: 3.4rem; }
-}
-@media (max-width: 640px) {
-  .ef-ch-title { font-size: clamp(2.2rem, 13vw, 3.4rem) !important; }
-  .ef-ch-inner { padding-inline: 1.1rem !important; }
-  .ef-ch-cards { display: none !important; }
-  .ef-ch-band { font-size: 0.62rem; letter-spacing: 0.08em; }
-  .ef-header-inner { padding: 0.6rem 0.9rem !important; }
-}
-
-/* ===== CJK 巨字的显示体处理 =====
-   官网标题是窄体重黑。没有同款字体时，用字重 + 轻微横向压缩 + 紧字距逼近，
-   比换成别的字族更接近原味。 */
-.ef-ch-title {
-  font-weight: 900 !important;
-  font-stretch: 87% !important;
-  transform: scaleX(0.94);
-  transform-origin: left center;
-  letter-spacing: -0.03em !important;
-}
-.ef-sec-title, .ef-page-name, .ef-post-title { font-weight: 800; letter-spacing: -0.02em; }
-
-/* ===== 内页浅色纸张（官网 operator 页基调）=====
-   首页是实景暗底，其余页面走奶白纸张 + 深色字 + 信号黄分隔。 */
-.ef-light { background: #f2f1ec; color: #141414; }
-.ef-light .ef-sec { border-top-color: rgba(0, 0, 0, 0.1); }
-.ef-light .ef-sec-title, .ef-light .ef-page-name, .ef-light .ef-post-title { color: #141414; }
-.ef-light .ef-eyebrow { color: #6b6a66; }
-.ef-light .ef-field, .ef-light .ef-sec-count { color: #6b6a66; }
-/* 权重必须高过兼容层的 #ef-main .card-base，否则深字压暗卡读不了 */
-#ef-main.ef-light .card-base {
-  background: #fff !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  color: #141414 !important;
-}
-.ef-light a { color: #141414; }
-.ef-light .ef-ledger li { border-color: rgba(0, 0, 0, 0.1); }
-.ef-light .ef-chip { background: #e6e5e0; color: #141414; }
-.ef-light .ef-post { background: #fff; border-color: rgba(0, 0, 0, 0.08); }
-.ef-light .ef-post-title { color: #141414; }
-.ef-light .ef-post-desc, .ef-light .ef-post-date { color: #5f5e59; }
-.ef-light .ef-pager .ef-btn { background: #141414; color: var(--ef-signal); }
-.ef-light .ef-shell-foot { border-top-color: rgba(0, 0, 0, 0.1); }
-.ef-light .ef-shell-links a, .ef-light .ef-shell-meta { color: #6b6a66; }
-
-/* 页脚在 main 之外，浅色页也要跟着转浅，否则底部会突然出现一大块深色 */
-.ef-light + .ef-shell-foot { background: #f2f1ec; }
-.ef-light + .ef-shell-foot .ef-shell-mark { color: #141414; }
-
-#ef-main.ef-light .card-base a { color: #141414; }
-#ef-main.ef-light .card-base h1, #ef-main.ef-light .card-base h2,
-#ef-main.ef-light .card-base h3 { color: #141414; }
-
-/* 浅色页里任何还在用暗色主题文字色的元素都要拉回深色，
-   否则会出现「浅字压白卡」（分类/标签页的账目表就是这样）。 */
-#ef-main.ef-light a,
-#ef-main.ef-light .ef-ledger a,
-#ef-main.ef-light .ef-page-list a,
-#ef-main.ef-light .ef-ledger li,
-#ef-main.ef-light .ef-page-list li,
-#ef-main.ef-light .ef-ledger,
-#ef-main.ef-light .ef-page-list,
-#ef-main.ef-light p,
-#ef-main.ef-light span,
-#ef-main.ef-light li,
-#ef-main.ef-light h1, #ef-main.ef-light h2, #ef-main.ef-light h3, #ef-main.ef-light h4 {
-  color: #141414;
-}
-#ef-main.ef-light .ef-eyebrow,
-#ef-main.ef-light .ef-field,
-#ef-main.ef-light .ef-page-sub,
-#ef-main.ef-light .ef-sec-count { color: #6b6a66; }
-
-/* 底部组与社交方块（对照官网那条：底部一组次级入口 + 黑 CTA + 一排小方块） */
-.ef-rail-foot { display: flex; flex-direction: column; margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px solid rgba(0, 0, 0, 0.1); }
-.ef-rail-social { display: flex; gap: 0.3rem; padding: 0 0.7rem 0.7rem; }
-.ef-rail-social i { width: 1.15rem; height: 1.15rem; border: 1px solid rgba(0, 0, 0, 0.18); }
-.ef-rail-social i:hover { background: var(--ef-signal); border-color: var(--ef-signal); }
-@media (max-width: 1150px) { .ef-rail { width: 3.6rem; } .ef-rail-label, .ef-rail-social { display: none; } }
-
-/* 兜底：无论谁把 --ef-ink 写在链路上，浅色页一律压回深色。
-   （前两轮用普通权重没压过，线上实测仍是 237,237,237 落在白卡上） */
-#ef-main.ef-light a, #ef-main.ef-light .ef-ledger a,
-#ef-main.ef-light .ef-page-list a, #ef-main.ef-light .ef-ledger li a,
-#ef-main.ef-light li, #ef-main.ef-light p, #ef-main.ef-light span,
-#ef-main.ef-light h1, #ef-main.ef-light h2, #ef-main.ef-light h3 {
-  color: #141414 !important;
-}
-#ef-main.ef-light .ef-eyebrow, #ef-main.ef-light .ef-field,
-#ef-main.ef-light .ef-page-sub, #ef-main.ef-light .ef-sec-count,
-#ef-main.ef-light .ef-boot-status { color: #6b6a66 !important; }
-
-/* 友链卡片这类自定义 markup 用的是 div，上一轮的兜底没覆盖到，
-   线上实测 /friends/ 仍有 4 处 rgb(237,237,237) / oklch(0.708) 浅字压在奶白底上。 */
-#ef-main.ef-light div, #ef-main.ef-light strong, #ef-main.ef-light em,
-#ef-main.ef-light .ef-friend, #ef-main.ef-light .ef-friend * {
-  color: #141414 !important;
-}
-#ef-main.ef-light .ef-field, #ef-main.ef-light .ef-eyebrow,
-#ef-main.ef-light .ef-page-sub, #ef-main.ef-light .ef-sec-count,
-#ef-main.ef-light .ef-friend-desc { color: #6b6a66 !important; }
-
-/* ============================================================
-   仿官网的装饰一律下架（用户规则：能用就用，不能用就空着）
-   以下这些是照着官网抄的装饰，抄不像就成了负担，全部关掉，
-   页面只留「内容 + 导航 + 页脚」这三样能用的东西。
-   ============================================================ */
-.ef-ch-bar,          /* 黄蓝撞色条 */
-.ef-ch-band,         /* 底部信号黄信息带 */
-.ef-ch-ver,          /* 核心记录版本章 */
-.ef-ch-figure,       /* 斜切几何色带 */
-.ef-ch-cards,        /* 右下卡片簇 */
-.ef-ch-marker,       /* 角标 */
-.ef-ch-hollow,       /* 空心叠字 */
-.ef-ch-no {          /* // 01 HOME 编号 */
-  display: none !important;
-}
-/* 主视觉只剩：底图 + 标题 + 一句说明 + 计数 */
-.ef-ch-inner { padding-block: clamp(3rem, 14vh, 9rem) !important; }
-.ef-ch-title { margin: 0 !important; }
-.ef-ch-lede { margin-top: 1rem !important; }
-.ef-ch-facts { margin-top: 1.25rem !important; }
-/* 竖排栏：保留能用的导航，去掉那个黑色 logo 方块与底部黑 CTA、社交方块 */
-.ef-rail-logo { display: none !important; }
-.ef-rail-cta, .ef-rail-social { display: none !important; }
-.ef-rail { border-left: 0 !important; }
-
-/* 官网竖排栏的行为：默认只露图标，鼠标移上去才展开显示文字，移开缩回。
-   我这里做成了常显，又宽又丑，改回官网行为。 */
-.ef-rail { width: 3.6rem; }
-.ef-rail:hover { width: 12.5rem; }
-.ef-rail-label { opacity: 0; transition: opacity 0.18s; white-space: nowrap; }
-.ef-rail:hover .ef-rail-label { opacity: 1; }
-.ef-rail-foot, .ef-rail-sep { opacity: 0; transition: opacity 0.18s; }
-.ef-rail:hover .ef-rail-foot, .ef-rail:hover .ef-rail-sep { opacity: 1; }
-@media (max-width: 1150px) { .ef-rail { width: 3.2rem; } .ef-rail:hover { width: 3.2rem; } }
-
-/* 官网首页背景是两层（照 index.html 的用法，不是我瞎选图）：
-   底：blurred_logo.*.png 全屏铺满并模糊 —— 铺氛围
-   上：01.aae95e75.png 角色原图 contain 靠右 —— 完整显示不裁切
-   我之前把 01.png 直接 cover 铺满，结果裁出来的全是工业场景，人看不见。 */
-.ef-ch-kv-bg {
-  background-image: url("/endfield-ui/official/blurred_logo.png") !important;
-  background-size: cover !important;
-  background-position: center center !important;
-  filter: blur(2px) brightness(0.85);
-}
-.ef-ch-kv-art {
+.ef-card-link::after {
+  content: "";
   position: absolute;
   inset: 0;
   z-index: 1;
-  background-image: url("/endfield-ui/official/01.png");
-  background-repeat: no-repeat;
-  background-position: right bottom;
-  background-size: contain;
-  pointer-events: none;
 }
-.ef-ch-inner { position: relative; z-index: 2; }
-
-/* ===== 用户明确要求：图片全部去掉，不留图 ===== */
-.ef-ch-kv-bg, .ef-ch-kv-art, .ef-boot-bg { display: none !important; }
-#ef-boot { background-color: #141414 !important; }
-
-/* ===== 竖排栏：官网是贴着上边/下边/左边的整条（顶天立地），
-   我原来 top:50% + translateY(-50%) 做成了一条居中浮着的小半截，
-   上下都漏风。改成 top:0; bottom:0 顶满。 ===== */
-.ef-rail {
-  top: 0 !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  height: 100dvh !important;
-  max-height: 100dvh;
-  transform: none !important;
-  border-radius: 0;
+.ef-card-tags,
+.ef-card-arrow {
+  position: relative;
+  z-index: 2;
+}
+.ef-card-meta {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  overflow-y: auto;
+  align-items: center;
+  gap: calc(1 * var(--efu));
+  margin: 0;
+  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-size: calc(1.05 * var(--efu));
+  letter-spacing: 0.08em;
+  color: var(--ef-ink-2);
+  font-variant-numeric: tabular-nums;
 }
-/* 上下两组之间留出弹性空隙，整条依然是顶天立地 */
-.ef-rail-list:last-of-type { margin-bottom: auto; }
-.ef-rail-foot { margin-top: 0; }
+.ef-card-cat {
+  padding: calc(0.15 * var(--efu)) calc(0.6 * var(--efu));
+  background: var(--ef-ink);
+  color: var(--ef-panel);
+  border-radius: 2px;
+  letter-spacing: 0.04em;
+}
+.ef-card-title {
+  margin: 0;
+  font-family: SansBold, Novecentosanswide-Bold, system-ui, sans-serif;
+  font-size: calc(1.65 * var(--efu));
+  line-height: 1.35;
+  color: var(--ef-ink);
+  transition: color 0.2s;
+}
+.ef-card-desc {
+  margin: 0;
+  color: var(--ef-ink-2);
+  font-size: calc(1.3 * var(--efu));
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ef-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(0.4 * var(--efu));
+  margin: auto 0 0;
+  padding: calc(0.5 * var(--efu)) 0 0;
+  list-style: none;
+}
+.ef-card-tags li {
+  padding: 0;
+}
+.ef-card-tags a {
+  color: var(--ef-ink-2);
+  text-decoration: none;
+  font-size: calc(1.05 * var(--efu));
+}
+.ef-card-tags a:hover {
+  color: var(--ef-ink);
+}
+/* 右下角箭头：官网卡片的指示符 */
+.ef-card-arrow {
+  align-self: flex-end;
+  margin-top: calc(0.5 * var(--efu));
+  font-family: SansMedium, sans-serif;
+  font-size: calc(1.5 * var(--efu));
+  line-height: 1;
+  color: var(--ef-ink-2);
+  transition: transform 0.25s, color 0.2s;
+}
+.ef-card:hover .ef-card-arrow {
+  transform: translate3d(calc(0.4 * var(--efu)), 0, 0);
+  color: var(--ef-ink);
+}
+
+/* ---------- 7. 分页与页脚 ------------------------------------------------- */
+
+.ef-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1.5 * var(--efu));
+  padding-block: calc(3 * var(--efu));
+}
+.ef-pager a,
+.ef-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(3.5 * var(--efu));
+  padding: 0 calc(1.75 * var(--efu));
+  border: 0;
+  border-radius: calc(0.25 * var(--efu));
+  background: var(--ef-ink);
+  color: var(--ef-panel);
+  font-family: SansMedium, system-ui, sans-serif;
+  font-size: calc(1.2 * var(--efu));
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+.ef-pager a:hover,
+.ef-btn:hover {
+  background: var(--ef-signal);
+  color: #191919;
+}
+
+.ef-foot {
+  border-top: 1px solid var(--ef-rule);
+  margin-top: auto;
+  padding-block: calc(3 * var(--efu));
+}
+.ef-foot-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: calc(0.75 * var(--efu)) calc(2 * var(--efu));
+  font-size: calc(1.15 * var(--efu));
+  color: var(--ef-ink-2);
+}
+.ef-foot-mark {
+  margin: 0;
+  font-family: Novecentosanswide-Bold, SansBold, sans-serif;
+  font-size: calc(1.35 * var(--efu));
+  letter-spacing: 0.06em;
+  color: var(--ef-ink);
+  text-transform: uppercase;
+}
+.ef-foot-mark span {
+  margin-inline-start: calc(0.5 * var(--efu));
+  color: var(--ef-signal);
+}
+.ef-foot-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(1.5 * var(--efu));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ef-foot-links a {
+  color: var(--ef-ink-2);
+  text-decoration: none;
+}
+.ef-foot-links a:hover {
+  color: var(--ef-ink);
+}
+.ef-foot-meta {
+  margin: 0;
+  margin-inline-start: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 8. 窄屏 ------------------------------------------------------
+   官网在移动端换成 H5 顶栏；这里保留同一条竖排栏，收到图标列（不展开），
+   内容让出固定宽度，永远不会横向溢出。 */
+
+@media (max-width: 860px) {
+  .ef-shell {
+    --ef-rail-w: 3.5rem;
+    --efu: 9px;
+  }
+  .Header_pcHeaderContainer__Sy_8l {
+    width: 3.5rem;
+  }
+  .Header_pcHeaderContainer__Sy_8l:hover,
+  .Header_pcHeaderContainer__Sy_8l:focus-within {
+    width: 3.5rem;
+  }
+  .Header_logo__s3lE_ {
+    top: 0.9rem;
+    width: 2.9rem;
+  }
+  .ef-rail-wordmark {
+    font-size: 0.62rem;
+  }
+  .ef-rail-wordmark-en {
+    display: none;
+  }
+  .Header_navList__r2BGN {
+    top: 4.6rem;
+    gap: 0.25rem;
+  }
+  .Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB {
+    height: 3rem;
+  }
+  .Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB::before {
+    left: 0.35rem;
+    width: 2.8rem;
+  }
+  .Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB .Header_icon__3iDIG,
+  .Header_pcHeaderContainer__Sy_8l [data-key] .Header_icon__3iDIG {
+    left: 50%;
+    width: 1.5rem;
+  }
+  .Header_textWrapper__o9aHt,
+  .ef-rail-bottom .Header_divider__tUYjO {
+    display: none;
+  }
+  .Header_pcHeaderContainer__Sy_8l .Header_buttonFrameBg__2UVLH,
+  .Header_pcHeaderContainer__Sy_8l .Header_buttonFrameContainer__Uvshp {
+    width: 2.75rem;
+  }
+  .Header_pcHeaderContainer__Sy_8l .Header_buttonPreserveBg__rEZGT {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.25rem;
+  }
+  .Header_pcHeaderContainer__Sy_8l
+    .Header_buttonPreserveBg__rEZGT
+    .Header_text__52fEh,
+  .Header_pcHeaderContainer__Sy_8l
+    .Header_buttonPreserveBg__rEZGT
+    .Header_divider__tUYjO {
+    display: none;
+  }
+  .Header_pcHeaderContainer__Sy_8l
+    .Header_buttonPreserveBg__rEZGT
+    .Header_tri__KNP87 {
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    width: 1.4rem;
+    height: auto;
+  }
+  .ef-rail-bottom {
+    bottom: 1.1rem;
+    gap: 1rem;
+  }
+  .Header_buttonFrameContainer__Uvshp {
+    gap: 0.35rem;
+    padding-block: 0.6rem;
+  }
+  .Header_pcHeaderContainer__Sy_8l .Header_button__b0gdu {
+    height: 2rem;
+  }
+  .ef-wrap {
+    padding-inline: 1.1rem;
+  }
+  .ef-sec-title,
+  .ef-page-name {
+    font-size: 2rem;
+  }
+}
+
+/* ---------- 9. 首页暗底 / 内页纸底的局部修正 ---------------------------- */
+
+.ef-shell:not(.ef-shell--light) .ef-sec {
+  border-top-color: #35373c;
+}
+.ef-shell:not(.ef-shell--light) .ef-card {
+  background: #232323;
+  border-color: #35373c;
+}
+.ef-shell:not(.ef-shell--light) .ef-card:hover {
+  border-color: #f2f2f2;
+}
+.ef-shell:not(.ef-shell--light) .ef-card-cat {
+  background: #f2f2f2;
+  color: #191919;
+}
+
+/* 内页里模板遗留的卡片（.card-base）：统一成官网白面 + 4px 圆角，
+   普通权重即可，不需要 !important。 */
+.ef-shell--light .card-base {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  box-shadow: none;
+  color: #191919;
+}
+.ef-shell--light .card-base h1,
+.ef-shell--light .card-base h2,
+.ef-shell--light .card-base h3,
+.ef-shell--light .card-base a {
+  color: #191919;
+}
+
+/* 内页正文链接：官网是黑字 + 黄下划线 */
+.ef-shell--light .custom-md a {
+  color: #191919;
+  text-decoration-color: var(--ef-signal);
+  text-decoration-thickness: 2px;
+}

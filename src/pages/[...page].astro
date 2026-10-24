@@ -18,14 +18,30 @@ const isHome = page.currentPage === 1;
 <EndfieldLayout title={siteConfig.title} description={siteConfig.subtitle}>
 	{
 		isHome ? (
-			<HeroCanvas />
+			<>
+				<HeroCanvas />
+				<div class="ef-wrap">
+					<section class="ef-sec">
+						<div class="ef-sec-head">
+							<div>
+								<p class="ef-eyebrow">// LATEST</p>
+								<h2 class="ef-sec-title">最新文章</h2>
+							</div>
+							<p class="ef-sec-count">{page.data.length} 篇文章</p>
+						</div>
+						<EndfieldPostGrid posts={page.data.slice(0, 6)} columns={3} />
+					</section>
+				</div>
+			</>
 		) : (
 			<div class="ef-wrap">
 				<section class="ef-sec">
 					<div class="ef-sec-head">
-						<p class="ef-eyebrow" data-replay="ef-in-power">// ARCHIVE</p>
-						<h1 class="ef-sec-title" data-replay="ef-in-power" style="--i: 1">第 {page.currentPage} 页</h1>
-						<p class="ef-sec-count ef-field">{page.data.length} 篇文章</p>
+						<div>
+							<p class="ef-eyebrow">// ARCHIVE</p>
+							<h1 class="ef-sec-title">第 {page.currentPage} 页</h1>
+						</div>
+						<p class="ef-sec-count">{page.data.length} 篇文章</p>
 					</div>
 					<EndfieldPostGrid posts={page.data} columns={3} />
 				</section>
@@ -35,9 +51,9 @@ const isHome = page.currentPage === 1;
 	{
 		page.total > 1 && (
 			<nav class="ef-wrap ef-pager">
-				{page.url.prev ? <a class="ef-btn small" href={page.url.prev}>上一页</a> : null}
-				<span class="ef-field">{page.currentPage} / {page.total}</span>
-				{page.url.next ? <a class="ef-btn small" href={page.url.next}>下一页</a> : null}
+				{page.url.prev ? <a href={page.url.prev}>上一页</a> : null}
+				<span class="ef-sec-count">{page.currentPage} / {page.total}</span>
+				{page.url.next ? <a href={page.url.next}>下一页</a> : null}
 			</nav>
 		)
 	}

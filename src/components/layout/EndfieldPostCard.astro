@@ -12,23 +12,35 @@ interface Props {
 
 const { url, title, published, description, tags = [], category } = Astro.props;
 const d = published ? new Date(published) : null;
+const pad = (n: number) => String(n).padStart(2, "0");
 const dateStr = d
-	? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+	? d.getFullYear() + "." + pad(d.getMonth() + 1) + "." + pad(d.getDate())
 	: "";
 ---
 
-<article class="ef-post">
-	<a class="ef-post-link" href={url}>
-		<p class="ef-post-date ef-field">{dateStr}</p>
-		<h3 class="ef-post-title">{title}</h3>
-		{description && <p class="ef-post-desc">{description}</p>}
-		{(category || tags.length > 0) && (
-			<ul class="ef-post-tags">
-				{category && <li class="ef-chip">{category}</li>}
+<article class="ef-card">
+	<p class="ef-card-meta">
+		{dateStr && <span class="ef-card-date">{dateStr}</span>}
+		{category && <span class="ef-card-cat">{category}</span>}
+	</p>
+
+	<h3 class="ef-card-title">
+		<a class="ef-card-link" href={url}>{title}</a>
+	</h3>
+
+	{description && <p class="ef-card-desc">{description}</p>}
+
+	{
+		tags.length > 0 && (
+			<ul class="ef-card-tags">
 				{tags.slice(0, 3).map((t) => (
-					<li class="ef-chip"><a href={getTagUrl(t)}>{t}</a></li>
+					<li>
+						<a href={getTagUrl(t)}>#{t}</a>
+					</li>
 				))}
 			</ul>
-		)}
-	</a>
+		)
+	}
+
+	<span class="ef-card-arrow" aria-hidden="true">→</span>
 </article>

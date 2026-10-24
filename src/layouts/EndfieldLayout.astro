@@ -1,6 +1,12 @@
 ---
+// 终末地官网版式的页面外壳。
+//   左侧竖排栏：位置/尺寸/配色/交互全部照官网 Header_pcHeaderContainer 搬用
+//   —— fixed 顶天立地、默认收起只见图标、悬停展开出文字（官网同名类名）。
+//   图标 SVG 从官网 index.html 里逐个抠出（data-key 同名），不是自绘。
+//   内容区：官网版心 + SectionTitle 量级；首页暗底、内页奶白纸张。
+//   站内跳转：main 必须包在 #swup-container 里（astro.config.mjs 的 swup containers
+//   依赖它），否则切换页面会整站重载。
 import BootScreen from "@components/common/BootScreen.astro";
-import EfHeader from "@components/common/EfHeader.astro";
 import "@/styles/endfield-shell.css";
 import Layout from "./Layout.astro";
 
@@ -45,19 +51,76 @@ const {
 	hasWallpaper,
 } = Astro.props;
 
-const path = Astro.url.pathname;
-const on = (p: string) => (p === "/" ? path === "/" : path.startsWith(p));
+const path = Astro.url.pathname.replace(/\/+$/, "") || "/";
+const isHome = path === "/";
+const on = (p: string) => (p === "/" ? isHome : path === p || path.startsWith(p + "/"));
+// 首页暗底、其余内页奶白纸张（ef-light 挂在 main 上，随 swup 切页自动更新）
+const isLight = !isHome;
 
-// 左侧竖排图标栏（官网 operator 页那条）。图标全部是自绘几何线框，不含任何游戏素材。
+// 官网 index.html 里 Header_icon__3iDIG 的 path（data-key 同名），原样照抄。
+const icons: Record<string, { vb: string; d: string }> = {
+	home: {
+		vb: "0 0 40 40",
+		d: "M35.744,33.156 L39.625,29.275 L31.369,21.019 L31.369,18.013 L39.616,9.766 L35.735,5.885 L26.176,15.443 L26.192,15.459 L26.185,15.459 L26.185,16.780 L22.854,16.780 L22.854,13.449 L24.184,13.449 L24.184,13.442 L24.191,13.449 L33.750,3.890 L29.869,0.009 L21.612,8.265 L18.606,8.265 L10.359,0.018 L6.478,3.899 L16.037,13.458 L16.053,13.442 L16.053,13.449 L17.365,13.449 L17.365,16.780 L14.042,16.780 L14.042,15.451 L14.035,15.451 L14.042,15.443 L4.484,5.885 L0.603,9.766 L8.859,18.022 L8.859,21.028 L0.612,29.275 L4.493,33.156 L14.052,23.597 L14.036,23.582 L14.042,23.582 L14.042,22.269 L17.365,22.269 L17.365,25.592 L16.044,25.592 L16.044,25.599 L16.037,25.592 L6.478,35.151 L10.359,39.032 L18.615,30.776 L21.622,30.776 L29.869,39.023 L33.750,35.142 L24.191,25.583 L24.175,25.599 L24.175,25.592 L22.854,25.592 L22.854,22.269 L26.185,22.269 L26.185,23.590 L26.193,23.590 L26.185,23.597 L35.744,33.156 Z",
+	},
+	operator: {
+		vb: "0 0 44 49",
+		d: "M43.057,48.470 L37.334,48.470 L6.667,48.470 L0.942,48.470 L0.942,40.719 L0.942,15.502 L0.941,15.502 L0.941,6.304 L0.942,6.304 L0.942,6.301 L6.667,6.301 L6.667,6.304 L9.743,6.304 L9.743,10.903 L34.526,10.903 L34.526,6.304 L37.334,6.304 L37.334,6.301 L43.058,6.301 L43.058,48.470 L43.057,48.470 ZM37.334,15.502 L6.667,15.502 L6.667,40.719 L10.448,40.719 L10.448,35.267 C10.448,32.112 12.951,29.554 16.037,29.554 L27.963,29.554 C31.049,29.554 33.551,32.112 33.551,35.267 L33.551,40.719 L37.334,40.719 L37.334,15.502 ZM22.000,27.793 C19.155,27.793 16.848,25.434 16.848,22.526 C16.848,19.617 19.155,17.259 22.000,17.259 C24.845,17.259 27.152,19.617 27.152,22.526 C27.152,25.434 24.845,27.793 22.000,27.793 ZM9.743,0.506 L34.526,0.506 L34.526,6.304 L9.743,6.304 L9.743,0.506 Z",
+	},
+	lore: {
+		vb: "0 0 42 42",
+		d: "M36.038,32.520 L36.038,5.876 L15.483,5.876 L15.483,0.188 L41.891,0.188 L41.891,32.520 L36.038,32.520 ZM15.614,9.516 L15.483,9.643 L15.483,9.787 L11.414,13.741 L6.027,8.506 L1.825,4.423 L1.861,4.388 L1.787,4.316 L6.060,0.164 L11.829,5.769 L15.445,9.283 L15.649,9.482 L15.614,9.516 ZM6.027,35.043 L22.791,35.043 L22.791,40.731 L0.173,40.731 L0.173,13.742 L6.027,13.742 L6.027,35.043 ZM15.652,24.914 L15.652,31.990 L8.255,31.990 L8.255,24.800 L15.535,24.800 L15.652,24.800 L15.652,9.476 L31.421,9.476 L31.421,24.800 L23.479,24.800 L23.479,32.518 L23.479,32.520 L15.652,24.914 ZM31.513,32.808 L34.107,35.331 L36.934,38.078 L33.068,41.835 L32.228,41.019 L26.374,35.331 L23.778,32.808 L23.479,32.518 L27.347,28.759 L31.513,32.808 Z",
+	},
+	information: {
+		vb: "0 0 43 46",
+		d: "M42.255,25.263 L34.478,33.034 L40.492,38.772 L35.979,43.279 L0.879,8.211 L5.387,3.708 L14.312,12.626 L15.100,12.614 L15.100,0 L22.100,0 L22.100,12.561 L24.715,12.548 L32.826,4.334 L40.786,12.286 L27.795,25.263 L42.255,25.263 ZM9.208,23.757 L9.208,23.490 L14.401,23.490 L14.401,23.757 C14.401,28.070 17.915,31.578 22.230,31.578 L22.496,31.578 L22.496,36.770 L22.230,36.770 C15.048,36.770 9.208,30.932 9.208,23.757 ZM5.918,23.757 C5.918,32.744 13.235,40.055 22.230,40.055 L22.496,40.055 L22.496,45.245 L22.230,45.245 C10.371,45.245 0.723,35.605 0.723,23.757 L0.723,23.490 L5.918,23.490 L5.918,23.757 Z",
+	},
+	calendar: {
+		vb: "0 0 42 40",
+		d: "M-0.002,40.010 L-0.002,5.448 L5.894,5.448 L5.894,10.171 L6.956,10.171 L6.956,8.485 L6.956,5.448 L6.956,-0.008 L12.072,-0.008 L12.072,5.448 L12.072,8.485 L12.072,10.171 L13.134,10.171 L13.134,5.448 L28.881,5.448 L28.881,10.171 L29.943,10.171 L29.943,8.485 L29.940,8.485 L29.940,-0.008 L35.056,-0.008 L35.056,5.448 L35.059,5.448 L35.059,10.171 L36.121,10.171 L36.121,5.448 L42.014,5.448 L42.014,40.010 L-0.002,40.010 ZM38.159,16.680 L3.853,16.680 L3.853,35.999 L38.159,35.999 L38.159,16.680 ZM9.511,22.456 L6.956,22.456 L6.956,19.889 L9.511,19.889 L9.511,22.456 ZM12.065,25.023 L9.511,25.023 L9.511,22.456 L12.065,22.456 L12.065,25.023 ZM12.065,30.156 L9.511,30.156 L9.511,27.590 L12.065,27.590 L12.065,30.156 ZM17.174,27.590 L17.174,30.156 L14.620,30.156 L14.620,27.590 L17.174,27.590 ZM22.283,27.590 L22.283,30.156 L19.729,30.156 L19.729,27.590 L22.283,27.590 ZM27.392,27.590 L27.392,30.156 L24.838,30.156 L24.838,27.590 L27.392,27.590 ZM32.501,27.590 L32.501,30.156 L29.947,30.156 L29.947,27.590 L32.501,27.590 ZM29.947,22.456 L32.501,22.456 L32.501,25.023 L29.947,25.023 L29.947,22.456 ZM24.838,25.023 L24.838,22.456 L27.392,22.456 L27.392,25.023 L24.838,25.023 ZM19.729,25.023 L19.729,22.456 L22.283,22.456 L22.283,25.023 L19.729,25.023 ZM14.620,25.023 L14.620,22.456 L17.174,22.456 L17.174,25.023 L14.620,25.023 ZM14.620,27.590 L12.065,27.590 L12.065,25.023 L14.620,25.023 L14.620,27.590 ZM19.729,25.023 L19.729,27.590 L17.174,27.590 L17.174,25.023 L19.729,25.023 ZM24.838,25.023 L24.838,27.590 L22.283,27.590 L22.283,25.023 L24.838,25.023 ZM29.947,25.023 L29.947,27.590 L27.392,27.590 L27.392,25.023 L29.947,25.023 ZM12.065,19.889 L14.620,19.889 L14.620,22.456 L12.065,22.456 L12.065,19.889 ZM17.174,19.889 L19.729,19.889 L19.729,22.456 L17.174,22.456 L17.174,19.889 ZM22.283,19.889 L24.838,19.889 L24.838,22.456 L22.283,22.456 L22.283,19.889 ZM27.392,19.889 L29.947,19.889 L29.947,22.456 L27.392,22.456 L27.392,19.889 ZM35.056,19.889 L35.056,22.456 L32.501,22.456 L32.501,19.889 L35.056,19.889 ZM35.056,25.023 L35.056,27.590 L32.501,27.590 L32.501,25.023 L35.056,25.023 ZM35.056,32.724 L32.501,32.724 L32.501,30.156 L35.056,30.156 L35.056,32.724 ZM29.947,32.724 L27.392,32.724 L27.392,30.156 L29.947,30.156 L29.947,32.724 ZM24.838,32.724 L22.283,32.724 L22.283,30.156 L24.838,30.156 L24.838,32.724 ZM19.729,32.724 L17.174,32.724 L17.174,30.156 L19.729,30.156 L19.729,32.724 ZM14.620,32.724 L12.065,32.724 L12.065,30.156 L14.620,30.156 L14.620,32.724 ZM6.956,32.724 L6.956,30.156 L9.511,30.156 L9.511,32.724 L6.956,32.724 ZM6.956,27.590 L6.956,25.023 L9.511,25.023 L9.511,27.590 L6.956,27.590 Z",
+	},
+	aicGameplay: {
+		vb: "0 0 41 50",
+		d: "M23.312,44.301 L18.497,49.105 L12.435,43.800 L17.195,43.800 L17.195,41.198 L17.195,38.997 L12.435,38.997 L17.542,34.527 L18.497,33.692 L18.757,33.952 L19.966,35.157 L20.654,35.844 L23.312,38.496 L25.259,38.496 L35.436,38.496 L36.242,38.496 L36.948,38.496 L37.859,38.496 L40.277,38.496 L40.791,38.496 L40.791,44.301 L23.312,44.301 ZM36.948,36.085 L36.242,36.085 L24.317,36.085 L20.214,31.986 L19.966,31.739 L19.966,23.492 L20.306,23.294 L30.347,17.513 L36.948,21.315 L40.729,23.492 L40.729,36.085 L39.626,36.085 L36.948,36.085 ZM30.347,24.808 C27.763,24.808 25.668,26.898 25.668,29.470 C25.668,32.048 27.763,34.137 30.347,34.137 C32.926,34.137 35.021,32.048 35.021,29.470 C35.021,26.898 32.926,24.808 30.347,24.808 ZM30.347,14.731 L29.139,15.424 L18.757,21.402 L17.542,22.101 L17.542,31.318 L16.904,31.875 L10.842,37.179 L6.249,41.198 L0.002,41.198 L0.002,0.895 L27.651,0.895 C31.283,4.518 33.316,6.546 36.948,10.169 L36.948,18.527 L31.556,15.424 L30.347,14.731 ZM7.898,4.605 L3.720,4.605 L3.720,8.765 L7.898,8.765 L7.898,4.605 ZM13.947,4.605 L9.776,4.605 L9.776,8.765 L13.947,8.765 L13.947,4.605 Z",
+	},
+	notice: {
+		vb: "0 0 44 49",
+		d: "M17.123,48.243 L17.123,8.711 L35.000,20.840 L43.285,20.840 L43.285,36.113 L35.000,36.113 L17.123,48.243 ZM9.253,0.256 L14.966,0.256 L14.966,5.930 L9.253,5.930 L9.253,0.256 ZM0.967,0.256 L6.680,0.256 L6.680,5.930 L0.967,5.930 L0.967,0.256 ZM13.264,15.581 L6.882,15.581 L6.882,41.372 L13.264,41.372 L13.264,46.884 L1.332,46.884 L1.332,10.069 L13.264,10.069 L13.264,15.581 ZM34.848,47.434 L34.848,39.054 L43.285,39.054 L34.848,47.434 Z",
+	},
+};
+
+// 导航项：文案是我们的站内结构，图标用官网对应的那一个。
 const rail = [
-	{ href: "/", label: "首页", d: "M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" },
-	{ href: "/archive/", label: "文章", d: "M4 5h16M4 12h16M4 19h10" },
-	{ href: "/categories/", label: "分类", d: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" },
-	{ href: "/tags/", label: "标签", d: "M3 12l9-9h8v8l-9 9z M15 8h.01" },
-	{ href: "/series/", label: "系列", d: "M12 3l9 5-9 5-9-5zM3 14l9 5 9-5" },
-	{ href: "/friends/", label: "友链", d: "M9 15l6-6M8 12l-2 2a3 3 0 0 0 4 4l2-2M16 12l2-2a3 3 0 0 0-4-4l-2 2" },
-	{ href: "/about/", label: "关于", d: "M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM5 20a7 7 0 0 1 14 0" },
+	{ key: "home", href: "/", label: "首页" },
+	{ key: "lore", href: "/archive/", label: "文章" },
+	{ key: "calendar", href: "/categories/", label: "分类" },
+	{ key: "information", href: "/tags/", label: "标签" },
+	{ key: "operator", href: "/series/", label: "系列" },
+	{ key: "aicGameplay", href: "/friends/", label: "友链" },
+	{ key: "notice", href: "/about/", label: "关于" },
 ];
+
+// 底部两个圆形按钮：官网是「用户 / 声音」，这边换成站内的「留言 / 订阅」。
+const railFoot = [
+	{
+		href: "/guestbook/",
+		label: "留言",
+		vb: "0 0 23 29",
+		d: "M0.253,28.756 L0.253,18.400 C0.253,15.269 2.716,12.730 5.755,12.730 L17.498,12.730 C20.537,12.730 23.000,15.269 23.000,18.400 L23.000,28.756 L0.253,28.756 ZM11.626,10.982 C8.825,10.982 6.554,8.642 6.554,5.754 C6.554,2.867 8.825,0.527 11.626,0.527 C14.428,0.527 16.699,2.867 16.699,5.754 C16.699,8.642 14.428,10.982 11.626,10.982 Z",
+	},
+	{
+		href: "/rss.xml",
+		label: "订阅",
+		vb: "0 0 27 30",
+		d: "M26.273,12.842 L25.645,11.890 L24.903,10.756 L25.645,9.622 L26.273,8.671 L25.645,8.671 L9.058,8.671 L9.058,7.007 L24.432,7.007 L13.186,0.503 L0.726,7.711 L0.726,22.135 L13.186,29.343 L24.432,22.838 L9.058,22.838 L9.058,21.183 L25.645,21.183 L26.273,21.183 L25.645,20.231 L24.903,19.098 L25.645,17.964 L26.273,17.012 L25.645,16.061 L24.903,14.927 L25.645,13.793 L26.273,12.842 ZM4.277,11.062 L6.374,11.062 L6.374,18.783 L4.277,18.783 L4.277,11.062 Z",
+	},
+];
+
+// 黑 CTA 的三角标记（官网 Header_tri__KNP87 的三枚三角）
+const triPath =
+	"M23.146,13.962 L15.554,0.843 L30.739,0.843 Z M0.261,0.843 L15.446,0.843 L7.854,13.962 Z M15.554,27.156 L7.961,14.036 L23.146,14.036 Z";
+
+const year = new Date().getFullYear();
 ---
 
 <Layout
@@ -74,67 +137,137 @@ const rail = [
 	hasWallpaper={hasWallpaper}
 >
 	<slot slot="head" name="head" />
-	<BootScreen />
-	<EfHeader />
+	<div class:list={["ef-shell", { "ef-shell--light": isLight }]} data-ef-shell>
+		<BootScreen />
 
-	<nav class="ef-rail" aria-label="主导航">
-		<a class="ef-rail-logo" href="/" aria-label="LegspCpd BLOG"><span>终末地</span></a>
-		<ul class="ef-rail-list">
-			{rail.slice(0, 4).map((item) => (
-				<li>
-					<a class={"ef-rail-item" + (on(item.href) ? " is-on" : "")} href={item.href}>
-						<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square" stroke-linejoin="miter">
-							<path d={item.d} />
+		<!-- 官网左侧竖排栏：位置/尺寸/配色/交互照 Header_pcHeaderContainer 搬用 -->
+		<aside
+			class="Header_pcHeaderContainer__Sy_8l"
+			data-ef-rail
+			aria-label="站点导航"
+		>
+			<div class="Header_innerContainer__cW_Dv">
+				<a class="Header_logo__s3lE_" href="/" aria-label="LegspCpd BLOG 首页">
+					<span class="ef-rail-wordmark">LegspCpd</span>
+					<span class="ef-rail-wordmark-en">BLOG</span>
+				</a>
+
+				<nav class="Header_navList__r2BGN">
+					{
+						rail.map((item) => (
+							<a
+								class:list={[
+									"Header_navItem__c_fLB",
+									{ Header_active__jzCyf: on(item.href) },
+								]}
+								href={item.href}
+								data-key={item.key}
+								aria-current={on(item.href) ? "page" : undefined}
+							>
+								<span class="Header_iconWrapper__BvBAU">
+									<svg
+										class="Header_icon__3iDIG"
+										viewBox={icons[item.key].vb}
+										xmlns="http://www.w3.org/2000/svg"
+										aria-hidden="true"
+									>
+										<path fill-rule="evenodd" fill="currentColor" d={icons[item.key].d} />
+									</svg>
+								</span>
+								<span class="Header_textWrapper__o9aHt">{item.label}</span>
+							</a>
+						))
+					}
+				</nav>
+
+				<div class="ef-rail-bottom">
+					<div class="Header_buttonFrameContainer__Uvshp">
+						<div class="Header_buttonFrameBg__2UVLH" aria-hidden="true"></div>
+						{
+							railFoot.map((item) => (
+								<a class="Header_button__b0gdu" href={item.href}>
+									<svg
+										class="Header_icon__3iDIG"
+										viewBox={item.vb}
+										xmlns="http://www.w3.org/2000/svg"
+										aria-hidden="true"
+									>
+										<path fill-rule="evenodd" fill="currentColor" d={item.d} />
+									</svg>
+									<span class="Header_textWrapper__o9aHt">{item.label}</span>
+								</a>
+							))
+						}
+					</div>
+
+					<!-- 官网黑 CTA（Header_buttonPreserveBg）：站内入口 -->
+					<a class="Header_buttonPreserveBg__rEZGT" href="/archive/">
+						<span class="Header_bg___kVDv" />
+						<svg
+							class="Header_tri__KNP87"
+							viewBox="0 0 32 27"
+							xmlns="http://www.w3.org/2000/svg"
+							aria-hidden="true"
+						>
+							<path fill-rule="evenodd" fill="currentColor" d={triPath} />
 						</svg>
-						<span class="ef-rail-label">{item.label}</span>
+						<span class="Header_divider__tUYjO" />
+						<span class="Header_text__52fEh">全部文章</span>
 					</a>
-				</li>
-			))}
-		</ul>
-		<div class="ef-rail-sep" aria-hidden="true"></div>
-		<ul class="ef-rail-list">
-			{rail.slice(4).map((item) => (
-				<li>
-					<a class={"ef-rail-item" + (on(item.href) ? " is-on" : "")} href={item.href}>
-						<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square" stroke-linejoin="miter">
-							<path d={item.d} />
-						</svg>
-						<span class="ef-rail-label">{item.label}</span>
-					</a>
-				</li>
-			))}
-		</ul>
-		<div class="ef-rail-foot">
-			<a class="ef-rail-item" href="/rss.xml">
-				<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 19h.01M5 12a7 7 0 0 1 7 7M5 5a14 14 0 0 1 14 14" /></svg>
-				<span class="ef-rail-label">订阅</span>
-			</a>
-			<a class="ef-rail-item" href="/guestbook/">
-				<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16v7H4zM8 20l4-3 4 3" /></svg>
-				<span class="ef-rail-label">留言</span>
-			</a>
-		</div>
-		<a class="ef-rail-cta" href="/archive/"><span>全部文章</span></a>
-		<div class="ef-rail-social" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-	</nav>
+				</div>
+			</div>
+		</aside>
 
-	<div id="swup-container">
-	<main id="ef-main" class={"ef-shell-main" + (path === "/" ? "" : " ef-light")}>
-		<div class="ef-wrap"><slot /></div>
-	</main>
-</div>
+		<!-- swup 容器：必须存在且包住 main（ef-light 跟着切页变） -->
+		<div id="swup-container">
+			<main
+				id="ef-main"
+				class:list={["ef-shell-main", { "ef-light": isLight }]}
+				data-ef-tone={isLight ? "light" : "dark"}
+			>
+				<slot />
 
-	<footer class="ef-shell-foot">
-		<div class="ef-wrap ef-shell-foot-inner">
-			<p class="ef-shell-mark">LegspCpd<span>// BLOG</span></p>
-			<ul class="ef-shell-links">
-				<li><a href="/archive/">文章</a></li>
-				<li><a href="/categories/">分类</a></li>
-				<li><a href="/tags/">标签</a></li>
-				<li><a href="/series/">系列</a></li>
-				<li><a href="/about/">关于</a></li>
-			</ul>
-			<p class="ef-shell-meta">&copy; {new Date().getFullYear()} LegspCpd</p>
+				<footer class="ef-foot">
+					<div class="ef-wrap ef-foot-inner">
+						<p class="ef-foot-mark">LegspCpd<span>// BLOG</span></p>
+						<ul class="ef-foot-links">
+							<li><a href="/archive/">文章</a></li>
+							<li><a href="/categories/">分类</a></li>
+							<li><a href="/tags/">标签</a></li>
+							<li><a href="/series/">系列</a></li>
+							<li><a href="/friends/">友链</a></li>
+							<li><a href="/about/">关于</a></li>
+						</ul>
+						<p class="ef-foot-meta">&copy; {year} LegspCpd</p>
+					</div>
+				</footer>
+			</main>
 		</div>
-	</footer>
+	</div>
 </Layout>
+
+<script is:inline>
+	// 竖排栏在 swup 容器之外、切页不会重建：手动同步「当前页」与页面基调。
+	(function () {
+		function sync() {
+			var path = location.pathname.replace(/\/+$/, "") || "/";
+			var isHome = path === "/";
+			var links = document.querySelectorAll("[data-ef-rail] .Header_navItem__c_fLB");
+			for (var i = 0; i < links.length; i++) {
+				var href = (links[i].getAttribute("href") || "").replace(/\/+$/, "") || "/";
+				var hit = href === "/" ? isHome : path === href || path.indexOf(href + "/") === 0;
+				links[i].classList.toggle("Header_active__jzCyf", hit);
+				if (hit) links[i].setAttribute("aria-current", "page");
+				else links[i].removeAttribute("aria-current");
+			}
+			var main = document.getElementById("ef-main");
+			var light = !!(main && main.classList.contains("ef-light"));
+			var shell = document.querySelector("[data-ef-shell]");
+			if (shell) shell.classList.toggle("ef-shell--light", light);
+		}
+		sync();
+		document.addEventListener("swup:page:view", function () {
+			setTimeout(sync, 0);
+		});
+	})();
+</script>

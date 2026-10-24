@@ -13,8 +13,7 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
 ---
 
 <div id="ef-boot" data-ef-boot>
-  <div class="ef-boot-bg" aria-hidden="true"></div>
-  <!-- 官网加载屏的 KV 底图（素材来自官网 CDN，站主同意少量使用） -->
+  <!-- 站主要求：先不显示任何图片。加载屏只留纯色底 + 竖条 + 文字。 -->
   <div class="ef-boot-rail" aria-hidden="true"><span></span></div>
   <div class="ef-boot-brand">
     <span class="ef-boot-brand-cn">LegspCpd</span>
@@ -36,7 +35,7 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
     /* 官网原文：.__00-Loading_container__aBijT{...background-color:#141414;...z-index:100}
        —— 是【完全不透明】的纯色底。此前写成 color-mix(#141414 86%, transparent)，
        有 14% 透光，所以加载过程中后面的文章会透出来（站主两轮都指出这一点）。 */
-    background-color: #141414;
+    background-color: #191919;
     color: #fff;
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
@@ -105,29 +104,10 @@ const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0])
     .ef-boot-meter { left: 18px; bottom: 26%; }
   }
 
-  /* ---- 官网加载屏 KV 底图，照抄官方原文 ----
-     .__00-Loading_container__aBijT .__00-Loading_bg__mahvH {
-       position:absolute; top:0; left:0; width:100%; height:100%;
-       background-image:url(bg.9e174372.jpg); background-size:cover;
-       background-position:50%; background-repeat:no-repeat; filter:blur(8px) }
-     竖屏换 bg_m.529c4e62.jpg。素材取自官网 CDN（站主同意少量使用官方素材）。 */
+  /* 站主要求：先不显示任何图片 —— 官方 KV 底图整块去掉，只留纯色底。 */
   #ef-boot { overflow: hidden; }
-  /* 官网 Loading 的实景底图：cover + blur(8px)，竖屏换 bg_m */
-  .ef-boot-bg {
-    position: absolute; inset: -2rem; z-index: 0;
-    background-image: url("/endfield-ui/official/loading-bg.jpg");
-    background-size: cover; background-position: 50%; background-repeat: no-repeat;
-    filter: blur(8px);
-  }
-  @media (orientation: portrait) {
-    .ef-boot-bg { background-image: url("/endfield-ui/official/loading-bg-m.jpg"); }
-  }
-  /* 官方那片 #fffa00 是整屏盖住的，必须压在 KV 与所有内容之上，否则会透出正文 */
+  /* 官方那片 #fffa00 是整屏盖住的，必须压在内容之上，否则会透出正文 */
   #ef-boot.is-leaving::after { z-index: 3; }
-  
-  @media (orientation: portrait) {
-    
-  }
 </style>
 
 <script is:inline>

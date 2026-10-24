@@ -710,21 +710,7 @@ button, .btn { border-radius: 0 !important; }
 [class*="h-2"][class*="rounded-full"] { height: 2px !important; background: var(--ef-rule) !important; }
 [class*="h-2"][class*="rounded-full"] > * { background: var(--ef-signal) !important; }
 
-/* 页头里的按钮（搜索 / 主题）统一成方角细线小钮，去掉主题的浅底 */
-/* 主题自带的按钮（如搜索）：保持方角细线；套件 .ef-btn 的不受此影响，走套件样式 */
-.ef-header-inner button:not(.ef-btn) {
-  border-radius: 0 !important;
-  border: 1px solid var(--ef-rule) !important;
-  background: color-mix(in srgb, var(--ef-panel) 70%, transparent) !important;
-  color: var(--ef-ink-2) !important;
-  padding: 0.28rem 0.7rem !important;
-  font-size: 0.82rem !important;
-  box-shadow: none !important;
-}
-.ef-header-inner button:not(.ef-btn):hover {
-  color: var(--ef-ink) !important;
-  border-color: color-mix(in srgb, var(--ef-ink) 45%, transparent) !important;
-}
+/* 52.1) 顶栏已整体删除（导航改为官网那条竖排栏），此处不再有页头按钮补丁。 */
 
 /* ===== 33) 正文自带目录块 + 评论区 ===== */
 #post-container .custom-md h2#目录 {
@@ -779,14 +765,7 @@ button, .btn { border-radius: 0 !important; }
   color: var(--ef-ink) !important;
 }
 
-/* ===== 35) 窄屏兜底：首屏大号空心编号必须隐藏（组件内 scoped 规则实测在线上未生效） ===== */
-@media (max-width: 860px) {
-  .ef-ch-no { display: none !important; }
-  /* 原来写死 margin-left:0 + !important，把 HeroCanvas 里的居中顶掉了，
-     所以主视觉一直贴左、右侧留大片空白（站主两轮都说「太小/太空」）。
-     这里改回 auto，窄屏保持满宽即可。 */
-  .ef-ch-inner { margin-left: auto !important; margin-right: auto !important; }
-}
+/* ===== 35) 首屏旧类（.ef-ch-*）已随 HeroCanvas 重写删除，见 endfield-shell.css ===== */
 
 /* ===== 36) 页名骨架（配合套件 ef-ledger / ef-field 使用）===== */
 .ef-page-name {
@@ -950,28 +929,7 @@ friend-filter button.ef-chip[data-active] {
 :root { --ef-contour: color-mix(in srgb, #ededed 36%, transparent); }
 :root:not(.dark) { --ef-contour: color-mix(in srgb, #141414 22%, transparent); }
 
-/* 50) 首屏大号空心编号：压在内容之下、不撑破横向、窄屏隐藏 */
-.ef-chapter { overflow: hidden; }
-.ef-ch-no {
-  position: absolute !important;
-  right: clamp(0.5rem, 3vw, 2.5rem) !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  z-index: 0 !important;
-  margin: 0 !important;
-  max-width: 46vw !important;
-  pointer-events: none !important;
-}
-.ef-ch-inner { z-index: 1; max-width: min(70rem, 86vw) !important; }
-/* 编号只有在大屏才放得下；<=1399px 时面板几乎占满，硬放会变成残缺一角（实测过） */
-@media (max-width: 1399px) {
-  .ef-ch-no { display: none !important; }
-}
-.ef-ch-no {
-  font-size: clamp(6rem, 15vw, 14rem) !important;
-  right: 2.5vw !important;
-  opacity: 0.92 !important;
-}
+/* 50) 首屏旧类已删除（HeroCanvas 现在用 .ef-hero*，样式在组件内）。 */
 
 /* ==== 51) 官网字体（Gilroy + Novecentosanswide，取自官网 CDN，站主同意少量使用）==== 
    官网正文字体是 Gilroy（几何无衬线）、标题是 Novecentosanswide（宽体）；中文走系统字体。
@@ -1009,7 +967,7 @@ friend-filter button.ef-chip[data-active] {
 }
 body, button, input, select, textarea { font-family: var(--ef-font-sans); }
 h1, h2, h3, h4,
-.ef-ch-title, .ef-ch-hollow, .ef-article-title, .ef-eyebrow,
+.ef-article-title, .ef-eyebrow, .ef-hero-title, .ef-hero-hollow,
 .ef-hollow-no, .ef-bar-title, .ef-wordmark, .ef-section-title {
   font-family: var(--ef-font-wide);
 }
