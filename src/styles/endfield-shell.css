@@ -88,9 +88,7 @@ body.ef-contours::after {
 }
 /* 站主要求：先不显示任何图片（竖排栏图标等一律走内联 SVG）。
    要恢复内容里的图片（友链头像、正文配图），删掉这一条即可。 */
-.ef-shell img {
-  display: none;
-}
+.ef-shell img.ef-hide-hero, .ef-boot img, .ef-ch-kv img { display: none; }
 /* 主题那条顶部渐变高光（Layout 渲染，180px 固定黑/白渐变，z-index 20）是 .ef-shell
    的兄弟节点，压不住它，所以这里直接按类名关掉。只有本站的壳页面会加载这份样式表。 */
 .top-gradient-highlight {
@@ -1167,3 +1165,9 @@ button.ef-rail-social-item, button.ef-rail-jump {
   border: 0;
   cursor: pointer;
 }
+
+/* 之前是 .ef-shell img{display:none}，本意只想去掉首页主视觉大图，
+   结果连友链头像、正文配图一起隐藏了（用户看到头像空框）。
+   现在只隐藏主视觉与加载屏的图，其它 <img> 正常显示。 */
+.ef-shell img:not(.ef-hide-hero) { display: revert; }
+.ef-shell .ef-ch-kv img, .ef-shell .ef-boot img, .ef-boot img { display: none; }
