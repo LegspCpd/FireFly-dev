@@ -1,0 +1,1502 @@
+<!DOCTYPE html><html lang="zh-CN" data-ef-variant="standard" class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode="none" data-fullscreen-layout="classic" data-tag-style="pill" data-category-style="rectangle" style="--configHue: 165;--page-width: 100rem;--navbar-panel-blur: 10px;--banner-height-home: 65vh;--banner-height-non-home: max(45vh, 380px);--banner-height: 35vh;" data-astro-cid-ju4pidww><head><meta charset="UTF-8"><link rel="stylesheet" href="/endfield-ui/endfield.css"><script src="/endfield-ui/variant.js"></script><script src="/endfield-ui/fx.js"></script><!-- 入场动效运行时。动画类一律来自套件预设（不受这里影响）：
+           ef-in-power / ef-in-come / ef-in-drive / ef-in-sweep ...
+         这里只补套件没有的两件事：
+           1) replay —— 把 data-replay 里的类摘掉 -> 强制回流 -> 加回去
+              （实现照搬套件 templates/motion.html，套件的 fx.js 并不含它）。
+              没有它，入场动画只在首次渲染跑一次，站内跳转（swup）后不会重跑。
+           2) 触发 —— 套件只有「开页即播」，长页面下半部分在播完后才被看到，
+              等于没有动效。因此改为：进入视口时才挂类。
+              对无法在 markup 上标注的内容生成元素（markdown 的 h2/h3 等）走 AUTO 列表。
+         套件预设本身包在 prefers-reduced-motion: no-preference 里，尊重系统设置。 --><script>
+      (function () {
+        // [选择器, 套件预设类, 是否按序号错开 --i]
+        var AUTO = [
+          // 注意用后代选择器：markdown 的 h2/h3 外面还有一层无类名的包裹，
+          // 实测 .custom-md > h2 匹配 0 个、.custom-md h2 匹配 36 个。
+          [".custom-md h2, .custom-md h3", "ef-in-power", true],
+          [".custom-md figure, .custom-md img", "ef-in-come", true],
+          // 正文里的代码块/表格/引用
+          [".custom-md pre, .custom-md table, .custom-md blockquote", "ef-in-come", true],
+          // 空状态
+          [".ef-empty", "ef-in-power", false],
+          // 卡片本体不能挂：.card-base 的切角是 clip-path，套件预设的关键帧也写 clip-path，
+          // fill-mode: both 会永久覆盖切角。改用它的子元素（子元素没有裁剪）。
+          [".card-base > :not(.ef-tri)", "ef-in-power", false],
+          [".ef-ledger > li, .ef-page-list > li", "ef-in-come", true],
+          [".archive-year-block", "ef-in-power", true],
+          // 目录与翻页
+          [".immersive-toc, .floating-toc-wrapper", "ef-in-power", false],
+          [".responsive-pagination, .desktop-pagination, .mobile-pagination", "ef-in-come", true],
+          // 页脚：用元素选择器，不依赖类名（真正的页脚是 components/layout/Footer.astro，
+          // 先前的 "footer .ef-footer" 类名并不存在，等于空转）
+          ["footer", "ef-in-power", false]
+        ];
+        function play(el) {
+          var cls = el.getAttribute("data-replay");
+          if (!cls) return;
+          // 保险一：文档隐藏时不要挂入场类。套件预设用 animation-fill-mode: backwards，
+          // 动画开始前元素停在 from（opacity:0）那一帧；后台标签页里动画被暂停，
+          // 就会永久停在不可见状态 —— 站主实测首页主视觉整块消失就是这个原因。
+          if (document.hidden) return;
+          el.classList.remove(cls);
+          void el.offsetWidth;
+          el.classList.add(cls);
+          // 保险二：动画若没有真的跑起来（被节流/暂停），把类摘掉回落到自然状态（完全可见）。
+          setTimeout(function () {
+            var anims = el.getAnimations ? el.getAnimations() : [];
+            var ran = anims.some(function (a) {
+              return a.playState === "running" || a.playState === "finished";
+            });
+            if (!ran) el.classList.remove(cls);
+          }, 1400);
+        }
+        function replay(root) {
+          (root || document).querySelectorAll("[data-replay]").forEach(play);
+        }
+        var io = "IntersectionObserver" in window
+          ? new IntersectionObserver(function (entries) {
+              entries.forEach(function (en) {
+                if (!en.isIntersecting) return;
+                io.unobserve(en.target);
+                play(en.target);
+              });
+            }, { rootMargin: "0px 0px -6% 0px", threshold: 0.05 })
+          : null;
+
+        var observed = 0;
+        function boot(root) {
+          replay(root);
+          AUTO.forEach(function (spec) {
+            (root || document).querySelectorAll(spec[0]).forEach(function (el, i) {
+              if (el.hasAttribute("data-replay")) return; // markup 上已标注的由上一行处理
+              el.setAttribute("data-replay", spec[1]);
+              if (spec[2]) el.style.setProperty("--i", String(i % 8));
+              // 首屏内立即播（getBoundingClientRect，不依赖 IntersectionObserver，
+              // 因为隐藏文档不投递 IO 回调）；首屏外交给观察器，滚到才播。
+              var r = el.getBoundingClientRect();
+              var inView = r.top < (window.innerHeight || 0) && r.bottom > 0;
+              if (inView || !io) play(el);
+              else { io.observe(el); observed++; }
+            });
+          });
+        }
+        window.__efReplay = replay;
+        window.__efMotion = function () { return { observed: observed, auto: AUTO.length }; };
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { boot(document); });
+        else boot(document);
+        document.addEventListener("swup:page:view", function () { boot(document); });
+        // 从后台切回前台时，把之前跳过的补齐
+        document.addEventListener("visibilitychange", function () {
+          if (!document.hidden) replay(document);
+        });
+      })();
+    </script><style>
+			@layer properties, theme, base, components, utilities;
+		</style><!-- Google tag (gtag.js) --><script data-swup-ignore-script async src="https://www.googletagmanager.com/gtag/js?id=G-EH2BZS4JH4"></script><script data-swup-ignore-script>(function(){const analyticsId = "G-EH2BZS4JH4";
+window.dataLayer = window.dataLayer || [];
+
+function gtag() {
+    dataLayer.push(arguments);
+}
+
+gtag('js', new Date());
+gtag('config', analyticsId);
+})();</script><!-- Google AdSense --><link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin="anonymous"><link rel="preconnect" href="https://googleads.g.doubleclick.net" crossorigin="anonymous"><script data-swup-ignore-script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5451911549695673" crossorigin="anonymous"></script><script data-swup-ignore-script>(function(){const clarityId = "y5kphl2duk";
+
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", clarityId);
+})();</script><script data-swup-ignore-script defer src="https://cloud.umami.is/script.js" data-website-id="a333ea5c-7ed3-440d-bf24-167384eef9c9"></script><script data-swup-ignore-script>
+			;(() => {
+				const name = 'outbound-link-click'
+
+				const applyOutboundTracking = () => {
+					document.querySelectorAll('a').forEach((a) => {
+						if (
+							a.host !== window.location.host &&
+							!a.getAttribute('data-umami-event')
+						) {
+							a.setAttribute('data-umami-event', name)
+							a.setAttribute('data-umami-event-url', a.href)
+						}
+					})
+				}
+
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', applyOutboundTracking, {
+						once: true,
+					})
+				} else {
+					applyOutboundTracking()
+				}
+
+				document.addEventListener('astro:page-load', applyOutboundTracking)
+			})()
+		</script><!-- ========== 本地定制：DNS 预取与预连接 ========== --><link rel="dns-prefetch" href="https://www.googletagmanager.com"><link rel="preconnect" href="https://www.googletagmanager.com" crossorigin="anonymous"><link rel="dns-prefetch" href="https://www.google-analytics.com"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin="anonymous"><link rel="dns-prefetch" href="https://pagead2.googlesyndication.com"><link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin="anonymous"><link rel="dns-prefetch" href="https://googleads.g.doubleclick.net"><link rel="preconnect" href="https://googleads.g.doubleclick.net" crossorigin="anonymous"><link rel="dns-prefetch" href="https://www.clarity.ms"><link rel="preconnect" href="https://www.clarity.ms" crossorigin="anonymous"><link rel="dns-prefetch" href="https://cloud.umami.is"><link rel="preconnect" href="https://cloud.umami.is" crossorigin="anonymous"><link rel="dns-prefetch" href="https://blog.legspcpd.top"><link rel="preconnect" href="https://blog.legspcpd.top"><title>LegspCpd Blog | LegspCpd Blog</title><meta name="description" content="记录技术折腾与生活点滴"><meta name="keywords" content="Firefly, Fuwari, Astro, ACGN, 博客, 技术博客, 静态博客, 个人博客, 编程, 生活, LegspCpd, LegspCpd Blog, LegspCpd 的个人博客, LegspCpd's Blog, LegspCpd's Personal Blog, 和顺一中, hsyz, 和顺第一初级中学, Heshun No.1 Junior High School, Heshun Yizhong, Bilibili LegspCpd, B站 LegspCpd, B站 LegspCpd 的个人博客, 技术分享, 科技, Cloudflare"><meta name="author" content="LegspCpd"><meta name="baidu-site-verification" content="Sy4nL3Xd5VtjwSqy"><meta name="yandex-verification" content="afca2c66e14b9ced"><link rel="canonical" href="https://blog.legspcpd.top/"><meta property="og:site_name" content="LegspCpd Blog"><meta property="og:locale" content="zh_CN"><meta property="og:url" content="https://blog.legspcpd.top/"><meta property="og:title" content="LegspCpd Blog | LegspCpd Blog"><meta property="og:description" content="记录技术折腾与生活点滴"><meta property="og:image" content="https://blog.legspcpd.top/og/site.png"><meta property="og:image:alt" content="LegspCpd Blog | LegspCpd Blog"><meta name="twitter:image" content="https://blog.legspcpd.top/og/site.png"><meta name="twitter:image:alt" content="LegspCpd Blog | LegspCpd Blog"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:url" content="https://blog.legspcpd.top/"><meta name="twitter:title" content="LegspCpd Blog | LegspCpd Blog"><meta name="twitter:description" content="记录技术折腾与生活点滴"><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://blog.legspcpd.top/#website","url":"https://blog.legspcpd.top/","name":"LegspCpd Blog","description":"LegspCpd 的个人博客，记录我的学习和生活点滴,分享我的技术经验和见解。","inLanguage":"zh-CN","publisher":{"@id":"https://blog.legspcpd.top/#person"},"potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://blog.legspcpd.top/search/?q={search_term_string}"},"query-input":"required name=search_term_string"}},{"@type":"Person","@id":"https://blog.legspcpd.top/#person","name":"LegspCpd","url":"https://blog.legspcpd.top/about/","image":"https://hub.legspcpd.top/file/1787274091485_ico.png","description":"你不能只在赢时,才爱自己国家","sameAs":["https://discord.gg/legspcpd","https://github.com/legspcpd"]},{"@type":"Organization","@id":"https://blog.legspcpd.top/#organization","name":"LegspCpd Blog","url":"https://blog.legspcpd.top/","logo":{"@type":"ImageObject","url":"https://hub.legspcpd.top/file/1787274091485_ico.png","contentUrl":"https://hub.legspcpd.top/file/1787274091485_ico.png"}}]}</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Astro v7.3.8"><meta name="theme-color" content="hsl(165 90% 60%)"><link rel="icon" href="https://hub.legspcpd.top/file/1787274091485_ico.png"><link rel="apple-touch-icon" href="https://hub.legspcpd.top/file/1787274091485_ico.png" type="image/png"><!-- 为特定域名的图片添加 referrerpolicy 以解决 403 问题 --><!-- 注：静态图片（ImageWrapper 组件、Markdown 正文图）已在构建期加好 referrerpolicy；
+         此脚本仅作为运行时兜底，处理动态注入的图片（解密内容、第三方评论/统计部件等）。 --><!-- Set the theme before the page is rendered to avoid a flash --><script>(function(){const PAGE_WIDTH = 100;
+const configHue = 165;
+const defaultMode = "dark";
+const defaultWallpaperMode = "none";
+const isWallpaperSwitchable = false;
+const isFullscreenLayoutSwitchable = false;
+const darkTheme = "one-dark-pro";
+const lightTheme = "one-light";
+const baseUrl = "/";
+const cardTransparentOpacity = 0.5;
+const fullscreenLayout = "classic";
+
+      // 主题初始化 - 与setting-utils.ts保持一致
+      const LIGHT_MODE = "light";
+      const DARK_MODE = "dark";
+      const SYSTEM_MODE = "system";
+
+      // 获取存储的主题，如果没有则使用默认值
+      const theme = localStorage.getItem("theme") || defaultMode;
+
+      // 获取系统主题
+      function getSystemTheme() {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? DARK_MODE
+          : LIGHT_MODE;
+      }
+
+      // 解析主题（如果是system模式，则获取系统主题）
+      function resolveTheme(themeValue) {
+        if (themeValue === SYSTEM_MODE) {
+          return getSystemTheme();
+        }
+        return themeValue;
+      }
+
+      const resolvedTheme = resolveTheme(theme);
+      const isDark = resolvedTheme === DARK_MODE;
+
+      // 应用主题
+      if (isDark) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+
+      // Set the theme for Expressive Code
+      document.documentElement.setAttribute(
+        "data-theme",
+        isDark ? darkTheme : lightTheme
+      );
+
+      // 暴露两组代码主题名，供自建页头切换时复用同一机制（class + data-theme + colorScheme）
+      try { window.__ffTheme = { dark: darkTheme, light: lightTheme }; } catch (e) {}
+
+      // Load the hue from local storage
+      const hue = localStorage.getItem("hue") || configHue;
+      document.documentElement.style.setProperty("--hue", hue);
+
+      // 设置卡片透明度（全屏透明模式下使用），优先使用用户自定义值
+      const storedCardOpacity = localStorage.getItem("overlayCardOpacity");
+      const parsedCardOpacity = storedCardOpacity === null ? NaN : Number.parseFloat(storedCardOpacity);
+      const resolvedCardOpacity = Number.isFinite(parsedCardOpacity)
+        ? Math.min(1, Math.max(0, parsedCardOpacity))
+        : cardTransparentOpacity;
+      document.documentElement.style.setProperty("--card-transparent-opacity", String(resolvedCardOpacity));
+
+      // 仅在允许切换时使用设置面板保存的运行时选择；否则配置值始终生效
+      const storedFullscreenLayout = isFullscreenLayoutSwitchable
+        ? localStorage.getItem("fullscreenLayout")
+        : null;
+      if (!isFullscreenLayoutSwitchable) {
+        localStorage.removeItem("fullscreenLayout");
+      }
+      const resolvedFullscreenLayout =
+        storedFullscreenLayout === "hero" || storedFullscreenLayout === "classic"
+          ? storedFullscreenLayout
+          : fullscreenLayout;
+      document.documentElement.setAttribute(
+        "data-fullscreen-layout",
+        resolvedFullscreenLayout,
+      );
+
+      // 内容定位已由 --content-top 纯 CSS 决定（layout-base.css），无需 --banner-height-extend 变量/计算
+
+      // 初始化壁纸模式 - 在页面渲染前同步应用（其余布局由 CSS 属性选择器接管）
+      const wallpaperMode = isWallpaperSwitchable
+        ? localStorage.getItem("wallpaperMode") || defaultWallpaperMode
+        : defaultWallpaperMode;
+
+      // 设置data-wallpaper-mode属性
+      document.documentElement.setAttribute(
+        "data-wallpaper-mode",
+        wallpaperMode
+      );
+
+      // 初始化期间禁用 content-panel/wrapper 过渡，避免加载时布局/变量变化产生内容移动动画；
+      // load 后移除（仅首次设置，swup 切页重跑脚本时不再重复）。布局已由 CSS 接管，无需 rAF 校正
+      if (!window.__fireflyLayoutTransitionGuard) {
+        window.__fireflyLayoutTransitionGuard = true;
+        document.documentElement.setAttribute("data-layout-init", "");
+        const removeLayoutInit = () =>
+          document.documentElement.removeAttribute("data-layout-init");
+        if (document.readyState === "complete") {
+          requestAnimationFrame(removeLayoutInit);
+        } else {
+          window.addEventListener("load", removeLayoutInit, { once: true });
+        }
+      }
+
+      // 初始化水波纹动画状态 - 在 html 元素上设置属性，CSS 会立即生效
+      (function applyWavesEnabled() {
+        const wavesEnabled = localStorage.getItem("wavesEnabled");
+        if (wavesEnabled !== null) {
+          document.documentElement.setAttribute("data-waves-enabled", wavesEnabled);
+        }
+      })();
+
+      // 初始化渐变过渡状态 - 在 html 元素上设置属性，CSS 会立即生效
+      (function applyGradientEnabled() {
+        const gradientEnabled = localStorage.getItem("gradientEnabled");
+        if (gradientEnabled !== null) {
+          document.documentElement.setAttribute("data-gradient-enabled", gradientEnabled);
+        }
+      })();
+
+      // 初始化横幅标题显示状态 - 在 html 元素上设置属性，CSS 会立即生效
+      (function applyBannerTitleEnabled() {
+        const bannerTitleEnabled = localStorage.getItem("bannerTitleEnabled");
+        if (bannerTitleEnabled !== null) {
+          document.documentElement.setAttribute("data-banner-title-enabled", bannerTitleEnabled);
+        }
+      })();
+    })();</script><!-- defines global css variables. This will be applied to <html> <body> and some other elements idk why --><!-- ========== 本地定制：hreflang 多语言定位 ========== --><link rel="alternate" hreflang="zh-CN" href="https://blog.legspcpd.top/"><link rel="alternate" hreflang="x-default" href="https://blog.legspcpd.top/"><!-- ========== 本地定制：按路由元数据设置索引策略 ========== --><meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"><!-- ========== 本地定制：BreadcrumbList 结构化数据 ========== --><script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LegspCpd Blog","item":"https://blog.legspcpd.top"}]}</script><link rel="alternate" type="application/rss+xml" title="LegspCpd" href="https://blog.legspcpd.top/rss.xml"><link rel="alternate" type="application/atom+xml" title="LegspCpd" href="https://blog.legspcpd.top/atom.xml"><!-- Font Setup (Astro Font API) --><!-- Astro Font API: 自动下载、缓存并生成优化的 @font-face --><!-- 区域字体 CSS 变量 + body 字体 --><!-- --font-code 无条件输出，即使关闭自定义字体，行内代码和代码块也要保持等宽字体 --><style>
+  :root {
+    --font-code: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    
+    
+    
+  }
+
+  
+</style><script type="module">document.fonts&&typeof document.fonts.ready<"u"&&document.fonts.ready.then(()=>{document.dispatchEvent(new CustomEvent("fontsLoaded"))}).catch(n=>{console.warn("Font loading failed:",n)});</script><link rel="stylesheet" href="/_astro/_..BRQQITdm.css"><link rel="stylesheet" href="/_astro/EndfieldLayout.Dm1zhcO4.css"><link rel="stylesheet" href="/_astro/Layout.qlB9Rfnf.css"><script type="module" src="/_astro/page.BQiduFAJ.js"></script></head><body class="min-h-screen ef ef-contours is-home sticky-navbar" style="--configHue: 165;--page-width: 100rem;--navbar-panel-blur: 10px;--banner-height-home: 65vh;--banner-height-non-home: max(45vh, 380px);--banner-height: 35vh;" data-astro-cid-ju4pidww><!-- 首帧前按运行时壁纸模式翻转卡片透明类（布局已由 data-wallpaper-mode 属性规则接管） --><script>
+      (function () {
+        const wm = document.documentElement.getAttribute("data-wallpaper-mode");
+        if (!wm) return;
+        document.body.classList.toggle(
+          "wallpaper-transparent",
+          wm === "overlay" ||
+            (wm === "fullscreen" &&
+              document.documentElement.getAttribute("data-fullscreen-layout") === "hero"),
+        );
+      })();
+    </script><div id="progress-bar" style="--configHue: 165;--page-width: 100rem;--navbar-panel-blur: 10px;--banner-height-home: 65vh;--banner-height-non-home: max(45vh, 380px);--banner-height: 35vh;" data-astro-cid-ju4pidww></div><script>(function(){const defaultBorder = true;
+const defaultFollowTheme = false;
+
+      (function() {
+        var stored = localStorage.getItem("cardBorderEnabled");
+        var border = stored !== null ? stored === "true" : defaultBorder;
+        if (border) document.documentElement.classList.add("enable-card-border");
+        else document.documentElement.classList.remove("enable-card-border");
+
+        stored = localStorage.getItem("cardFollowThemeEnabled");
+        var follow = stored !== null ? stored === "true" : defaultFollowTheme;
+        if (follow) document.body.classList.add("card-follow-theme-hue");
+        else document.body.classList.remove("card-follow-theme-hue");
+      })();
+    })();</script><!-- 页面顶部渐变高光效果 - 只在full和semifull模式下显示 --><div class="top-gradient-highlight" style="--configHue: 165;--page-width: 100rem;--navbar-panel-blur: 10px;--banner-height-home: 65vh;--banner-height-non-home: max(45vh, 380px);--banner-height: 35vh;" data-astro-cid-ju4pidww></div><!-- 全局配置载体 --><div id="config-carrier" data-hue="165" data-wallpaper-mode="none"></div><script data-swup-ignore-script>(function(){const managerConfigStr = "{\"mode\":\"local\",\"meting\":{\"api\":\"https://api.i-meto.com/meting/api?server=:server&type=:type&id=:id&r=:r\",\"server\":\"tencent\",\"type\":\"playlist\",\"id\":\"6pFWDs1Da5FG\",\"auth\":\"\",\"fallbackApis\":[\"https://api.injahow.cn/meting/?server=:server&type=:type&id=:id\",\"https://api.moeyao.cn/meting/?server=:server&type=:type&id=:id\"]},\"localPlaylist\":[{\"name\":\"Higher\",\"artist\":\"Tobu\",\"url\":\"/assets/music/Higher-Tobu.mp3\",\"pic\":\"/assets/music/cover/Higher-Tobu.jpg\"},{\"name\":\"Give Me Something (for Arknights Endfield)\",\"artist\":\"OneRepublic\",\"url\":\"/assets/music/Give Me Something (for Arknights Endfield) - OneRepublic.mp3\",\"pic\":\"/assets/music/cover/170474730.jpg\"},{\"name\":\"Numb\",\"artist\":\"Linkin Park\",\"url\":\"/assets/music/Numb.flac\",\"pic\":\"/assets/music/cover/Linkin_Park_-_Numb_CD_cover.jpg\"},{\"name\":\"The Nights\",\"artist\":\"Avicii\",\"url\":\"/assets/music/The Nights-Avicii.mp3\",\"pic\":\"/assets/music/cover/Avicii_Nights_Artwork.png\"},{\"name\":\"world.execute(me);\",\"artist\":\"Miracle Milk\",\"url\":\"/assets/music/world-execute-me.wav\",\"pic\":\"/assets/music/cover/ab67616d00001e02de2f0ff77da06e2bb0fda6d2.jpg\"},{\"name\":\"Sky High\",\"artist\":\"Elektronomia\",\"url\":\"/assets/music/Sky High.mp3\",\"pic\":\"/assets/music/cover/artwork-440x440.jpg\"},{\"name\":\"Sky High Pt.II\",\"artist\":\"Elektronomia\",\"url\":\"/assets/music/Sky High pt.II.mp3\",\"pic\":\"/assets/music/cover/Sky High pt.II.jpg\"},{\"name\":\"Heaven\",\"artist\":\"Avicii\",\"url\":\"/assets/music/Heaven.mp3\",\"pic\":\"/assets/music/cover/Avicii_Heaven_Single_Cover_Art.jpg\"},{\"name\":\"A Moment Apart\",\"artist\":\"Odesza\",\"url\":\"/assets/music/A Moment Apart-Odesza.mp3\",\"pic\":\"/assets/music/cover/A_Moment_Alone_Cover.jpg\"},{\"name\":\"使一颗心免于哀伤\",\"artist\":\"知更鸟 / HOYO-MiX / Chevy\",\"url\":\"/assets/music/使一颗心免于哀伤-哼唱.mp3\",\"pic\":\"/assets/music/cover/109951169585655912.webp\"}],\"volume\":0.7,\"playMode\":\"list\",\"showLyrics\":false,\"i18n\":{\"noPlaying\":\"暂未播放\",\"lyrics\":\"歌词\",\"volume\":\"音量\",\"playMode\":\"切换播放模式\",\"prev\":\"上一首\",\"next\":\"下一首\",\"playlist\":\"列表\",\"noLyrics\":\"暂无歌词\",\"loadingLyrics\":\"正在加载歌词...\",\"failedLyrics\":\"歌词加载失败\",\"noSongs\":\"暂无歌曲\",\"error\":\"播放器错误\",\"play\":\"播放\",\"pause\":\"暂停\",\"progress\":\"播放进度\",\"noCover\":\"暂无封面\"}}";
+
+(function () {
+    // Singleton guard – only create once
+    if (window.__fireflyMusic) return;
+
+    var config = JSON.parse(managerConfigStr);
+
+    // ── Helpers ──────────────────────────────────────────────
+    function formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '0:00';
+        var min = Math.floor(seconds / 60);
+        var sec = Math.floor(seconds % 60);
+        return min + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    function parseLRC(lrc) {
+        if (!lrc) return [];
+        var lines = lrc.split('\n');
+        var result = [];
+        var timeReg = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/g;
+        lines.forEach(function (line) {
+            var matches = Array.from(line.matchAll(timeReg));
+            if (matches.length > 0) {
+                var text = line.replace(timeReg, '').trim();
+                if (text) {
+                    matches.forEach(function (match) {
+                        var m = parseInt(match[1]);
+                        var s = parseInt(match[2]);
+                        var ms = parseInt(match[3]);
+                        var time = m * 60 + s + ms / (match[3].length === 3 ? 1000 : 100);
+                        result.push({ time: time, text: text });
+                    });
+                }
+            }
+        });
+        return result.sort(function (a, b) { return a.time - b.time; });
+    }
+
+    // ── Audio element (persistent, attached to body) ────────
+    var audio = document.createElement('audio');
+    audio.crossOrigin = 'anonymous';
+    audio.style.display = 'none';
+    audio.preload = 'none'; // 阻止浏览器预加载和自动恢复播放
+    document.body.appendChild(audio);
+    audio.pause(); // 确保不自动播放
+
+    // ── State ────────────────────────────────────────────────
+    var loadVersion = 0; // incremented on each loadTrack to discard stale play() results
+    var state = {
+        playlist: [],
+        currentIndex: 0,
+        isPlaying: false,
+        playMode: 0, // 0: list, 1: one, 2: random
+        volume: localStorage.getItem('music-player-volume') !== null
+            ? parseFloat(localStorage.getItem('music-player-volume'))
+            : (config.volume || 0.7),
+        isMuted: false,
+        lyrics: [],
+        currentLrcIndex: -1,
+        initialized: false,
+        initializing: false,
+        error: null
+    };
+
+    // Map config playMode string to number
+    if (config.playMode === 'random') state.playMode = 2;
+    else if (config.playMode === 'one') state.playMode = 1;
+    else state.playMode = 0;
+
+    // ── Event helpers ────────────────────────────────────────
+    function emit(name, detail) {
+        window.dispatchEvent(new CustomEvent(name, { detail: detail || {} }));
+    }
+
+    // ── Meting fetch ─────────────────────────────────────────
+    async function fetchMetingData() {
+        if (!config.meting) return;
+        var m = config.meting;
+        var apis = [m.api].concat(m.fallbackApis || []);
+
+        for (var i = 0; i < apis.length; i++) {
+            var baseApi = apis[i];
+            if (!baseApi) continue;
+            try {
+                var fetchUrl = baseApi
+                    .replace(':server', m.server)
+                    .replace(':type', m.type)
+                    .replace(':id', m.id)
+                    .replace(':r', Math.random());
+                if (m.auth) fetchUrl += '&auth=' + m.auth;
+
+                var res = await fetch(fetchUrl);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                var data = await res.json();
+
+                if (Array.isArray(data) && data.length > 0) {
+                    state.playlist = data.map(function (item) {
+                        return {
+                            name: item.title || item.name || 'Unknown',
+                            artist: item.author || item.artist || 'Unknown',
+                            url: item.url,
+                            pic: item.pic || item.cover || '',
+                            lrc: item.lrc
+                        };
+                    });
+                    return;
+                }
+            } catch (e) {
+                console.warn('Meting API failed for ' + baseApi, e);
+            }
+        }
+        throw new Error('All Meting APIs failed');
+    }
+
+    // ── Lyrics ───────────────────────────────────────────────
+    function loadLyrics(track) {
+        state.lyrics = [];
+        state.currentLrcIndex = -1;
+
+        if (!track.lrc) {
+            emit('fm:lyrics', { lyrics: [], status: 'none' });
+            return;
+        }
+
+        var isLrcUrl = /^(https?:)?\/\//.test(track.lrc)
+            || track.lrc.startsWith('/')
+            || /\.(lrc|txt)(\?|#|$)/i.test(track.lrc);
+
+        if (isLrcUrl) {
+            emit('fm:lyrics', { lyrics: [], status: 'loading' });
+            fetch(track.lrc)
+                .then(function (r) { return r.text(); })
+                .then(function (text) {
+                    state.lyrics = parseLRC(text);
+                    emit('fm:lyrics', { lyrics: state.lyrics, status: 'loaded' });
+                })
+                .catch(function () {
+                    state.lyrics = [];
+                    emit('fm:lyrics', { lyrics: [], status: 'failed' });
+                });
+        } else {
+            state.lyrics = parseLRC(track.lrc);
+            emit('fm:lyrics', { lyrics: state.lyrics, status: state.lyrics.length > 0 ? 'loaded' : 'none' });
+        }
+    }
+
+    var currentTrackUrls = [];
+    var currentTrackUrlIndex = 0;
+    var errorSkipTimeout = null;
+
+    function tryPlayCurrentTrackUrl(autoPlay, ver) {
+        if (ver !== loadVersion) return;
+        var playUrl = currentTrackUrls[currentTrackUrlIndex];
+        audio.src = playUrl;
+
+        if (autoPlay) {
+            audio.play().then(function () {
+                if (ver !== loadVersion) return; // stale, discard
+                state.isPlaying = true;
+                state.error = null;
+                emit('fm:play-state', { isPlaying: true });
+            }).catch(function (e) {
+                if (ver !== loadVersion) return; // stale, discard
+                if (e.name === 'AbortError') return; // interrupted by new load
+                console.warn('Autoplay blocked:', e);
+            });
+        } else {
+            state.isPlaying = false;
+            emit('fm:play-state', { isPlaying: false });
+        }
+    }
+
+    // ── Track loading ────────────────────────────────────────
+    function loadTrack(index, autoPlay) {
+        if (index < 0 || index >= state.playlist.length) return;
+        state.currentIndex = index;
+        var track = state.playlist[index];
+        var ver = ++loadVersion;
+
+        if (errorSkipTimeout) {
+            clearTimeout(errorSkipTimeout);
+            errorSkipTimeout = null;
+        }
+
+        currentTrackUrls = [track.url];
+        currentTrackUrlIndex = 0;
+
+        var matchId = track.url.match(/[?&]id=([^&]+)/);
+        var matchServer = track.url.match(/[?&]server=([^&]+)/);
+        if (matchId && matchServer && config.meting && config.meting.fallbackApis) {
+            config.meting.fallbackApis.forEach(function (fallback) {
+                var fallbackUrl = fallback
+                    .replace(':server', matchServer[1])
+                    .replace(':type', 'url')
+                    .replace(':id', matchId[1]);
+                if (currentTrackUrls.indexOf(fallbackUrl) === -1) {
+                    currentTrackUrls.push(fallbackUrl);
+                }
+            });
+        }
+
+        loadLyrics(track);
+
+        emit('fm:track', { index: index, track: track, autoPlay: !!autoPlay });
+
+        tryPlayCurrentTrackUrl(autoPlay, ver);
+    }
+
+    // ── Playback controls ────────────────────────────────────
+    function togglePlay() {
+        if (audio.paused) {
+            audio.play().then(function () {
+                state.isPlaying = true;
+                emit('fm:play-state', { isPlaying: true });
+            }).catch(function (e) {
+                if (e.name === 'AbortError') return;
+                console.warn('Playback failed:', e);
+            });
+        } else {
+            audio.pause();
+            state.isPlaying = false;
+            emit('fm:play-state', { isPlaying: false });
+        }
+    }
+
+    function playNext(auto) {
+        if (state.playMode === 1 && auto) {
+            audio.currentTime = 0;
+            audio.play();
+            return;
+        }
+        var nextIndex;
+        if (state.playMode === 2) {
+            nextIndex = Math.floor(Math.random() * state.playlist.length);
+        } else {
+            nextIndex = (state.currentIndex + 1) % state.playlist.length;
+        }
+        loadTrack(nextIndex, true);
+    }
+
+    function playPrev() {
+        var prevIndex;
+        if (state.playMode === 2) {
+            prevIndex = Math.floor(Math.random() * state.playlist.length);
+        } else {
+            prevIndex = (state.currentIndex - 1 + state.playlist.length) % state.playlist.length;
+        }
+        loadTrack(prevIndex, true);
+    }
+
+    function setPlayMode(mode) {
+        state.playMode = mode;
+        emit('fm:mode', { playMode: mode });
+    }
+
+    function cyclePlayMode() {
+        setPlayMode((state.playMode + 1) % 3);
+    }
+
+    function setVolume(val) {
+        val = Math.max(0, Math.min(1, val));
+        state.volume = val;
+        state.isMuted = false;
+        audio.volume = val;
+        audio.muted = false;
+        localStorage.setItem('music-player-volume', val.toString());
+        emit('fm:volume', { volume: val, isMuted: false });
+    }
+
+    function toggleMute() {
+        state.isMuted = !state.isMuted;
+        audio.muted = state.isMuted;
+        emit('fm:volume', { volume: state.volume, isMuted: state.isMuted });
+    }
+
+    function seek(percent) {
+        if (!audio.duration) return;
+        audio.currentTime = Math.max(0, Math.min(1, percent)) * audio.duration;
+    }
+
+    function seekToTime(time) {
+        if (!audio.duration) return;
+        audio.currentTime = Math.max(0, Math.min(time, audio.duration));
+    }
+
+    function playTrackByIndex(index) {
+        if (index === state.currentIndex && !audio.paused) {
+            togglePlay();
+        } else {
+            loadTrack(index, true);
+        }
+    }
+
+    // ── Audio events → broadcast ─────────────────────────────
+    audio.addEventListener('timeupdate', function () {
+        if (isNaN(audio.duration)) return;
+        var ct = audio.currentTime;
+        var dur = audio.duration;
+        var pct = (ct / dur) * 100;
+
+        emit('fm:time', {
+            currentTime: ct,
+            duration: dur,
+            progress: pct,
+            currentTimeStr: formatTime(ct),
+            durationStr: formatTime(dur)
+        });
+
+        // Lyrics sync
+        if (state.lyrics.length > 0) {
+            var idx = -1;
+            for (var i = 0; i < state.lyrics.length; i++) {
+                if (ct >= state.lyrics[i].time) idx = i;
+                else break;
+            }
+            if (idx !== state.currentLrcIndex) {
+                state.currentLrcIndex = idx;
+                emit('fm:lrc-index', { index: idx });
+            }
+        }
+    });
+
+    audio.addEventListener('ended', function () {
+        playNext(true);
+    });
+
+    audio.addEventListener('error', function () {
+        var ver = loadVersion;
+        if (currentTrackUrlIndex < currentTrackUrls.length - 1) {
+            currentTrackUrlIndex++;
+            console.warn('Playback failed, trying fallback URL: ' + currentTrackUrls[currentTrackUrlIndex]);
+            tryPlayCurrentTrackUrl(true, ver);
+        } else {
+            state.error = 'Audio playback error';
+            emit('fm:error', { message: '播放失败，即将自动跳过...' });
+
+            if (errorSkipTimeout) clearTimeout(errorSkipTimeout);
+            errorSkipTimeout = setTimeout(function () {
+                if (ver === loadVersion) {
+                    playNext(true);
+                }
+            }, 2000);
+        }
+    });
+
+    // ── Init (idempotent) ────────────────────────────────────
+    async function init() {
+        if (state.initialized || state.initializing) return;
+        state.initializing = true;
+
+        try {
+            if (config.mode === 'meting' && config.meting) {
+                await fetchMetingData();
+            } else if (config.mode === 'local') {
+                state.playlist = config.localPlaylist || [];
+            }
+
+            if (state.playlist.length > 0) {
+                // Apply volume
+                audio.volume = state.volume;
+
+                var startIndex = 0;
+                if (state.playMode === 2) {
+                    startIndex = Math.floor(Math.random() * state.playlist.length);
+                }
+
+                state.initialized = true;
+
+                emit('fm:init', {
+                    playlist: state.playlist,
+                    playMode: state.playMode,
+                    volume: state.volume,
+                    isMuted: state.isMuted
+                });
+
+                loadTrack(startIndex, false);
+            } else {
+                state.initialized = true;
+                emit('fm:init', {
+                    playlist: [],
+                    playMode: state.playMode,
+                    volume: state.volume,
+                    isMuted: state.isMuted
+                });
+                emit('fm:error', { message: config.i18n.noSongs });
+            }
+        } catch (e) {
+            console.error('Music Manager init error:', e);
+            state.initialized = true;
+            emit('fm:init', {
+                playlist: [],
+                playMode: state.playMode,
+                volume: state.volume,
+                isMuted: state.isMuted
+            });
+            emit('fm:error', { message: config.i18n.error });
+        } finally {
+            state.initializing = false;
+        }
+    }
+
+    // ── Public API ───────────────────────────────────────────
+    window.__fireflyMusic = {
+        init: init,
+        getState: function () {
+            var track = state.playlist[state.currentIndex] || null;
+            return {
+                playlist: state.playlist,
+                currentIndex: state.currentIndex,
+                track: track,
+                isPlaying: state.isPlaying,
+                playMode: state.playMode,
+                volume: state.volume,
+                isMuted: state.isMuted,
+                currentTime: audio.currentTime,
+                duration: audio.duration || 0,
+                progress: audio.duration ? (audio.currentTime / audio.duration) * 100 : 0,
+                currentTimeStr: formatTime(audio.currentTime),
+                durationStr: formatTime(audio.duration),
+                lyrics: state.lyrics,
+                currentLrcIndex: state.currentLrcIndex,
+                initialized: state.initialized,
+                error: state.error,
+                config: config
+            };
+        },
+        togglePlay: togglePlay,
+        playNext: function () { playNext(false); },
+        playPrev: playPrev,
+        cyclePlayMode: cyclePlayMode,
+        setVolume: setVolume,
+        toggleMute: toggleMute,
+        seek: seek,
+        seekToTime: seekToTime,
+        playTrackByIndex: playTrackByIndex,
+        loadTrack: loadTrack
+    };
+})();
+})();</script><div class="ef-shell" data-ef-shell><div id="ef-boot" data-ef-boot data-astro-cid-lb7m5ja3><!-- 站主要求：先不显示任何图片。加载屏只留纯色底 + 竖条 + 文字。 --><div class="ef-boot-rail" aria-hidden="true" data-astro-cid-lb7m5ja3><span data-astro-cid-lb7m5ja3></span></div><div class="ef-boot-brand" data-astro-cid-lb7m5ja3><span class="ef-boot-brand-cn" data-astro-cid-lb7m5ja3>LegspCpd</span><span class="ef-boot-brand-en" data-astro-cid-lb7m5ja3>BLOG</span></div><div class="ef-boot-meter" data-astro-cid-lb7m5ja3><span class="ef-boot-pct" id="ef-boot-pct" data-astro-cid-lb7m5ja3>0%</span><span class="ef-boot-loading" data-astro-cid-lb7m5ja3>Loading</span></div><div class="ef-boot-foot" data-astro-cid-lb7m5ja3><p class="ef-boot-status" data-astro-cid-lb7m5ja3><span class="ef-boot-mark" data-astro-cid-lb7m5ja3>▲</span> 站点资源正在加载，请稍候</p><p class="ef-boot-slogan" data-astro-cid-lb7m5ja3>In Reddened Chrysalis, I Once Rest</p></div></div><script>
+  (function () {
+    var el = document.getElementById("ef-boot");
+    if (!el) return;
+    // 站主要求：每次手动刷新都要完整走一遍加载屏，而不是「一个会话只放一次」。
+    // 原来这行读 sessionStorage 就是「加载一次之后就不加载了」的原因，已去掉读写。
+    // 只保留 reduced-motion 的无障碍逃生口。
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) { el.remove(); return; }
+    document.documentElement.style.overflow = "hidden";
+    var pct = document.getElementById("ef-boot-pct");
+    var t0 = Date.now();
+    var timer = setInterval(function () {
+      var p = Math.min(100, Math.round(((Date.now() - t0) / 1400) * 100));
+      if (pct) pct.textContent = p + "%";
+      if (p >= 100) { clearInterval(timer); el.classList.add("is-sharp"); }
+    }, 60);
+    var done = false;
+    function leave() {
+      if (done) return;
+      done = true;
+      clearInterval(timer);
+      el.classList.add("is-leaving");
+      document.documentElement.style.overflow = "";
+      setTimeout(function () { el.remove(); }, 3000);
+    }
+    setTimeout(leave, 1650);
+    el.addEventListener("click", leave);
+    window.addEventListener("keydown", leave, { once: true });
+  })();
+</script><!-- 官网左侧竖排栏：位置/尺寸/配色/交互照 Header_pcHeaderContainer 搬用 --><aside class="Header_pcHeaderContainer__Sy_8l" data-ef-rail aria-label="站点导航"><div class="Header_innerContainer__cW_Dv"><a class="Header_logo__s3lE_" href="/" aria-label="LegspCpd BLOG 首页"><span class="ef-rail-wordmark">LegspCpd</span><span class="ef-rail-wordmark-en">BLOG</span></a><nav class="Header_navList__r2BGN"><a class="Header_navItem__c_fLB Header_active__jzCyf" href="/" data-key="home" aria-current="page"><span class="Header_iconWrapper__BvBAU"><svg class="Header_icon__3iDIG" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M35.744,33.156 L39.625,29.275 L31.369,21.019 L31.369,18.013 L39.616,9.766 L35.735,5.885 L26.176,15.443 L26.192,15.459 L26.185,15.459 L26.185,16.780 L22.854,16.780 L22.854,13.449 L24.184,13.449 L24.184,13.442 L24.191,13.449 L33.750,3.890 L29.869,0.009 L21.612,8.265 L18.606,8.265 L10.359,0.018 L6.478,3.899 L16.037,13.458 L16.053,13.442 L16.053,13.449 L17.365,13.449 L17.365,16.780 L14.042,16.780 L14.042,15.451 L14.035,15.451 L14.042,15.443 L4.484,5.885 L0.603,9.766 L8.859,18.022 L8.859,21.028 L0.612,29.275 L4.493,33.156 L14.052,23.597 L14.036,23.582 L14.042,23.582 L14.042,22.269 L17.365,22.269 L17.365,25.592 L16.044,25.592 L16.044,25.599 L16.037,25.592 L6.478,35.151 L10.359,39.032 L18.615,30.776 L21.622,30.776 L29.869,39.023 L33.750,35.142 L24.191,25.583 L24.175,25.599 L24.175,25.592 L22.854,25.592 L22.854,22.269 L26.185,22.269 L26.185,23.590 L26.193,23.590 L26.185,23.597 L35.744,33.156 Z"></path></svg></span><span class="Header_textWrapper__o9aHt">首页</span></a><a class="Header_navItem__c_fLB" href="/archive/" data-key="lore"><span class="Header_iconWrapper__BvBAU"><svg class="Header_icon__3iDIG" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M36.038,32.520 L36.038,5.876 L15.483,5.876 L15.483,0.188 L41.891,0.188 L41.891,32.520 L36.038,32.520 ZM15.614,9.516 L15.483,9.643 L15.483,9.787 L11.414,13.741 L6.027,8.506 L1.825,4.423 L1.861,4.388 L1.787,4.316 L6.060,0.164 L11.829,5.769 L15.445,9.283 L15.649,9.482 L15.614,9.516 ZM6.027,35.043 L22.791,35.043 L22.791,40.731 L0.173,40.731 L0.173,13.742 L6.027,13.742 L6.027,35.043 ZM15.652,24.914 L15.652,31.990 L8.255,31.990 L8.255,24.800 L15.535,24.800 L15.652,24.800 L15.652,9.476 L31.421,9.476 L31.421,24.800 L23.479,24.800 L23.479,32.518 L23.479,32.520 L15.652,24.914 ZM31.513,32.808 L34.107,35.331 L36.934,38.078 L33.068,41.835 L32.228,41.019 L26.374,35.331 L23.778,32.808 L23.479,32.518 L27.347,28.759 L31.513,32.808 Z"></path></svg></span><span class="Header_textWrapper__o9aHt">文章</span></a><a class="Header_navItem__c_fLB" href="/categories/" data-key="calendar"><span class="Header_iconWrapper__BvBAU"><svg class="Header_icon__3iDIG" viewBox="0 0 42 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M-0.002,40.010 L-0.002,5.448 L5.894,5.448 L5.894,10.171 L6.956,10.171 L6.956,8.485 L6.956,5.448 L6.956,-0.008 L12.072,-0.008 L12.072,5.448 L12.072,8.485 L12.072,10.171 L13.134,10.171 L13.134,5.448 L28.881,5.448 L28.881,10.171 L29.943,10.171 L29.943,8.485 L29.940,8.485 L29.940,-0.008 L35.056,-0.008 L35.056,5.448 L35.059,5.448 L35.059,10.171 L36.121,10.171 L36.121,5.448 L42.014,5.448 L42.014,40.010 L-0.002,40.010 ZM38.159,16.680 L3.853,16.680 L3.853,35.999 L38.159,35.999 L38.159,16.680 ZM9.511,22.456 L6.956,22.456 L6.956,19.889 L9.511,19.889 L9.511,22.456 ZM12.065,25.023 L9.511,25.023 L9.511,22.456 L12.065,22.456 L12.065,25.023 ZM12.065,30.156 L9.511,30.156 L9.511,27.590 L12.065,27.590 L12.065,30.156 ZM17.174,27.590 L17.174,30.156 L14.620,30.156 L14.620,27.590 L17.174,27.590 ZM22.283,27.590 L22.283,30.156 L19.729,30.156 L19.729,27.590 L22.283,27.590 ZM27.392,27.590 L27.392,30.156 L24.838,30.156 L24.838,27.590 L27.392,27.590 ZM32.501,27.590 L32.501,30.156 L29.947,30.156 L29.947,27.590 L32.501,27.590 ZM29.947,22.456 L32.501,22.456 L32.501,25.023 L29.947,25.023 L29.947,22.456 ZM24.838,25.023 L24.838,22.456 L27.392,22.456 L27.392,25.023 L24.838,25.023 ZM19.729,25.023 L19.729,22.456 L22.283,22.456 L22.283,25.023 L19.729,25.023 ZM14.620,25.023 L14.620,22.456 L17.174,22.456 L17.174,25.023 L14.620,25.023 ZM14.620,27.590 L12.065,27.590 L12.065,25.023 L14.620,25.023 L14.620,27.590 ZM19.729,25.023 L19.729,27.590 L17.174,27.590 L17.174,25.023 L19.729,25.023 ZM24.838,25.023 L24.838,27.590 L22.283,27.590 L22.283,25.023 L24.838,25.023 ZM29.947,25.023 L29.947,27.590 L27.392,27.590 L27.392,25.023 L29.947,25.023 ZM12.065,19.889 L14.620,19.889 L14.620,22.456 L12.065,22.456 L12.065,19.889 ZM17.174,19.889 L19.729,19.889 L19.729,22.456 L17.174,22.456 L17.174,19.889 ZM22.283,19.889 L24.838,19.889 L24.838,22.456 L22.283,22.456 L22.283,19.889 ZM27.392,19.889 L29.947,19.889 L29.947,22.456 L27.392,22.456 L27.392,19.889 ZM35.056,19.889 L35.056,22.456 L32.501,22.456 L32.501,19.889 L35.056,19.889 ZM35.056,25.023 L35.056,27.590 L32.501,27.590 L32.501,25.023 L35.056,25.023 ZM35.056,32.724 L32.501,32.724 L32.501,30.156 L35.056,30.156 L35.056,32.724 ZM29.947,32.724 L27.392,32.724 L27.392,30.156 L29.947,30.156 L29.947,32.724 ZM24.838,32.724 L22.283,32.724 L22.283,30.156 L24.838,30.156 L24.838,32.724 ZM19.729,32.724 L17.174,32.724 L17.174,30.156 L19.729,30.156 L19.729,32.724 ZM14.620,32.724 L12.065,32.724 L12.065,30.156 L14.620,30.156 L14.620,32.724 ZM6.956,32.724 L6.956,30.156 L9.511,30.156 L9.511,32.724 L6.956,32.724 ZM6.956,27.590 L6.956,25.023 L9.511,25.023 L9.511,27.590 L6.956,27.590 Z"></path></svg></span><span class="Header_textWrapper__o9aHt">分类</span></a><a class="Header_navItem__c_fLB" href="/tags/" data-key="information"><span class="Header_iconWrapper__BvBAU"><svg class="Header_icon__3iDIG" viewBox="0 0 43 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M42.255,25.263 L34.478,33.034 L40.492,38.772 L35.979,43.279 L0.879,8.211 L5.387,3.708 L14.312,12.626 L15.100,12.614 L15.100,0 L22.100,0 L22.100,12.561 L24.715,12.548 L32.826,4.334 L40.786,12.286 L27.795,25.263 L42.255,25.263 ZM9.208,23.757 L9.208,23.490 L14.401,23.490 L14.401,23.757 C14.401,28.070 17.915,31.578 22.230,31.578 L22.496,31.578 L22.496,36.770 L22.230,36.770 C15.048,36.770 9.208,30.932 9.208,23.757 ZM5.918,23.757 C5.918,32.744 13.235,40.055 22.230,40.055 L22.496,40.055 L22.496,45.245 L22.230,45.245 C10.371,45.245 0.723,35.605 0.723,23.757 L0.723,23.490 L5.918,23.490 L5.918,23.757 Z"></path></svg></span><span class="Header_textWrapper__o9aHt">标签</span></a><a class="Header_navItem__c_fLB" href="/series/" data-key="operator"><span class="Header_iconWrapper__BvBAU"><svg class="Header_icon__3iDIG" viewBox="0 0 44 49" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M43.057,48.470 L37.334,48.470 L6.667,48.470 L0.942,48.470 L0.942,40.719 L0.942,15.502 L0.941,15.502 L0.941,6.304 L0.942,6.304 L0.942,6.301 L6.667,6.301 L6.667,6.304 L9.743,6.304 L9.743,10.903 L34.526,10.903 L34.526,6.304 L37.334,6.304 L37.334,6.301 L43.058,6.301 L43.058,48.470 L43.057,48.470 ZM37.334,15.502 L6.667,15.502 L6.667,40.719 L10.448,40.719 L10.448,35.267 C10.448,32.112 12.951,29.554 16.037,29.554 L27.963,29.554 C31.049,29.554 33.551,32.112 33.551,35.267 L33.551,40.719 L37.334,40.719 L37.334,15.502 ZM22.000,27.793 C19.155,27.793 16.848,25.434 16.848,22.526 C16.848,19.617 19.155,17.259 22.000,17.259 C24.845,17.259 27.152,19.617 27.152,22.526 C27.152,25.434 24.845,27.793 22.000,27.793 ZM9.743,0.506 L34.526,0.506 L34.526,6.304 L9.743,6.304 L9.743,0.506 Z"></path></svg></span><span class="Header_textWrapper__o9aHt">系列</span></a><a class="Header_navItem__c_fLB" href="/friends/" data-key="aicGameplay"><span class="Header_iconWrapper__BvBAU"><svg class="Header_icon__3iDIG" viewBox="0 0 41 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M23.312,44.301 L18.497,49.105 L12.435,43.800 L17.195,43.800 L17.195,41.198 L17.195,38.997 L12.435,38.997 L17.542,34.527 L18.497,33.692 L18.757,33.952 L19.966,35.157 L20.654,35.844 L23.312,38.496 L25.259,38.496 L35.436,38.496 L36.242,38.496 L36.948,38.496 L37.859,38.496 L40.277,38.496 L40.791,38.496 L40.791,44.301 L23.312,44.301 ZM36.948,36.085 L36.242,36.085 L24.317,36.085 L20.214,31.986 L19.966,31.739 L19.966,23.492 L20.306,23.294 L30.347,17.513 L36.948,21.315 L40.729,23.492 L40.729,36.085 L39.626,36.085 L36.948,36.085 ZM30.347,24.808 C27.763,24.808 25.668,26.898 25.668,29.470 C25.668,32.048 27.763,34.137 30.347,34.137 C32.926,34.137 35.021,32.048 35.021,29.470 C35.021,26.898 32.926,24.808 30.347,24.808 ZM30.347,14.731 L29.139,15.424 L18.757,21.402 L17.542,22.101 L17.542,31.318 L16.904,31.875 L10.842,37.179 L6.249,41.198 L0.002,41.198 L0.002,0.895 L27.651,0.895 C31.283,4.518 33.316,6.546 36.948,10.169 L36.948,18.527 L31.556,15.424 L30.347,14.731 ZM7.898,4.605 L3.720,4.605 L3.720,8.765 L7.898,8.765 L7.898,4.605 ZM13.947,4.605 L9.776,4.605 L9.776,8.765 L13.947,8.765 L13.947,4.605 Z"></path></svg></span><span class="Header_textWrapper__o9aHt">友链</span></a><a class="Header_navItem__c_fLB" href="/about/" data-key="notice"><span class="Header_iconWrapper__BvBAU"><svg class="Header_icon__3iDIG" viewBox="0 0 44 49" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M17.123,48.243 L17.123,8.711 L35.000,20.840 L43.285,20.840 L43.285,36.113 L35.000,36.113 L17.123,48.243 ZM9.253,0.256 L14.966,0.256 L14.966,5.930 L9.253,5.930 L9.253,0.256 ZM0.967,0.256 L6.680,0.256 L6.680,5.930 L0.967,5.930 L0.967,0.256 ZM13.264,15.581 L6.882,15.581 L6.882,41.372 L13.264,41.372 L13.264,46.884 L1.332,46.884 L1.332,10.069 L13.264,10.069 L13.264,15.581 ZM34.848,47.434 L34.848,39.054 L43.285,39.054 L34.848,47.434 Z"></path></svg></span><span class="Header_textWrapper__o9aHt">关于</span></a></nav><div class="ef-rail-bottom"><div class="Header_buttonFrameContainer__Uvshp"><div class="Header_buttonFrameBg__2UVLH" aria-hidden="true"></div><a class="Header_button__b0gdu" href="/guestbook/"><svg class="Header_icon__3iDIG" viewBox="0 0 23 29" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M0.253,28.756 L0.253,18.400 C0.253,15.269 2.716,12.730 5.755,12.730 L17.498,12.730 C20.537,12.730 23.000,15.269 23.000,18.400 L23.000,28.756 L0.253,28.756 ZM11.626,10.982 C8.825,10.982 6.554,8.642 6.554,5.754 C6.554,2.867 8.825,0.527 11.626,0.527 C14.428,0.527 16.699,2.867 16.699,5.754 C16.699,8.642 14.428,10.982 11.626,10.982 Z"></path></svg><span class="Header_textWrapper__o9aHt">留言</span></a><a class="Header_button__b0gdu" href="/rss.xml"><svg class="Header_icon__3iDIG" viewBox="0 0 27 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M26.273,12.842 L25.645,11.890 L24.903,10.756 L25.645,9.622 L26.273,8.671 L25.645,8.671 L9.058,8.671 L9.058,7.007 L24.432,7.007 L13.186,0.503 L0.726,7.711 L0.726,22.135 L13.186,29.343 L24.432,22.838 L9.058,22.838 L9.058,21.183 L25.645,21.183 L26.273,21.183 L25.645,20.231 L24.903,19.098 L25.645,17.964 L26.273,17.012 L25.645,16.061 L24.903,14.927 L25.645,13.793 L26.273,12.842 ZM4.277,11.062 L6.374,11.062 L6.374,18.783 L4.277,18.783 L4.277,11.062 Z"></path></svg><span class="Header_textWrapper__o9aHt">订阅</span></a></div><!-- 官网黑 CTA（Header_buttonPreserveBg）：站内入口 --><a class="Header_buttonPreserveBg__rEZGT" href="/archive/"><span class="Header_bg___kVDv"></span><svg class="Header_tri__KNP87" viewBox="0 0 32 27" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M23.146,13.962 L15.554,0.843 L30.739,0.843 Z M0.261,0.843 L15.446,0.843 L7.854,13.962 Z M15.554,27.156 L7.961,14.036 L23.146,14.036 Z"></path></svg><span class="Header_divider__tUYjO"></span><span class="Header_text__52fEh">全部文章</span></a></div></div></aside><!-- swup 容器：必须存在且包住 main（ef-light 跟着切页变） --><div id="swup-container"><main id="ef-main" class="ef-shell-main" data-ef-tone="dark"><section class="ef-hero" data-astro-cid-kk3h47sh><div class="ef-hero-inner" data-astro-cid-kk3h47sh><p class="ef-hero-eyebrow" data-astro-cid-kk3h47sh><i aria-hidden="true" data-astro-cid-kk3h47sh></i>// 01 HOME</p><h1 class="ef-hero-title" data-astro-cid-kk3h47sh>自建服务记录</h1><p class="ef-hero-hollow" aria-hidden="true" data-astro-cid-kk3h47sh>CONFIG · PITFALL · TRADEOFF</p><p class="ef-hero-lede" data-astro-cid-kk3h47sh>Cloudflare / EdgeOne / 自建服务 —— 记录配置、踩坑与取舍。</p><ul class="ef-hero-facts" data-astro-cid-kk3h47sh><li data-astro-cid-kk3h47sh><b data-astro-cid-kk3h47sh>10</b><span data-astro-cid-kk3h47sh>篇文章</span></li><li data-astro-cid-kk3h47sh><b data-astro-cid-kk3h47sh>32</b><span data-astro-cid-kk3h47sh>个标签</span></li><li data-astro-cid-kk3h47sh><b data-astro-cid-kk3h47sh>10</b><span data-astro-cid-kk3h47sh>个分类</span></li><li data-astro-cid-kk3h47sh><b data-astro-cid-kk3h47sh>+2026.10</b><span data-astro-cid-kk3h47sh>最近更新</span></li></ul><div class="ef-hero-actions" data-astro-cid-kk3h47sh><a class="ef-hero-btn" href="/archive/" data-astro-cid-kk3h47sh><span data-astro-cid-kk3h47sh>浏览全部文章</span><i aria-hidden="true" data-astro-cid-kk3h47sh>→</i></a><a class="ef-hero-btn ef-hero-btn--ghost" href="/about/" data-astro-cid-kk3h47sh>关于本站</a></div></div><div class="ef-hero-side" aria-hidden="true" data-astro-cid-kk3h47sh><p class="ef-hero-side-mark" data-astro-cid-kk3h47sh>LEGSPCPD</p><p class="ef-hero-side-scroll" data-astro-cid-kk3h47sh>SCROLL<span data-astro-cid-kk3h47sh>↓</span></p></div></section><div class="ef-wrap"><section class="ef-sec"><div class="ef-sec-head"><div><p class="ef-eyebrow">// LATEST</p><h2 class="ef-sec-title">最新文章</h2></div><p class="ef-sec-count">10 篇文章</p></div><div class="ef-grid ef-grid-3"><article class="ef-card"><p class="ef-card-meta"><span class="ef-card-date">2026.10.02</span><span class="ef-card-cat">Cloudflare</span></p><h3 class="ef-card-title"><a class="ef-card-link" href="/posts/fuwari-termux-cloudflare-wrangler-guide/">在 Termux 上配置 Cloudflare Wrangler，并上传已有 Worker 与 D1 数据库</a></h3><p class="ef-card-desc">适合新手的 Termux + Ubuntu + Wrangler 教程：从零安装 Cloudflare Wrangler，登录 Cloudflare，连接已经创建好的 Worker 和 D1，并完成 SQLite/SQL 数据库导入与 Worker 部署。</p><ul class="ef-card-tags"><li><a href="/archive/?tag=Cloudflare">#Cloudflare</a></li><li><a href="/archive/?tag=Wrangler">#Wrangler</a></li><li><a href="/archive/?tag=Termux">#Termux</a></li></ul><span class="ef-card-arrow" aria-hidden="true">→</span></article><article class="ef-card"><p class="ef-card-meta"><span class="ef-card-date">2026.09.21</span><span class="ef-card-cat">教程</span></p><h3 class="ef-card-title"><a class="ef-card-link" href="/posts/cloudreve-worker/">Cloudreve也能部署到Cloudflare Worker上面了？！</a></h3><p class="ef-card-desc">Cloudreve-Worker 使用与部署完整指南。需要 R2 存储（开通需绑卡），支持多数据库主备容灾。推荐 fork 仓库后在 Cloudflare 面板手动部署，部署后务必绑定自定义域名。</p><ul class="ef-card-tags"><li><a href="/archive/?tag=Cloudreve">#Cloudreve</a></li><li><a href="/archive/?tag=Cloudflare%20Workers">#Cloudflare Workers</a></li><li><a href="/archive/?tag=R2">#R2</a></li></ul><span class="ef-card-arrow" aria-hidden="true">→</span></article><article class="ef-card"><p class="ef-card-meta"><span class="ef-card-date">2026.08.21</span><span class="ef-card-cat">技术教程</span></p><h3 class="ef-card-title"><a class="ef-card-link" href="/posts/cf-cname/">仅需10分钟即可制作出一个Cloudflare的优选域名</a></h3><p class="ef-card-desc">本文介绍如何通过 DNSPod 按运营商线路划分（电信/联通/移动）配置 CDN 优选 CNAME 或 IP，实现国内网络访问加速。</p><ul class="ef-card-tags"><li><a href="/archive/?tag=DNSPod">#DNSPod</a></li><li><a href="/archive/?tag=Cloudflare">#Cloudflare</a></li><li><a href="/archive/?tag=%E4%BC%98%E9%80%89%E5%9F%9F%E5%90%8D">#优选域名</a></li></ul><span class="ef-card-arrow" aria-hidden="true">→</span></article><article class="ef-card"><p class="ef-card-meta"><span class="ef-card-date">2026.05.06</span><span class="ef-card-cat">日常</span></p><h3 class="ef-card-title"><a class="ef-card-link" href="/posts/day/yxdsm/">有限生命里的无限当下</a></h3><ul class="ef-card-tags"><li><a href="/archive/?tag=%E6%97%A5%E5%B8%B8">#日常</a></li></ul><span class="ef-card-arrow" aria-hidden="true">→</span></article><article class="ef-card"><p class="ef-card-meta"><span class="ef-card-date">2026.05.04</span><span class="ef-card-cat">EdgeOne</span></p><h3 class="ef-card-title"><a class="ef-card-link" href="/posts/eo-ys/">EdgeOne优选教程，让EdgeOne在国内更快更稳</a></h3><p class="ef-card-desc">EdgeOne优选教程，教你如何手动调整DNS解析和路由规则，让腾讯云EdgeOne在国内外访问更快更稳，包含A/AAAA记录优选、边缘函数路由、多IP优选等完整方案。</p><ul class="ef-card-tags"><li><a href="/archive/?tag=EdgeOne">#EdgeOne</a></li><li><a href="/archive/?tag=EdgeOne%E4%BC%98%E9%80%89">#EdgeOne优选</a></li><li><a href="/archive/?tag=EdgeOne%E4%BC%98%E9%80%89%E6%95%99%E7%A8%8B">#EdgeOne优选教程</a></li></ul><span class="ef-card-arrow" aria-hidden="true">→</span></article><article class="ef-card"><p class="ef-card-meta"><span class="ef-card-date">2026.04.19</span><span class="ef-card-cat">CloudFlare</span></p><h3 class="ef-card-title"><a class="ef-card-link" href="/posts/cf-ys/">Cloudflare优选教程，让Cloudflare在国内不再是减速器</a></h3><ul class="ef-card-tags"><li><a href="/archive/?tag=CloudFlare">#CloudFlare</a></li><li><a href="/archive/?tag=CloudFlare%E4%BC%98%E9%80%89">#CloudFlare优选</a></li><li><a href="/archive/?tag=CloudFlare%E4%BC%98%E9%80%89%E6%95%99%E7%A8%8B">#CloudFlare优选教程</a></li></ul><span class="ef-card-arrow" aria-hidden="true">→</span></article></div></section></div><nav class="ef-wrap ef-pager"><span class="ef-sec-count">1 / 10</span></nav><footer class="ef-foot"><div class="ef-wrap ef-foot-inner"><p class="ef-foot-mark">LegspCpd<span>// BLOG</span></p><ul class="ef-foot-links"><li><a href="/archive/">文章</a></li><li><a href="/categories/">分类</a></li><li><a href="/tags/">标签</a></li><li><a href="/series/">系列</a></li><li><a href="/friends/">友链</a></li><li><a href="/about/">关于</a></li></ul><p class="ef-foot-meta">&copy; 2026 LegspCpd</p></div></footer></main></div></div><!-- 播放器视图脚本：必须在 <slot /> 之后（解析到它时所有 widget 的 DOM 要已存在），
+         且在 MusicManager 之后（swup 重跑按文档顺序，window.__fireflyMusic 得先就位） --><!-- 播放列表条目模板：所有 widget 共用一份 --><template id="playlist-item-template" data-astro-cid-xfxzjgof><div class="playlist-item flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors group" data-astro-cid-xfxzjgof><div class="w-8 h-8 rounded-md overflow-hidden shrink-0 relative bg-neutral-200 dark:bg-neutral-700" data-astro-cid-xfxzjgof><img src="" class="item-cover w-full h-full object-cover" loading="lazy" alt="" data-astro-cid-xfxzjgof><!-- Active Indicator overlay with animated equalizer / play icon --><div class="item-active-overlay absolute inset-0 bg-(--primary)/20 hidden items-center justify-center" data-astro-cid-xfxzjgof><div class="eq-bars flex items-end gap-[2px] h-3.5" data-astro-cid-xfxzjgof><span class="eq-bar w-[3px] bg-(--primary) rounded-sm" data-astro-cid-xfxzjgof></span><span class="eq-bar w-[3px] bg-(--primary) rounded-sm" data-astro-cid-xfxzjgof></span><span class="eq-bar w-[3px] bg-(--primary) rounded-sm" data-astro-cid-xfxzjgof></span></div><svg class="eq-play-icon text-(--primary) hidden" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" data-astro-cid-xfxzjgof><path d="M8 5v14l11-7z" data-astro-cid-xfxzjgof></path></svg></div></div><div class="flex-1 min-w-0" data-astro-cid-xfxzjgof><div class="item-title text-xs font-bold text-neutral-700 dark:text-neutral-200 truncate group-hover:text-(--primary) transition-colors" data-astro-cid-xfxzjgof></div><div class="item-artist text-[10px] text-neutral-400 truncate" data-astro-cid-xfxzjgof></div></div></div></template><script>(function(){const viewConfigStr = "{\"showLyrics\":false,\"i18n\":{\"noPlaying\":\"暂未播放\",\"lyrics\":\"歌词\",\"noLyrics\":\"暂无歌词\",\"loadingLyrics\":\"正在加载歌词...\",\"failedLyrics\":\"歌词加载失败\",\"noSongs\":\"暂无歌曲\",\"error\":\"播放器错误\",\"play\":\"播放\",\"pause\":\"暂停\",\"noCover\":\"暂无封面\",\"music\":\"音乐\"}}";
+
+(function () {
+    var cfg = JSON.parse(viewConfigStr);
+
+    var mgr = window.__fireflyMusic;
+    if (!mgr) return;
+
+    var initScheduled = false;
+    function scheduleInit() {
+        if (initScheduled) return;
+        initScheduled = true;
+
+        var fired = false;
+        function go() {
+            if (fired) return;
+            fired = true;
+            document.removeEventListener('pointerdown', go, true);
+            document.removeEventListener('keydown', go, true);
+            mgr.init();
+        }
+        document.addEventListener('pointerdown', go, true);
+        document.addEventListener('keydown', go, true);
+
+        function afterLoad() {
+            if (window.requestIdleCallback) window.requestIdleCallback(go, { timeout: 2000 });
+            else setTimeout(go, 800);
+        }
+        if (document.readyState === 'complete') afterLoad();
+        else window.addEventListener('load', afterLoad, { once: true });
+    }
+
+    function initWidget(widget) {
+        // ── UI element refs ──────────────────────────────────────
+        var ui = {
+            widget: widget,
+            loading: widget.querySelector('.music-loading'),
+            cover: widget.querySelector('.music-cover'),
+            title: widget.querySelector('.music-title'),
+            artist: widget.querySelector('.music-artist'),
+            progressBar: widget.querySelector('.progress-bar'),
+            progressThumb: widget.querySelector('.progress-thumb'),
+            progressContainer: widget.querySelector('.progress-container'),
+            currentTime: widget.querySelector('.current-time'),
+            totalTime: widget.querySelector('.total-time'),
+            btnPlay: widget.querySelector('.btn-play'),
+            iconPlay: widget.querySelector('.icon-play'),
+            iconPause: widget.querySelector('.icon-pause'),
+            btnPrev: widget.querySelector('.btn-prev'),
+            btnNext: widget.querySelector('.btn-next'),
+            btnRepeat: widget.querySelector('.btn-repeat'),
+            iconRepeat: widget.querySelector('.icon-repeat'),
+            iconRepeatOne: widget.querySelector('.icon-repeat-one'),
+            iconShuffle: widget.querySelector('.icon-shuffle'),
+            btnMute: widget.querySelector('.btn-mute'),
+            iconVolHigh: widget.querySelector('.icon-vol-high'),
+            iconVolMute: widget.querySelector('.icon-vol-mute'),
+            volContainer: widget.querySelector('.vol-container'),
+            volBar: widget.querySelector('.vol-bar'),
+            btnLrc: widget.querySelector('.btn-lrc-toggle'),
+            iconLrcOn: widget.querySelector('.icon-lrc-on'),
+            iconLrcOff: widget.querySelector('.icon-lrc-off'),
+            lrcDrawer: widget.querySelector('.lrc-drawer'),
+            lrcContainer: widget.querySelector('.lrc-container'),
+            btnDrawer: widget.querySelector('.btn-drawer-toggle'),
+            playlistDrawer: widget.querySelector('.playlist-drawer'),
+            playlistContainer: widget.querySelector('.playlist-container'),
+            itemTemplate: document.getElementById('playlist-item-template')
+        };
+
+        // Verify critical elements
+        var _critical = [ui.btnPlay, ui.btnRepeat, ui.btnMute, ui.volContainer,
+            ui.btnDrawer, ui.btnLrc, ui.lrcDrawer, ui.lrcContainer,
+            ui.progressContainer, ui.btnNext, ui.btnPrev, ui.loading,
+            ui.cover, ui.title, ui.artist, ui.playlistContainer, ui.itemTemplate];
+        if (_critical.some(function(el) { return !el; })) return;
+
+        // ── Local state (drawers, user scrolling, virtual scroll) ──
+        var ITEM_H = 42;
+        var OVERSCAN = 8;
+        var local = {
+            isUserScrolling: false,
+            scrollTimeout: null,
+            currentLrcIndex: -1,
+            vs: {
+                playlist: [],
+                currentIndex: -1,
+                renderedStart: -1,
+                renderedEnd: -1,
+                renderedEls: {},
+                scrollRaf: 0,
+                drawerOpen: false
+            }
+        };
+
+        // ── UI update functions ──────────────────────────────────
+        function setLoading(bool) {
+            if (bool) {
+                ui.loading.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                ui.loading.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function updatePlayStateUI(isPlaying) {
+            if (isPlaying) {
+                ui.btnPlay.classList.add('bg-(--primary)', 'text-white', 'hover:brightness-110');
+                ui.btnPlay.classList.remove('bg-(--btn-regular-bg)', 'hover:bg-(--btn-regular-bg-hover)', 'active:bg-(--btn-regular-bg-active)', 'text-(--primary)');
+                ui.iconPlay.classList.add('hidden');
+                ui.iconPause.classList.remove('hidden');
+                ui.cover.style.animationPlayState = 'running';
+                ui.btnPlay.setAttribute('aria-label', cfg.i18n.pause);
+                ui.btnPlay.title = cfg.i18n.pause;
+            } else {
+                ui.btnPlay.classList.remove('bg-(--primary)', 'text-white', 'hover:brightness-110');
+                ui.btnPlay.classList.add('bg-(--btn-regular-bg)', 'hover:bg-(--btn-regular-bg-hover)', 'active:bg-(--btn-regular-bg-active)', 'text-(--primary)');
+                ui.iconPlay.classList.remove('hidden');
+                ui.iconPause.classList.add('hidden');
+                ui.cover.style.animationPlayState = 'paused';
+                ui.btnPlay.setAttribute('aria-label', cfg.i18n.play);
+                ui.btnPlay.title = cfg.i18n.play;
+            }
+            // Toggle eq-bars / play icon in playlist
+            var activeItems = ui.playlistContainer.querySelectorAll('.playlist-item[aria-current="true"]');
+            activeItems.forEach(function (item) {
+                var eqBars = item.querySelector('.eq-bars');
+                var playIcon = item.querySelector('.eq-play-icon');
+                if (isPlaying) {
+                    eqBars.classList.remove('hidden');
+                    eqBars.classList.add('flex');
+                    playIcon.classList.add('hidden');
+                } else {
+                    eqBars.classList.add('hidden');
+                    eqBars.classList.remove('flex');
+                    playIcon.classList.remove('hidden');
+                }
+            });
+        }
+
+        function updateModeUI(playMode) {
+            var primaryColor = 'text-(--primary)';
+            if (playMode === 0) {
+                ui.btnRepeat.className = 'p-2 active:scale-95 transition-colors text-neutral-300 dark:text-neutral-600 hover:text-(--primary)';
+                ui.iconRepeat.classList.remove('hidden');
+                ui.iconRepeatOne.classList.add('hidden');
+                ui.iconShuffle.classList.add('hidden');
+            } else if (playMode === 1) {
+                ui.btnRepeat.className = 'p-2 active:scale-95 transition-colors ' + primaryColor;
+                ui.iconRepeat.classList.add('hidden');
+                ui.iconRepeatOne.classList.remove('hidden');
+                ui.iconShuffle.classList.add('hidden');
+            } else {
+                ui.btnRepeat.className = 'p-2 active:scale-95 transition-colors ' + primaryColor;
+                ui.iconRepeat.classList.add('hidden');
+                ui.iconRepeatOne.classList.add('hidden');
+                ui.iconShuffle.classList.remove('hidden');
+            }
+        }
+
+        function updateVolumeUI(volume, isMuted) {
+            var pct = isMuted ? 0 : volume * 100;
+            ui.volBar.style.width = pct + '%';
+            ui.volContainer.setAttribute('aria-valuenow', Math.round(pct).toString());
+            if (isMuted || volume === 0) {
+                ui.iconVolHigh.classList.add('hidden');
+                ui.iconVolMute.classList.remove('hidden');
+            } else {
+                ui.iconVolHigh.classList.remove('hidden');
+                ui.iconVolMute.classList.add('hidden');
+            }
+        }
+
+        function updateTrackUI(track) {
+            if (!track) return;
+            ui.title.innerText = track.name;
+            ui.title.title = track.name;
+            ui.artist.innerText = track.artist;
+            ui.artist.title = track.artist;
+
+            if (track.pic) {
+                ui.cover.classList.add('opacity-0');
+                ui.cover.src = track.pic;
+                ui.cover.alt = track.name + ' - ' + track.artist;
+            } else {
+                ui.cover.src = '';
+                ui.cover.classList.add('opacity-0');
+                ui.cover.alt = cfg.i18n.noCover;
+            }
+
+            // Reset cover rotation
+            ui.cover.classList.remove('animate-spin-slow');
+            void ui.cover.offsetWidth;
+            ui.cover.classList.add('animate-spin-slow');
+            ui.cover.style.animationPlayState = 'paused';
+
+            // Reset progress
+            ui.progressBar.style.width = '0%';
+            ui.progressThumb.style.left = '0%';
+            ui.progressContainer.setAttribute('aria-valuenow', '0');
+            ui.currentTime.innerText = '0:00';
+            ui.totalTime.innerText = '0:00';
+        }
+
+        // ── Virtual scroll helpers (absolute-position based) ──────
+        var PRIMARY_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#6366f1';
+
+        function vsApplyActiveStyle(el, isActive) {
+            var overlay = el.querySelector('.item-active-overlay');
+            var title = el.querySelector('.item-title');
+            var eqBars = el.querySelector('.eq-bars');
+            var playIcon = el.querySelector('.eq-play-icon');
+            var isPlaying = mgr.getState().isPlaying;
+            if (isActive) {
+                el.classList.add('bg-neutral-100', 'dark:bg-white/10');
+                el.setAttribute('aria-current', 'true');
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+                title.style.color = PRIMARY_COLOR;
+                if (isPlaying) {
+                    eqBars.classList.remove('hidden');
+                    eqBars.classList.add('flex');
+                    playIcon.classList.add('hidden');
+                } else {
+                    eqBars.classList.add('hidden');
+                    eqBars.classList.remove('flex');
+                    playIcon.classList.remove('hidden');
+                }
+            } else {
+                el.classList.remove('bg-neutral-100', 'dark:bg-white/10');
+                el.removeAttribute('aria-current');
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+                title.style.color = '';
+            }
+        }
+
+        function vsCreateItemEl(idx) {
+            var vs = local.vs;
+            var track = vs.playlist[idx];
+            var clone = ui.itemTemplate.content.cloneNode(true);
+            var itemEl = clone.querySelector('.playlist-item');
+            var img = clone.querySelector('.item-cover');
+            var title = clone.querySelector('.item-title');
+            var artist = clone.querySelector('.item-artist');
+
+            img.src = track.pic || '';
+            img.alt = track.name + ' - ' + track.artist;
+            title.innerText = track.name;
+            artist.innerText = track.artist;
+
+            itemEl.dataset.index = idx;
+            itemEl.setAttribute('role', 'option');
+            itemEl.setAttribute('aria-label', track.name + ' - ' + track.artist);
+            itemEl.onclick = function () { mgr.playTrackByIndex(idx); };
+
+            // Absolute positioning for virtual scroll
+            itemEl.style.position = 'absolute';
+            itemEl.style.left = '0';
+            itemEl.style.right = '0';
+            itemEl.style.top = (idx * ITEM_H) + 'px';
+            itemEl.style.height = ITEM_H + 'px';
+
+            if (idx === vs.currentIndex) {
+                vsApplyActiveStyle(itemEl, true);
+            }
+            return clone;
+        }
+
+        function vsCommitRange() {
+            var vs = local.vs;
+            if (vs.playlist.length === 0 || !vs.drawerOpen) return;
+
+            var container = ui.playlistContainer;
+            var scrollTop = container.scrollTop;
+            var viewHeight = container.clientHeight;
+            var start = Math.max(0, Math.floor(scrollTop / ITEM_H) - OVERSCAN);
+            var end = Math.min(vs.playlist.length, Math.ceil((scrollTop + viewHeight) / ITEM_H) + OVERSCAN);
+
+            if (start === vs.renderedStart && end === vs.renderedEnd) return;
+
+            if (vs.renderedStart === -1) {
+                // First render: batch via fragment
+                var frag = document.createDocumentFragment();
+                for (var i = start; i < end; i++) {
+                    frag.appendChild(vsCreateItemEl(i));
+                }
+                container.appendChild(frag);
+            } else {
+                // Incremental: remove out-of-range, add new items
+                var oldEls = vs.renderedEls;
+                for (var ri = vs.renderedStart; ri < vs.renderedEnd; ri++) {
+                    if (ri < start || ri >= end) {
+                        if (oldEls[ri]) { oldEls[ri].remove(); delete oldEls[ri]; }
+                    }
+                }
+                for (var ai = start; ai < end; ai++) {
+                    if (!oldEls[ai]) {
+                        var newEl = vsCreateItemEl(ai);
+                        var inserted = false;
+                        for (var ni = ai + 1; ni < end; ni++) {
+                            if (oldEls[ni]) {
+                                container.insertBefore(newEl, oldEls[ni]);
+                                inserted = true;
+                                break;
+                            }
+                        }
+                        if (!inserted) container.appendChild(newEl);
+                        oldEls[ai] = newEl;
+                    }
+                }
+            }
+
+            // Rebuild reference map
+            vs.renderedEls = {};
+            var children = container.children;
+            for (var ci = 0; ci < children.length; ci++) {
+                var idx = parseInt(children[ci].dataset.index);
+                if (!isNaN(idx)) vs.renderedEls[idx] = children[ci];
+            }
+
+            vs.renderedStart = start;
+            vs.renderedEnd = end;
+        }
+
+        function vsRequestUpdate() {
+            var vs = local.vs;
+            if (vs.scrollRaf) return;
+            vs.scrollRaf = requestAnimationFrame(function () {
+                vs.scrollRaf = 0;
+                vsCommitRange();
+            });
+        }
+
+        function vsSetContainerHeight() {
+            ui.playlistContainer.style.height = (local.vs.playlist.length * ITEM_H) + 'px';
+        }
+
+        function renderPlaylist(playlist, currentIndex) {
+            var vs = local.vs;
+            vs.playlist = playlist;
+            vs.currentIndex = currentIndex;
+            vs.renderedStart = -1;
+            vs.renderedEnd = -1;
+            vs.renderedEls = {};
+            vs.drawerOpen = ui.playlistDrawer.style.gridTemplateRows === '1fr';
+            ui.playlistContainer.innerHTML = '';
+            if (vs.drawerOpen) {
+                vsSetContainerHeight();
+                vsCommitRange();
+            }
+        }
+
+        function updatePlaylistActiveUI(currentIndex) {
+            var vs = local.vs;
+            var oldIndex = vs.currentIndex;
+            vs.currentIndex = currentIndex;
+
+            if (vs.renderedEls[oldIndex]) {
+                vsApplyActiveStyle(vs.renderedEls[oldIndex], false);
+            }
+
+            if (currentIndex >= 0 && currentIndex < vs.playlist.length) {
+                if (currentIndex < vs.renderedStart || currentIndex >= vs.renderedEnd) {
+                    ui.playlistContainer.scrollTop = currentIndex * ITEM_H;
+                    vsCommitRange();
+                }
+                if (vs.renderedEls[currentIndex]) {
+                    vsApplyActiveStyle(vs.renderedEls[currentIndex], true);
+                }
+            }
+        }
+
+        function renderLyricsUI(lyrics, status) {
+            local.currentLrcIndex = -1;
+            ui.lrcContainer.innerHTML = '';
+            if (status === 'loading') {
+                ui.lrcContainer.innerHTML = '<div class="text-neutral-400 text-sm py-10">' + cfg.i18n.loadingLyrics + '</div>';
+                return;
+            }
+            if (status === 'failed') {
+                ui.lrcContainer.innerHTML = '<div class="text-neutral-400 text-sm py-10">' + cfg.i18n.failedLyrics + '</div>';
+                return;
+            }
+            if (!lyrics || lyrics.length === 0) {
+                ui.lrcContainer.innerHTML = '<div class="text-neutral-400 text-sm py-10" role="option">' + cfg.i18n.noLyrics + '</div>';
+                return;
+            }
+            lyrics.forEach(function (line, index) {
+                var lineEl = document.createElement('div');
+                lineEl.className = 'lrc-line transition-all duration-300 text-sm text-neutral-400 py-1 cursor-pointer hover:text-(--primary)';
+                lineEl.innerText = line.text;
+                lineEl.dataset.index = index;
+                lineEl.setAttribute('role', 'option');
+                lineEl.setAttribute('aria-label', line.text);
+                lineEl.onclick = function () {
+                    mgr.seekToTime(line.time);
+                };
+                ui.lrcContainer.appendChild(lineEl);
+            });
+        }
+
+        function updateLrcHighlight(index) {
+            if (index === local.currentLrcIndex) return;
+            local.currentLrcIndex = index;
+
+            var lines = ui.lrcContainer.querySelectorAll('.lrc-line');
+            lines.forEach(function (line, i) {
+                if (i === index) {
+                    line.classList.add('text-(--primary)', 'font-bold', 'text-base');
+                    line.classList.remove('text-neutral-400', 'text-sm');
+                } else {
+                    line.classList.remove('text-(--primary)', 'font-bold', 'text-base');
+                    line.classList.add('text-neutral-400', 'text-sm');
+                }
+            });
+
+            // Auto-scroll unless user is scrolling
+            if (index !== -1 && !local.isUserScrolling) {
+                var line = ui.lrcContainer.querySelector('.lrc-line[data-index="' + index + '"]');
+                if (line) {
+                    var containerHeight = ui.lrcContainer.clientHeight;
+                    var lineOffset = line.offsetTop;
+                    var lineHeight = line.offsetHeight;
+                    var targetScroll = lineOffset - (containerHeight / 2) + (lineHeight / 2);
+                    ui.lrcContainer.scrollTo({ top: targetScroll, behavior: 'smooth' });
+                }
+            }
+        }
+
+        // ── Full sync from manager state (for late-mount) ────────
+        function syncAll() {
+            var s = mgr.getState();
+            if (!s.initialized) return;
+
+            // Loading off
+            setLoading(false);
+
+            if (s.playlist.length === 0) {
+                ui.title.innerText = s.error || cfg.i18n.noSongs;
+                return;
+            }
+
+            renderPlaylist(s.playlist, s.currentIndex);
+            if (s.track) updateTrackUI(s.track);
+            updatePlayStateUI(s.isPlaying);
+            updateModeUI(s.playMode);
+            updateVolumeUI(s.volume, s.isMuted);
+
+            // Progress
+            if (s.duration > 0) {
+                ui.progressBar.style.width = s.progress + '%';
+                ui.progressThumb.style.left = s.progress + '%';
+                ui.progressContainer.setAttribute('aria-valuenow', Math.round(s.progress).toString());
+                ui.currentTime.innerText = s.currentTimeStr;
+                ui.totalTime.innerText = s.durationStr;
+            }
+
+            // Lyrics
+            renderLyricsUI(s.lyrics, s.lyrics.length > 0 ? 'loaded' : 'none');
+            if (s.currentLrcIndex >= 0) updateLrcHighlight(s.currentLrcIndex);
+
+            // Cover image: if already set, show it
+            if (s.track && s.track.pic && ui.cover.src && ui.cover.complete && ui.cover.naturalWidth > 0) {
+                ui.cover.classList.remove('opacity-0');
+            }
+            // Update cover animation state to match play state
+            ui.cover.style.animationPlayState = s.isPlaying ? 'running' : 'paused';
+        }
+
+        // ── Event listeners (fm:* from manager) ──────────────────
+        var handlers = {};
+
+        function on(name, fn) {
+            handlers[name] = fn;
+            window.addEventListener(name, fn);
+        }
+
+        on('fm:init', function (e) {
+            var d = e.detail;
+            setLoading(false);
+            if (d.playlist.length > 0) {
+                renderPlaylist(d.playlist, 0);
+                updateModeUI(d.playMode);
+                updateVolumeUI(d.volume, d.isMuted);
+            } else {
+                ui.title.innerText = cfg.i18n.noSongs;
+            }
+        });
+
+        on('fm:track', function (e) {
+            var d = e.detail;
+            updateTrackUI(d.track);
+            updatePlaylistActiveUI(d.index);
+        });
+
+        on('fm:play-state', function (e) {
+            updatePlayStateUI(e.detail.isPlaying);
+        });
+
+        on('fm:time', function (e) {
+            var d = e.detail;
+            ui.progressBar.style.width = d.progress + '%';
+            ui.progressThumb.style.left = d.progress + '%';
+            ui.progressContainer.setAttribute('aria-valuenow', Math.round(d.progress).toString());
+            ui.currentTime.innerText = d.currentTimeStr;
+            ui.totalTime.innerText = d.durationStr;
+        });
+
+        on('fm:volume', function (e) {
+            updateVolumeUI(e.detail.volume, e.detail.isMuted);
+        });
+
+        on('fm:mode', function (e) {
+            updateModeUI(e.detail.playMode);
+        });
+
+        on('fm:lyrics', function (e) {
+            renderLyricsUI(e.detail.lyrics, e.detail.status);
+        });
+
+        on('fm:lrc-index', function (e) {
+            updateLrcHighlight(e.detail.index);
+        });
+
+        on('fm:error', function (e) {
+            ui.title.innerText = e.detail.message || cfg.i18n.error;
+        });
+
+        // ── Button click delegates ───────────────────────────────
+        ui.btnPlay.addEventListener('click', function () { mgr.togglePlay(); });
+        ui.btnNext.addEventListener('click', function () { mgr.playNext(); });
+        ui.btnPrev.addEventListener('click', function () { mgr.playPrev(); });
+        ui.btnRepeat.addEventListener('click', function () { mgr.cyclePlayMode(); });
+        ui.btnMute.addEventListener('click', function () { mgr.toggleMute(); });
+
+        ui.volContainer.addEventListener('click', function (e) {
+            var rect = ui.volContainer.getBoundingClientRect();
+            var x = e.clientX - rect.left;
+            var val = Math.max(0, Math.min(1, x / rect.width));
+            mgr.setVolume(val);
+        });
+
+        ui.progressContainer.addEventListener('click', function (e) {
+            var rect = ui.progressContainer.getBoundingClientRect();
+            var clickX = e.clientX - rect.left;
+            var percent = Math.min(Math.max(clickX / rect.width, 0), 1);
+            mgr.seek(percent);
+        });
+
+        // ── Drawer logic (local state) ───────────────────────────
+        ui.btnLrc.addEventListener('click', function () {
+            var isOpen = ui.lrcDrawer.style.gridTemplateRows === '1fr';
+            if (isOpen) {
+                ui.lrcDrawer.style.gridTemplateRows = '0fr';
+                ui.lrcDrawer.classList.remove('opacity-100');
+                ui.lrcDrawer.classList.add('opacity-0');
+                ui.btnLrc.classList.remove('text-(--primary)');
+                ui.btnLrc.classList.add('text-neutral-400');
+                ui.iconLrcOn.classList.add('hidden');
+                ui.iconLrcOff.classList.remove('hidden');
+            } else {
+                // Close playlist if open
+                ui.playlistDrawer.style.gridTemplateRows = '0fr';
+                ui.playlistDrawer.classList.remove('opacity-100');
+                ui.playlistDrawer.classList.add('opacity-0');
+                ui.btnDrawer.classList.remove('text-(--primary)');
+                ui.btnDrawer.classList.add('text-neutral-400');
+
+                ui.lrcDrawer.style.gridTemplateRows = '1fr';
+                ui.lrcDrawer.classList.add('opacity-100');
+                ui.lrcDrawer.classList.remove('opacity-0');
+                ui.btnLrc.classList.add('text-(--primary)');
+                ui.btnLrc.classList.remove('text-neutral-400');
+                ui.iconLrcOn.classList.remove('hidden');
+                ui.iconLrcOff.classList.add('hidden');
+            }
+        });
+
+        ui.btnDrawer.addEventListener('click', function () {
+            var isOpen = ui.playlistDrawer.style.gridTemplateRows === '1fr';
+            if (isOpen) {
+                ui.playlistDrawer.style.gridTemplateRows = '0fr';
+                ui.playlistDrawer.classList.remove('opacity-100');
+                ui.playlistDrawer.classList.add('opacity-0');
+                ui.btnDrawer.classList.add('text-neutral-400');
+                ui.btnDrawer.classList.remove('text-(--primary)');
+                local.vs.drawerOpen = false;
+            } else {
+                // Close lyrics if open
+                ui.lrcDrawer.style.gridTemplateRows = '0fr';
+                ui.lrcDrawer.classList.remove('opacity-100');
+                ui.lrcDrawer.classList.add('opacity-0');
+                ui.btnLrc.classList.remove('text-(--primary)');
+                ui.btnLrc.classList.add('text-neutral-400');
+                ui.iconLrcOn.classList.add('hidden');
+                ui.iconLrcOff.classList.remove('hidden');
+
+                ui.playlistDrawer.style.gridTemplateRows = '1fr';
+                ui.playlistDrawer.classList.add('opacity-100');
+                ui.playlistDrawer.classList.remove('opacity-0');
+                ui.btnDrawer.classList.remove('text-neutral-400');
+                ui.btnDrawer.classList.add('text-(--primary)');
+                local.vs.drawerOpen = true;
+
+                // Render playlist after drawer transition settles
+                if (local.vs.playlist.length > 0) {
+                    requestAnimationFrame(function () {
+                        vsSetContainerHeight();
+                        vsCommitRange();
+                    });
+                }
+            }
+        });
+
+        // ── Playlist virtual scroll listener ──────────────────────
+        ui.playlistContainer.addEventListener('scroll', function () {
+            vsRequestUpdate();
+        });
+
+        // ── Lyrics user scroll detection ─────────────────────────
+        function resetScrollTimeout() {
+            clearTimeout(local.scrollTimeout);
+            local.scrollTimeout = setTimeout(function () {
+                local.isUserScrolling = false;
+                // Snap back to current lyric
+                var s = mgr.getState();
+                if (s.currentLrcIndex >= 0) {
+                    var line = ui.lrcContainer.querySelector('.lrc-line[data-index="' + s.currentLrcIndex + '"]');
+                    if (line) {
+                        var containerHeight = ui.lrcContainer.clientHeight;
+                        var lineOffset = line.offsetTop;
+                        var lineHeight = line.offsetHeight;
+                        var targetScroll = lineOffset - (containerHeight / 2) + (lineHeight / 2);
+                        ui.lrcContainer.scrollTo({ top: targetScroll, behavior: 'auto' });
+                    }
+                }
+            }, 3000);
+        }
+
+        ui.lrcContainer.addEventListener('wheel', function () {
+            local.isUserScrolling = true;
+            resetScrollTimeout();
+        });
+        ui.lrcContainer.addEventListener('touchstart', function () {
+            local.isUserScrolling = true;
+            resetScrollTimeout();
+        });
+
+        // ── Cover image events ───────────────────────────────────
+        ui.cover.addEventListener('load', function () {
+            ui.cover.classList.remove('opacity-0');
+        });
+        ui.cover.addEventListener('error', function () {
+            ui.cover.classList.add('opacity-0');
+        });
+
+        // ── Cleanup on DOM removal ───────────────────────────────
+        var observer = new MutationObserver(function (mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+                var removed = mutations[i].removedNodes;
+                for (var j = 0; j < removed.length; j++) {
+                    if (removed[j] === widget || (removed[j].contains && removed[j].contains(widget))) {
+                        // Widget removed from DOM – clean up event listeners
+                        Object.keys(handlers).forEach(function (name) {
+                            window.removeEventListener(name, handlers[name]);
+                        });
+                        observer.disconnect();
+                        clearTimeout(local.scrollTimeout);
+                        return;
+                    }
+                }
+            }
+        });
+        if (widget.parentNode) {
+            observer.observe(widget.parentNode, { childList: true });
+        }
+
+        // ── Init: either sync existing state or trigger init ─────
+        var currentState = mgr.getState();
+        if (currentState.initialized) {
+            // Manager already initialized (late mount) – sync all UI
+            syncAll();
+        } else {
+            // First widget to mount – show loading and trigger init
+            setLoading(true);
+            scheduleInit();
+        }
+    }
+
+    // 每个 widget 只初始化一次。导航栏那份 widget 在 swup 容器之外、DOM 不会被
+    // 替换，而本脚本每次导航都会被重跑；侧栏 widget 会被整体替换，新 DOM 上没有
+    // 这个标记，因此仍会正常重新初始化（旧实例由内部的 MutationObserver 清理）。
+    function initAll() {
+        var widgets = document.querySelectorAll('.music-player-widget');
+        for (var i = 0; i < widgets.length; i++) {
+            var w = widgets[i];
+            if (w.dataset.musicInit === '1') continue;
+            w.dataset.musicInit = '1';
+            initWidget(w);
+        }
+    }
+
+    initAll();
+})();
+})();</script><!-- Sakura Effect --><script type="module" src="/_astro/SakuraEffect.astro_astro_type_script_index_0_lang.M--7gaZb.js"></script><!-- Water Waves Effect --><script type="module" src="/_astro/WavesEffect.astro_astro_type_script_index_0_lang.DwU8s_Lh.js"></script><!-- Fancybox Manager --><script type="module" src="/_astro/FancyboxManager.astro_astro_type_script_index_0_lang.B6KBqFOP.js"></script><!-- Tab 代码块交互 --><script type="module">var g=".rehype-code-group",i=".rcg-tab",b=".rcg-block",l=e=>Array.from(e.querySelectorAll(`:scope > .rcg-tab-container > ${i}`)),h=e=>Array.from(e.querySelectorAll(`:scope > ${b}`));function u(e,t,n=!1){const r=l(e),d=h(e);if(r.length===0)return;const a=Math.max(0,Math.min(t,r.length-1));r.forEach((c,s)=>{const o=s===a;c.classList.toggle("active",o),c.setAttribute("aria-selected",o?"true":"false")}),d.forEach((c,s)=>{const o=s===a;c.classList.toggle("active",o),o?c.removeAttribute("hidden"):c.setAttribute("hidden","true")}),n&&r[a].focus({preventScroll:!0})}function f(e){if(!(e instanceof Element))return null;const t=e.closest(i),n=t?.closest(g);if(!t||!n)return null;const r=l(n).indexOf(t);return r===-1?null:{group:n,index:r}}document.addEventListener("click",e=>{const t=f(e.target);t&&u(t.group,t.index)});document.addEventListener("keydown",e=>{if(e.altKey||e.ctrlKey||e.metaKey)return;const t=f(e.target);if(!t)return;const n=l(t.group).length;let r;switch(e.key){case"ArrowRight":r=(t.index+1)%n;break;case"ArrowLeft":r=(t.index-1+n)%n;break;case"Home":r=0;break;case"End":r=n-1;break;default:return}e.preventDefault(),u(t.group,r,!0)});</script><!-- GitHub 卡片客户端实时补全（forks/stars） --><script type="module">function u(t){return Intl.NumberFormat("en-us",{notation:"compact",maximumFractionDigits:1}).format(t).replaceAll(" ","")}var m="github-card:",h=864e5,c=new Map,l=new Set;function g(t){return m+t.toLowerCase()}function p(t){try{const e=localStorage.getItem(g(t));if(!e)return null;const r=JSON.parse(e),n=r.data;return!n||typeof r.fetchedAt!="number"||typeof n.stargazers_count!="number"||typeof n.forks!="number"||Date.now()-r.fetchedAt>=h?null:n}catch{return null}}function y(t,e){try{localStorage.setItem(g(t),JSON.stringify({data:e,fetchedAt:Date.now()}))}catch{}}async function w(t){const[e,r]=t.split("/"),n=`https://api.github.com/repos/${encodeURIComponent(e)}/${encodeURIComponent(r)}`,o=await fetch(n,{referrerPolicy:"no-referrer",signal:AbortSignal.timeout(5e3)});if(!o.ok)throw new Error(`GitHub API returned ${o.status}`);return await o.json()}function f(t,e){const r=(o,a)=>{const s=t.querySelector(o);s&&(s.textContent=a)};r(".gc-stars",u(e.stargazers_count)),r(".gc-forks",u(e.forks)),r(".gc-description",e.description?.replace(/:[a-zA-Z0-9_]+:/g,"")||"Description not set"),r(".gc-language",e.language??"Unavailable"),r(".gc-license",e.license?.spdx_id||"no-license");const n=t.querySelector(".gc-avatar");if(n&&e.owner?.avatar_url){const o=e.owner.avatar_url;n.style.backgroundImage=`url("${o}${o.includes("?")?"&":"?"}s=32")`,n.style.backgroundColor="transparent"}t.classList.remove("fetch-waiting","fetch-error")}function C(t,e){const r=p(e);if(r){f(t,r);return}const n=e.toLowerCase();if(l.has(n))return;let o=c.get(n);o||(o=w(e).then(a=>(y(e,a),a)).catch(a=>(console.warn("[GITHUB-CARD] Failed to load",e,a),null)).finally(()=>{c.delete(n),l.add(n)}),c.set(n,o)),o.then(a=>{a?f(t,a):t.classList.add("fetch-error")})}function i(){document.querySelectorAll(".card-github[repo]").forEach(t=>{const e=t.getAttribute("repo");e&&C(t,e)})}function d(){i(),document.addEventListener("swup:content:replace",()=>{requestAnimationFrame(i)}),document.addEventListener("password:decrypted",()=>{requestAnimationFrame(i)})}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",d):d();</script></body></html><script type="module" src="/_astro/Layout.astro_astro_type_script_index_0_lang.K2jyWMW8.js"></script><script>
+	// 竖排栏在 swup 容器之外、切页不会重建：手动同步「当前页」与页面基调。
+	(function () {
+		function sync() {
+			var path = location.pathname.replace(/\/+$/, "") || "/";
+			var isHome = path === "/";
+			var links = document.querySelectorAll("[data-ef-rail] .Header_navItem__c_fLB");
+			for (var i = 0; i < links.length; i++) {
+				var href = (links[i].getAttribute("href") || "").replace(/\/+$/, "") || "/";
+				var hit = href === "/" ? isHome : path === href || path.indexOf(href + "/") === 0;
+				links[i].classList.toggle("Header_active__jzCyf", hit);
+				if (hit) links[i].setAttribute("aria-current", "page");
+				else links[i].removeAttribute("aria-current");
+			}
+			var main = document.getElementById("ef-main");
+			var light = !!(main && main.classList.contains("ef-light"));
+			var shell = document.querySelector("[data-ef-shell]");
+			if (shell) shell.classList.toggle("ef-shell--light", light);
+		}
+		sync();
+		document.addEventListener("swup:page:view", function () {
+			setTimeout(sync, 0);
+		});
+	})();
+</script>

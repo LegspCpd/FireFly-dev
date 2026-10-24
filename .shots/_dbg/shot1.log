@@ -1,0 +1,6 @@
+Warning: Detected unsettled top-level await at file:///F:/Github/Firefly/.shots/_dbg/shot1.mjs:24
+await send("Page.enable", {}, sid); await send("Runtime.enable", {}, sid); await send("Page.bringToFront", {}, sid);
+^
+
+
+

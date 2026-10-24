@@ -1,0 +1,64 @@
+<div class="ef-rail-bottom">
+	<!-- 第一组：横向铺满的浅灰圆角块（留言 / 订阅）—— 图标在左、文字左对齐 -->
+	<div class="ef-rail-menu">
+		{
+			railFoot.map((item) => (
+				<a class="ef-rail-menu-row" href={item.href} aria-label={item.label}>
+					<svg
+						class="ef-rail-menu-icon"
+						viewBox={item.vb}
+						xmlns="http://www.w3.org/2000/svg"
+						aria-hidden="true"
+					>
+						<path fill="currentColor" d={item.d} />
+					</svg>
+					<span class="ef-rail-menu-label">{item.label}</span>
+				</a>
+			))
+		}
+	</div>
+
+	<!-- 第二组：横向长条黑色 CTA —— ▼ + 竖向白分隔线 + 横排白字 -->
+	<a class="ef-rail-cta" href="/archive/" aria-label="全部文章">
+		<svg
+			class="ef-rail-cta-tri"
+			viewBox="0 0 12 12"
+			xmlns="http://www.w3.org/2000/svg"
+			aria-hidden="true"
+		>
+			<path fill="currentColor" d={triPath} />
+		</svg>
+		<span class="ef-rail-cta-line" />
+		<span class="ef-rail-cta-text">全部文章</span>
+	</a>
+
+	<!-- 第三组：一排小圆角方块的社交图标 -->
+	<div class="ef-rail-social">
+		{
+			social.map((item) => (
+				<a
+					class="ef-rail-social-btn"
+					href={item.href}
+					aria-label={item.label}
+					target={item.external ? "_blank" : undefined}
+					rel={item.external ? "noopener noreferrer" : undefined}
+				>
+					<svg
+						class="ef-rail-social-icon"
+						viewBox={item.vb}
+						xmlns="http://www.w3.org/2000/svg"
+						aria-hidden="true"
+					>
+						<path fill="currentColor" d={item.d} />
+					</svg>
+				</a>
+			))
+		}
+	</div>
+
+	<!-- 第四组：极小的品牌标记（官网那里是一枚极小的图形 logo） -->
+	<p class="ef-rail-mark">
+		<span class="ef-rail-mark-brand">LEGSPCPD</span>
+		<span class="ef-rail-mark-ver">// BLOG &copy; {year}</span>
+	</p>
+</div>

@@ -1,0 +1,190 @@
+/* ---------- 4. 竖排栏底部（四组：灰块 / 黑长条 / 社交方块 / 品牌标记） -------
+  展开后从上到下：
+    1) 横向铺满的浅灰圆角块：留言 / 订阅（图标在左、文字左对齐）
+    2) 横向长条黑色 CTA：▼ + 竖向白分隔线 + 横排白字「全部文章」
+    3) 一排小圆角方块的社交图标
+    4) 极小的品牌标记
+
+  几何全部按站主给的官网实测值换算成 --efu：
+    1) 左右各留 1u 外边距 → 宽 = 展开栏宽 22.5u − 2u = 20.5u（不是窄药丸）；
+       底色 #e6e6e6、圆角 .5625u（中等，不是 pill）；
+       上下内边距 .75u、每行高 3u；
+       图标 left 1.25u / 高 1.25u；文字 left 3.75u 起、1.25u、左对齐、#191919；
+       行间 1px 分隔线 rgba(0,0,0,.1)，左右各缩进 1u；
+    2) 与上面同宽、高 3.25u；
+       ▼ 1.25u、距左 1u；1px 竖白分隔线高 1.5u；
+       右侧区域横排白字 1.25u、居中；
+       底色 #191919 + 45° 细斜纹（repeating-linear-gradient 复刻官网的斜纹深底）；
+    3) 4 个 1.5u 圆角方块 space-between 铺满；圆角 .25u、底色 #e6e6e6、
+       图标高 1u 单色实心（单条 path + fill=currentColor，不加 stroke）；
+       hover 底色换信号黄 #fffa00；
+    4) LEGSPCPD .75u / // BLOG © 年份 .625u，整排居中，上下各留约 1u。
+
+  收起时竖排栏只有 7.5u 宽且 overflow:hidden，这一列自然只剩最左边那条「图标列」；
+  菜单文字与导航项一样，展开（hover / 键盘聚焦）时才淡入。 */
+
+.ef-rail-bottom {
+  position: absolute;
+  left: calc(1 * var(--efu));
+  bottom: calc(1 * var(--efu));
+  width: calc(var(--ef-rail-w-open) - 2 * var(--efu));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: calc(0.75 * var(--efu));
+}
+
+/* 1) 浅灰圆角块：留言 / 订阅 */
+.ef-rail-menu {
+  width: 100%;
+  padding-block: calc(0.75 * var(--efu));
+  border-radius: calc(0.5625 * var(--efu));
+  background-color: #e6e6e6;
+}
+.ef-rail-menu-row {
+  position: relative;
+  display: block;
+  height: calc(3 * var(--efu));
+  color: #191919;
+  text-decoration: none;
+}
+/* 行与行之间 1px 分隔线，比底色略深，左右各缩进 1u（不贴边） */
+.ef-rail-menu-row + .ef-rail-menu-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(1 * var(--efu));
+  right: calc(1 * var(--efu));
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.ef-rail-menu-icon {
+  position: absolute;
+  left: calc(1.25 * var(--efu));
+  top: 50%;
+  transform: translate3d(0, -50%, 0);
+  display: block;
+  height: calc(1.25 * var(--efu));
+  width: auto;
+  color: #191919;
+}
+.ef-rail-menu-label {
+  position: absolute;
+  left: calc(3.75 * var(--efu));
+  top: 50%;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-size: calc(1.25 * var(--efu));
+  line-height: 1;
+  text-align: left;
+  color: #191919;
+  opacity: 0;
+  transform: translate3d(calc(-1 * var(--efu)), -50%, 0);
+  transition: opacity 0.2s, transform 0.3s;
+}
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-menu-label,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-menu-label {
+  opacity: 1;
+  transform: translate3d(0, -50%, 0);
+}
+
+/* 2) 黑色长条 CTA：▼ + 竖白线 + 横排白字 */
+.ef-rail-cta {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: calc(3.25 * var(--efu));
+  padding-left: calc(1 * var(--efu));
+  border-radius: calc(0.25 * var(--efu));
+  background-color: #191919;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.07) 0,
+    rgba(255, 255, 255, 0.07) 1px,
+    rgba(255, 255, 255, 0) 1px,
+    rgba(255, 255, 255, 0) calc(0.25 * var(--efu))
+  );
+  text-decoration: none;
+}
+.ef-rail-cta-tri {
+  flex: 0 0 auto;
+  display: block;
+  width: calc(1.25 * var(--efu));
+  height: calc(1.25 * var(--efu));
+  color: #fff;
+}
+.ef-rail-cta-line {
+  flex: 0 0 auto;
+  width: 1px;
+  height: calc(1.5 * var(--efu));
+  margin-left: calc(1.25 * var(--efu));
+  background-color: #fff;
+}
+.ef-rail-cta-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-size: calc(1.25 * var(--efu));
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* 3) 一排小圆角方块的社交图标 */
+.ef-rail-social {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.ef-rail-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(1.5 * var(--efu));
+  height: calc(1.5 * var(--efu));
+  border-radius: calc(0.25 * var(--efu));
+  background-color: #e6e6e6;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+.ef-rail-social-btn:hover {
+  background-color: #fffa00;
+}
+.ef-rail-social-icon {
+  display: block;
+  height: calc(1 * var(--efu));
+  width: auto;
+  color: #191919;
+}
+
+/* 4) 最底部：极小的品牌标记 */
+.ef-rail-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(0.1875 * var(--efu));
+  margin: calc(0.25 * var(--efu)) 0 0;
+  text-align: center;
+}
+.ef-rail-mark-brand {
+  font-family: Novecentosanswide-Bold, SansBold, sans-serif;
+  font-size: calc(0.75 * var(--efu));
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #191919;
+}
+.ef-rail-mark-ver {
+  font-family: SansMedium, system-ui, sans-serif;
+  font-size: calc(0.625 * var(--efu));
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: #999;
+  white-space: nowrap;
+}

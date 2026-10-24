@@ -65,8 +65,8 @@
    唯一保留暗色的是加载屏（BootScreen 的 #141414，与官网上屏一致）。 */
 
 .ef-shell {
-  /* 官网单位：1rem = min(.625vw, 1.111111vh)，钳到 9~12px 防止极端视口 */
-  --efu: clamp(9px, min(0.625vw, 1.111111vh), 12px);
+  /* 官网单位：1rem = min(.625vw, 1.111111vh)；1920×1080 下 1u = 12px */
+  --efu: min(0.625vw, 1.111111vh);
 
   --ef-black: #191919;
   --ef-yellow: #fffa00;
@@ -298,8 +298,11 @@ body.ef-contours {
   position: absolute;
   left: 0;
   top: calc(-0.25 * var(--efu));
+  /* 这块是背景条，必须落在图标与文字之下，否则整行只剩一条灰条（图标文字全被盖住）。 */
+  z-index: -1;
   box-sizing: border-box;
-  width: calc(21 * var(--efu));
+  /* 收起态只占栏宽；展开（悬停）时才铺到官网的 21u。 */
+  width: 100%;
   height: calc(5 * var(--efu));
   border-left: calc(0.75 * var(--efu)) solid #191919;
   background-color: #e6e6e6;
@@ -383,300 +386,191 @@ body.ef-contours {
   opacity: 1;
 }
 
-/* ---------- 4. 竖排栏底部（官网 buttonFrame + buttonPreserveBg 原样照抄） ---------
+/* ---------- 4. 竖排栏底部（四组：灰块 / 黑长条 / 社交方块 / 品牌标记） -------
   展开后从上到下：
-    1) 浅灰大圆角胶囊：留言 / 订阅（官网 Header_buttonFrameBg + Header_buttonFrameContainer）
-    2) 黑色竖条方块：白三角 + 细分隔线 + 竖排白字「全部文章」（官网 Header_buttonPreserveBg）
-    3) 一排小圆角方块的社交图标（官网 Header_iconButton__KWPpn 的方块几何）
-    4) 最底部一行很小的品牌标记
+    1) 横向铺满的浅灰圆角块：留言 / 订阅（图标在左、文字左对齐）
+    2) 横向长条黑色 CTA：▼ + 竖向白分隔线 + 横排白字「全部文章」
+    3) 一排小圆角方块的社交图标
+    4) 极小的品牌标记
 
-  尺寸全部照官网：
-    · 胶囊 3.75rem 宽 / 圆角 1.875rem / 底色 #f2f2f2；
-      官网按行数给高度：Header_ele2（两行）= 7.8125rem、Header_ele3（三行）= 11.5625rem，
-      公式 = 行数 × 3.75rem + 0.3125rem；本站两行，取 7.8125rem；
-      行高 3rem、首行距顶 .5rem、行间距 .75rem（官网内联 translateY 0.5 / 4.25rem）；
-      图标 height 1.75rem、width auto、压 x=1.875rem（收起态胶囊正中）、垂直压行中线；
-      行间细线 1px × 1.25rem、#ccc，同样压 x=1.875rem；
-      文字 1.125rem / line-height 1，压 y=1.5rem；
-    · 黑块 4.5rem × 9.75rem、圆角 4px、#191919；
-    · 官网 showPreserveButton 变体里胶囊与黑块的间距是 2.4375rem（21.75 - 19.3125）。
+  几何全部按站主给的官网实测值换算成 --efu：
+    1) 左右各留 1u 外边距 → 宽 = 展开栏宽 22.5u − 2u = 20.5u（不是窄药丸）；
+       底色 #e6e6e6、圆角 .5625u（中等，不是 pill）；
+       上下内边距 .75u、每行高 3u；
+       图标 left 1.25u / 高 1.25u；文字 left 3.75u 起、1.25u、左对齐、#191919；
+       行间 1px 分隔线 rgba(0,0,0,.1)，左右各缩进 1u；
+    2) 与上面同宽、高 3.25u；
+       ▼ 1.25u、距左 1u；1px 竖白分隔线高 1.5u；
+       右侧区域横排白字 1.25u、居中；
+       底色 #191919 + 45° 细斜纹（repeating-linear-gradient 复刻官网的斜纹深底）；
+    3) 4 个 1.5u 圆角方块 space-between 铺满；圆角 .25u、底色 #e6e6e6、
+       图标高 1u 单色实心（单条 path + fill=currentColor，不加 stroke）；
+       hover 底色换信号黄 #fffa00；
+    4) LEGSPCPD .75u / // BLOG © 年份 .625u，整排居中，上下各留约 1u。
 
-  只按用户要求改了胶囊的横向尺寸（官网那套是整栏 hover 展开、按钮文字压在展开后
-  19.5rem 胶囊的中线上；本站展宽只到 10.25u）：
-    · 收起 4.5u —— 与黑块同宽、同左缘，图标仍压在胶囊正中（2.25u）；
-    · 展开 10.25u —— 文字左缘落在 6.9375u，与导航项文字同一条竖线，滑入距离照官网留 2rem。 */
+  收起时竖排栏只有 7.5u 宽且 overflow:hidden，这一列自然只剩最左边那条「图标列」；
+  菜单文字与导航项一样，展开（hover / 键盘聚焦）时才淡入。 */
 
 .ef-rail-bottom {
   position: absolute;
-  left: calc(1.5 * var(--efu));
-  bottom: calc(2.25 * var(--efu));
+  left: calc(1 * var(--efu));
+  bottom: calc(1 * var(--efu));
+  width: calc(var(--ef-rail-w-open) - 2 * var(--efu));
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-}
-
-/* 胶囊：官网把背景单独挂在 .Header_buttonFrameBg 上（它的按钮是绝对定位的兄弟节点）；
-  这边按钮走文档流，背景与尺寸合到容器这一层，几何一致。 */
-.Header_buttonFrameContainer__Uvshp {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  padding-top: calc(0.5 * var(--efu));
+  align-items: stretch;
   gap: calc(0.75 * var(--efu));
-  width: calc(4.5 * var(--efu));
-  height: calc(7.8125 * var(--efu));
-  margin-bottom: calc(2.4375 * var(--efu));
-  border-radius: calc(1.875 * var(--efu));
-  background-color: #f2f2f2;
-  overflow: hidden;
-  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
-}
-.Header_pcHeaderContainer__Sy_8l:hover .Header_buttonFrameContainer__Uvshp,
-.Header_pcHeaderContainer__Sy_8l:focus-within .Header_buttonFrameContainer__Uvshp {
-  width: calc(10.25 * var(--efu));
 }
 
-/* 行：官网 .Header_button 高 3rem，行内元素一律绝对定位 */
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonFrameContainer__Uvshp
-  .Header_button__b0gdu {
+/* 1) 浅灰圆角块：留言 / 订阅 */
+.ef-rail-menu {
+  width: 100%;
+  padding-block: calc(0.75 * var(--efu));
+  border-radius: calc(0.5625 * var(--efu));
+  background-color: #e6e6e6;
+}
+.ef-rail-menu-row {
   position: relative;
-  flex: 0 0 auto;
   display: block;
   height: calc(3 * var(--efu));
-  color: inherit;
+  color: #191919;
   text-decoration: none;
 }
-/* 行间细线：官网 .Header_divider 1px × 1.25rem、#ccc，压在图标中线上，
-   左缘 = 1.875 - 0.625 = 1.25rem；官网用独立 div + 内联 translateY，
-   这里挂在后一行的 ::before 上（离行顶 -.375rem = 半格行间距），几何一致。 */
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonFrameContainer__Uvshp
-  .Header_button__b0gdu
-  + .Header_button__b0gdu::before {
+/* 行与行之间 1px 分隔线，比底色略深，左右各缩进 1u（不贴边） */
+.ef-rail-menu-row + .ef-rail-menu-row::before {
   content: "";
   position: absolute;
-  top: calc(-0.375 * var(--efu));
-  left: calc(1.25 * var(--efu));
-  width: calc(1.25 * var(--efu));
+  top: 0;
+  left: calc(1 * var(--efu));
+  right: calc(1 * var(--efu));
   height: 1px;
-  background-color: #ccc;
+  background-color: rgba(0, 0, 0, 0.1);
 }
-
-/* 图标：官网 height:1.75rem / width:auto / left:1.875rem / top:1.5rem /
-   translate3d(-50%,-50%,0)。left 取 2.25u —— 收起态 4.5u 胶囊的正中
-   （官网的 1.875rem 同样是 3.75rem 胶囊的正中），展开时不会跟着胶囊中线漂移。 */
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonFrameContainer__Uvshp
-  .Header_button__b0gdu
-  .Header_icon__3iDIG {
+.ef-rail-menu-icon {
   position: absolute;
-  left: calc(2.25 * var(--efu));
-  top: calc(1.5 * var(--efu));
-  transform: translate3d(-50%, -50%, 0);
+  left: calc(1.25 * var(--efu));
+  top: 50%;
+  transform: translate3d(0, -50%, 0);
   display: block;
+  height: calc(1.25 * var(--efu));
   width: auto;
-  height: calc(1.75 * var(--efu));
   color: #191919;
-  transition: color 0.2s;
 }
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonFrameContainer__Uvshp
-  .Header_button__b0gdu:hover
-  .Header_icon__3iDIG {
-  color: #424242;
-}
-
-/* 文字：官网 left 10.1875rem / top 1.5rem / 1.125rem / line-height 1，
-   隐藏态 translate3d(calc(-50% - 2rem),-50%,0) → 展开 translate3d(-50%,-50%,0)。
-   这里改成左缘锚定 6.9375u（与导航文字同一条竖线），滑入方向与距离照官网。 */
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonFrameContainer__Uvshp
-  .Header_button__b0gdu
-  .Header_textWrapper__o9aHt {
+.ef-rail-menu-label {
   position: absolute;
-  left: calc(6.9375 * var(--efu));
-  top: calc(1.5 * var(--efu));
+  left: calc(3.75 * var(--efu));
+  top: 50%;
   white-space: nowrap;
   pointer-events: none;
-  font-family: SansMedium, system-ui, sans-serif;
-  font-size: calc(1.125 * var(--efu));
+  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-size: calc(1.25 * var(--efu));
   line-height: 1;
+  text-align: left;
   color: #191919;
   opacity: 0;
-  transform: translate3d(calc(-2 * var(--efu)), -50%, 0);
+  transform: translate3d(calc(-1 * var(--efu)), -50%, 0);
   transition: opacity 0.2s, transform 0.3s;
 }
-.Header_pcHeaderContainer__Sy_8l:hover
-  .Header_buttonFrameContainer__Uvshp
-  .Header_button__b0gdu
-  .Header_textWrapper__o9aHt,
-.Header_pcHeaderContainer__Sy_8l:focus-within
-  .Header_buttonFrameContainer__Uvshp
-  .Header_button__b0gdu
-  .Header_textWrapper__o9aHt {
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-menu-label,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-menu-label {
   opacity: 1;
   transform: translate3d(0, -50%, 0);
 }
 
-/* 官网 .Header_buttonPreserveBg：黑底 4.5rem × 9.75rem、圆角 4px */
-.Header_pcHeaderContainer__Sy_8l .Header_buttonPreserveBg__rEZGT {
+/* 2) 黑色长条 CTA：▼ + 竖白线 + 横排白字 */
+.ef-rail-cta {
   position: relative;
-  display: block;
-  width: calc(4.5 * var(--efu));
-  height: calc(9.75 * var(--efu));
-  border-radius: calc(0.25 * var(--efu));
-  overflow: hidden;
-  cursor: pointer;
-  background-color: #191919;
-  text-decoration: none;
-  /* .ef-rail-bottom 不设 gap，块与块的间距由各块自己给（官网那套是绝对定位） */
-  margin-bottom: calc(1.75 * var(--efu));
-}
-/* 官网 hover：整块被 #fffa00 盖住（.Header_bg opacity 0 → 1） */
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonPreserveBg__rEZGT
-  .Header_bg___kVDv {
-  position: absolute;
-  top: 0;
-  left: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
   width: 100%;
-  height: 100%;
-  background-color: #fffa00;
-  transition: opacity 0.2s;
-  opacity: 0;
-}
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonPreserveBg__rEZGT:hover
-  .Header_bg___kVDv {
-  opacity: 1;
-}
-/* 白色三角 logo：压在方块中线上 */
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonPreserveBg__rEZGT
-  .Header_tri__KNP87 {
-  position: absolute;
-  top: calc(1.25 * var(--efu));
-  left: calc(2.25 * var(--efu));
-  width: calc(1.9375 * var(--efu));
-  height: calc(1.75 * var(--efu));
-  color: #fff;
-  transition: color 0.3s;
-  transform: translate3d(-50%, 0, 0);
-}
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonPreserveBg__rEZGT:hover
-  .Header_tri__KNP87 {
-  color: #191919;
-}
-/* 一条细分隔线（官网是 2px；用户要求细，收成 1px） */
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonPreserveBg__rEZGT
-  .Header_divider__tUYjO {
-  position: absolute;
-  top: calc(4.125 * var(--efu));
-  left: calc(2.25 * var(--efu));
-  width: calc(3 * var(--efu));
-  height: 1px;
-  margin: 0;
-  background-color: rgba(255, 255, 255, 0.3);
-  transition: background-color 0.3s;
-  transform: translate3d(-50%, 0, 0);
-  pointer-events: none;
-  opacity: 1;
-}
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonPreserveBg__rEZGT:hover
-  .Header_divider__tUYjO {
+  height: calc(3.25 * var(--efu));
+  padding-left: calc(1 * var(--efu));
+  border-radius: calc(0.25 * var(--efu));
   background-color: #191919;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.07) 0,
+    rgba(255, 255, 255, 0.07) 1px,
+    rgba(255, 255, 255, 0) 1px,
+    rgba(255, 255, 255, 0) calc(0.25 * var(--efu))
+  );
+  text-decoration: none;
 }
-/* 竖排白字「全部文章」：官网竖排变体用 writing-mode:vertical-rl */
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonPreserveBg__rEZGT
-  .Header_text__52fEh {
-  position: absolute;
-  top: calc(4.375 * var(--efu));
-  left: calc(2.25 * var(--efu));
-  /* 4 个字一列：高度按 4 × (1 + 字距) 留足，否则会被挤成两列 */
-  height: calc(5.25 * var(--efu));
-  transform: translate3d(-50%, 0, 0);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-family: SansMedium, system-ui, sans-serif;
-  font-size: calc(1.125 * var(--efu));
+.ef-rail-cta-tri {
+  flex: 0 0 auto;
+  display: block;
+  width: calc(1.25 * var(--efu));
+  height: calc(1.25 * var(--efu));
+  color: #fff;
+}
+.ef-rail-cta-line {
+  flex: 0 0 auto;
+  width: 1px;
+  height: calc(1.5 * var(--efu));
+  margin-left: calc(1.25 * var(--efu));
+  background-color: #fff;
+}
+.ef-rail-cta-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-size: calc(1.25 * var(--efu));
   line-height: 1;
   letter-spacing: 0.04em;
   text-align: center;
   color: #fff;
-  transition: color 0.3s;
-}
-.Header_pcHeaderContainer__Sy_8l
-  .Header_buttonPreserveBg__rEZGT:hover
-  .Header_text__52fEh {
-  color: #191919;
+  white-space: nowrap;
 }
 
-/* 一排小圆角方块的社交图标。
-   方块几何照官网 .Header_iconButton__KWPpn（正方形 + .25rem 圆角 + #f2f2f2 底），
-   字形照官网 .Header_mediaItem__mUuKL / .Header_icon__3iDIG：单色实心、颜色走 color、
-   path 用 fill="currentColor"、不加 stroke。
-   本站竖排栏收起只有 7.5u 宽，所以这一排改成 4 个 1.5u 方块铺满栏面（左右各留 .375u）；
-   这排比上面的胶囊/黑块（4.5u）宽，往左回拉 1.125u，让整排仍以栏轴 3.75u 居中。 */
+/* 3) 一排小圆角方块的社交图标 */
 .ef-rail-social {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: calc(6.75 * var(--efu));
-  margin-left: calc(-1.125 * var(--efu));
-  margin-bottom: calc(1.25 * var(--efu));
+  width: 100%;
 }
-.ef-rail-social .Header_iconButton__KWPpn {
+.ef-rail-social-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: calc(1.5 * var(--efu));
   height: calc(1.5 * var(--efu));
   border-radius: calc(0.25 * var(--efu));
-  background-color: #f2f2f2;
+  background-color: #e6e6e6;
   text-decoration: none;
   transition: background-color 0.2s;
 }
-.ef-rail-social .Header_iconButton__KWPpn:hover {
-  background-color: #e5e5e5;
+.ef-rail-social-btn:hover {
+  background-color: #fffa00;
 }
-.ef-rail-social .Header_iconButton__KWPpn .Header_icon__3iDIG {
+.ef-rail-social-icon {
   display: block;
-  width: auto;
   height: calc(1 * var(--efu));
-  color: #7c7c7c;
-  transition: color 0.2s;
-}
-.ef-rail-social .Header_iconButton__KWPpn:hover .Header_icon__3iDIG {
-  color: #424242;
+  width: auto;
+  color: #191919;
 }
 
-/* 最底部一行很小的品牌标记（官网那行是 Arknights: Endfield 的小 logo + 版本号）。
-   宽度锁到 4.5u 并居中，让它和黑块压在同一条中线上。 */
+/* 4) 最底部：极小的品牌标记 */
 .ef-rail-mark {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(0.125 * var(--efu));
-  width: calc(4.5 * var(--efu));
-  margin: 0;
+  gap: calc(0.1875 * var(--efu));
+  margin: calc(0.25 * var(--efu)) 0 0;
   text-align: center;
 }
 .ef-rail-mark-brand {
   font-family: Novecentosanswide-Bold, SansBold, sans-serif;
-  font-size: calc(0.625 * var(--efu));
+  font-size: calc(0.75 * var(--efu));
   line-height: 1;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #191919;
 }
 .ef-rail-mark-ver {
   font-family: SansMedium, system-ui, sans-serif;
-  font-size: calc(0.5 * var(--efu));
+  font-size: calc(0.625 * var(--efu));
   line-height: 1;
   letter-spacing: 0.06em;
   color: #999;
@@ -1000,90 +894,64 @@ body.ef-contours {
     left: 50%;
     width: 1.5rem;
   }
-  .Header_textWrapper__o9aHt,
-  .ef-rail-bottom .Header_divider__tUYjO {
+  .Header_textWrapper__o9aHt {
     display: none;
   }
-  .Header_pcHeaderContainer__Sy_8l .Header_buttonFrameContainer__Uvshp {
-    padding-top: 0.375rem;
-    gap: 0.5rem;
-    width: 2.75rem;
-    height: 6.5rem;
-    margin-bottom: 1rem;
-    border-radius: 1.375rem;
-  }
-  .Header_pcHeaderContainer__Sy_8l
-    .Header_buttonFrameContainer__Uvshp
-    .Header_button__b0gdu {
-    height: 2.75rem;
-  }
-  .Header_pcHeaderContainer__Sy_8l
-    .Header_buttonFrameContainer__Uvshp
-    .Header_button__b0gdu
-    + .Header_button__b0gdu::before {
-    top: -0.25rem;
-    left: 0.75rem;
-    width: 1.25rem;
-  }
-  .Header_pcHeaderContainer__Sy_8l
-    .Header_buttonFrameContainer__Uvshp
-    .Header_button__b0gdu
-    .Header_icon__3iDIG {
-    left: 1.375rem;
-    top: 1.375rem;
-    width: auto;
-    height: 1.5rem;
-  }
-  .Header_pcHeaderContainer__Sy_8l .Header_buttonPreserveBg__rEZGT {
-    width: 2.75rem;
-    height: 2.75rem;
-    margin-bottom: 0.75rem;
-    border-radius: 0.25rem;
-  }
-  .Header_pcHeaderContainer__Sy_8l
-    .Header_buttonPreserveBg__rEZGT
-    .Header_text__52fEh,
-  .Header_pcHeaderContainer__Sy_8l
-    .Header_buttonPreserveBg__rEZGT
-    .Header_divider__tUYjO {
-    display: none;
-  }
-  .Header_pcHeaderContainer__Sy_8l
-    .Header_buttonPreserveBg__rEZGT
-    .Header_tri__KNP87 {
-    top: 50%;
-    left: 50%;
-    transform: translate3d(-50%, -50%, 0);
-    width: 1.4rem;
-    height: auto;
-  }
+  /* 窄屏栏固定 3.5rem、不再展开：底部四组一并收进这一列图标 */
   .ef-rail-bottom {
     left: 0.375rem;
-    bottom: 1.1rem;
+    bottom: 0.75rem;
+    width: 2.75rem;
+    gap: 0.5rem;
   }
-  /* 窄屏栏宽 3.5rem：社交方块改 2 × 2，品牌标记跟着黑块收窄 */
+  .ef-rail-menu-label,
+  .ef-rail-cta-line,
+  .ef-rail-cta-text {
+    display: none;
+  }
+  .ef-rail-menu {
+    padding-block: 0.375rem;
+    border-radius: 0.25rem;
+  }
+  .ef-rail-menu-row {
+    height: 1.5rem;
+  }
+  .ef-rail-menu-row + .ef-rail-menu-row::before {
+    left: 0.375rem;
+    right: 0.375rem;
+  }
+  .ef-rail-menu-icon {
+    left: 0.5rem;
+    height: 0.75rem;
+  }
+  .ef-rail-cta {
+    height: 1.75rem;
+    padding-left: 0.5rem;
+    border-radius: 0.25rem;
+  }
+  .ef-rail-cta-tri {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
   .ef-rail-social {
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: 0.2rem;
-    width: 1.6rem;
-    margin-left: 0;
-    margin-bottom: 0.6rem;
+    gap: 0.25rem;
   }
-  .ef-rail-social .Header_iconButton__KWPpn {
-    width: 0.7rem;
-    height: 0.7rem;
-    border-radius: 0.125rem;
+  .ef-rail-social-btn {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 0.1875rem;
   }
-  .ef-rail-social .Header_iconButton__KWPpn .Header_icon__3iDIG {
-    height: 0.45rem;
+  .ef-rail-social-icon {
+    height: 0.75rem;
   }
   .ef-rail-mark {
-    width: 2.75rem;
+    margin-top: 0.25rem;
   }
   .ef-rail-mark-brand {
     font-size: 0.5rem;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.1em;
   }
   .ef-rail-mark-ver {
     font-size: 0.42rem;
@@ -1122,3 +990,12 @@ body.ef-contours {
   text-decoration-color: var(--ef-signal);
   text-decoration-thickness: 2px;
 }
+
+/* 悬停展开时，当前项背景条才铺到官网的 21u；收起态保持栏宽，避免灰条伸出栏外。 */
+.Header_pcHeaderContainer__Sy_8l:hover .Header_navItem__c_fLB.Header_active__jzCyf::after,
+.Header_pcHeaderContainer__Sy_8l:focus-within .Header_navItem__c_fLB.Header_active__jzCyf::after {
+  width: calc(21 * var(--efu));
+}
+/* 图标与文字确保在背景条之上（背景条 z-index:-1） */
+.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB > * { position: relative; z-index: 1; }
+.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB::before { z-index: 1; }

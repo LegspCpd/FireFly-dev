@@ -1,0 +1,10 @@
+import fs from "node:fs";
+const read = (p) => JSON.parse(fs.readFileSync("node_modules/@iconify-json/" + p, "utf8"));
+const ic = read("ic/icons.json");
+const ms = read("material-symbols/icons.json");
+const mdi = read("mdi/icons.json");
+console.log("ic mail-ish:", Object.keys(ic.icons).filter((k) => /mail|envelope|message/.test(k)).slice(0, 20).join(", "));
+console.log("ms mail-ish:", Object.keys(ms.icons).filter((k) => /mail|envelope/.test(k)).slice(0, 20).join(", "));
+console.log("mdi mail-ish:", Object.keys(mdi.icons).filter((k) => /^email|mail|envelope/.test(k)).slice(0, 20).join(", "));
+console.log("ic:mail", JSON.stringify(ic.icons.mail || null).slice(0, 300));
+console.log("ms:mail", JSON.stringify(ms.icons.mail || null).slice(0, 300));

@@ -1,0 +1,135 @@
+/* ---------- 4. 竖排栏底部（官网 buttonFrame + buttonPreserveBg 原样照抄） ---------
+  展开后从上到下：
+    1) 浅灰大圆角胶囊：留言 / 订阅（官网 Header_buttonFrameBg + Header_buttonFrameContainer）
+    2) 黑色竖条方块：白三角 + 细分隔线 + 竖排白字「全部文章」（官网 Header_buttonPreserveBg）
+    3) 一排小圆角方块的社交图标（官网 Header_iconButton__KWPpn 的方块几何）
+    4) 最底部一行很小的品牌标记
+
+  尺寸全部照官网：
+    · 胶囊 3.75rem 宽 / 圆角 1.875rem / 底色 #f2f2f2；
+      官网按行数给高度：Header_ele2（两行）= 7.8125rem、Header_ele3（三行）= 11.5625rem，
+      公式 = 行数 × 3.75rem + 0.3125rem；本站两行，取 7.8125rem；
+      行高 3rem、首行距顶 .5rem、行间距 .75rem（官网内联 translateY 0.5 / 4.25rem）；
+      图标 height 1.75rem、width auto、压 x=1.875rem（收起态胶囊正中）、垂直压行中线；
+      行间细线 1px × 1.25rem、#ccc，同样压 x=1.875rem；
+      文字 1.125rem / line-height 1，压 y=1.5rem；
+    · 黑块 4.5rem × 9.75rem、圆角 4px、#191919；
+    · 官网 showPreserveButton 变体里胶囊与黑块的间距是 2.4375rem（21.75 - 19.3125）。
+
+  只按用户要求改了胶囊的横向尺寸（官网那套是整栏 hover 展开、按钮文字压在展开后
+  19.5rem 胶囊的中线上；本站展宽只到 10.25u）：
+    · 收起 4.5u —— 与黑块同宽、同左缘，图标仍压在胶囊正中（2.25u）；
+    · 展开 10.25u —— 文字左缘落在 6.9375u，与导航项文字同一条竖线，滑入距离照官网留 2rem。 */
+
+.ef-rail-bottom {
+  position: absolute;
+  left: calc(1.5 * var(--efu));
+  bottom: calc(2.25 * var(--efu));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* 胶囊：官网把背景单独挂在 .Header_buttonFrameBg 上（它的按钮是绝对定位的兄弟节点）；
+  这边按钮走文档流，背景与尺寸合到容器这一层，几何一致。 */
+.Header_buttonFrameContainer__Uvshp {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: calc(0.5 * var(--efu));
+  gap: calc(0.75 * var(--efu));
+  width: calc(4.5 * var(--efu));
+  height: calc(7.8125 * var(--efu));
+  margin-bottom: calc(2.4375 * var(--efu));
+  border-radius: calc(1.875 * var(--efu));
+  background-color: #f2f2f2;
+  overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.Header_pcHeaderContainer__Sy_8l:hover .Header_buttonFrameContainer__Uvshp,
+.Header_pcHeaderContainer__Sy_8l:focus-within .Header_buttonFrameContainer__Uvshp {
+  width: calc(10.25 * var(--efu));
+}
+
+/* 行：官网 .Header_button 高 3rem，行内元素一律绝对定位 */
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu {
+  position: relative;
+  flex: 0 0 auto;
+  display: block;
+  height: calc(3 * var(--efu));
+  color: inherit;
+  text-decoration: none;
+}
+/* 行间细线：官网 .Header_divider 1px × 1.25rem、#ccc，压在图标中线上，
+   左缘 = 1.875 - 0.625 = 1.25rem；官网用独立 div + 内联 translateY，
+   这里挂在后一行的 ::before 上（离行顶 -.375rem = 半格行间距），几何一致。 */
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu
+  + .Header_button__b0gdu::before {
+  content: "";
+  position: absolute;
+  top: calc(-0.375 * var(--efu));
+  left: calc(1.25 * var(--efu));
+  width: calc(1.25 * var(--efu));
+  height: 1px;
+  background-color: #ccc;
+}
+
+/* 图标：官网 height:1.75rem / width:auto / left:1.875rem / top:1.5rem /
+   translate3d(-50%,-50%,0)。left 取 2.25u —— 收起态 4.5u 胶囊的正中
+   （官网的 1.875rem 同样是 3.75rem 胶囊的正中），展开时不会跟着胶囊中线漂移。 */
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu
+  .Header_icon__3iDIG {
+  position: absolute;
+  left: calc(2.25 * var(--efu));
+  top: calc(1.5 * var(--efu));
+  transform: translate3d(-50%, -50%, 0);
+  display: block;
+  width: auto;
+  height: calc(1.75 * var(--efu));
+  color: #191919;
+  transition: color 0.2s;
+}
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu:hover
+  .Header_icon__3iDIG {
+  color: #424242;
+}
+
+/* 文字：官网 left 10.1875rem / top 1.5rem / 1.125rem / line-height 1，
+   隐藏态 translate3d(calc(-50% - 2rem),-50%,0) → 展开 translate3d(-50%,-50%,0)。
+   这里改成左缘锚定 6.9375u（与导航文字同一条竖线），滑入方向与距离照官网。 */
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu
+  .Header_textWrapper__o9aHt {
+  position: absolute;
+  left: calc(6.9375 * var(--efu));
+  top: calc(1.5 * var(--efu));
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: SansMedium, system-ui, sans-serif;
+  font-size: calc(1.125 * var(--efu));
+  line-height: 1;
+  color: #191919;
+  opacity: 0;
+  transform: translate3d(calc(-2 * var(--efu)), -50%, 0);
+  transition: opacity 0.2s, transform 0.3s;
+}
+.Header_pcHeaderContainer__Sy_8l:hover
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu
+  .Header_textWrapper__o9aHt,
+.Header_pcHeaderContainer__Sy_8l:focus-within
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu
+  .Header_textWrapper__o9aHt {
+  opacity: 1;
+  transform: translate3d(0, -50%, 0);
+}

@@ -99,7 +99,8 @@ const rail = [
 	{ key: "notice", href: "/about/", label: "关于" },
 ];
 
-// 底部两个圆形按钮：官网是「用户 / 声音」，这边换成站内的「留言 / 订阅」。
+// 底部第一组（浅灰圆角块）的两行：官网是「用户 / 鹰角支付中心 / 声音」，
+// 这边换成站内的「留言 / 订阅」，行高与图标文字位置照官网。
 const railFoot = [
 	{
 		href: "/guestbook/",
@@ -115,10 +116,11 @@ const railFoot = [
 	},
 ];
 
-// 底部社交：一排「小圆角方块」（官网 Header_iconButton__KWPpn 的方块 + 单色实心字形）。
+// 底部第三组：一排「小圆角方块」社交（官网 Header_iconButton__KWPpn 的方块 + 单色实心字形）。
 // 图标沿用官网的渲染方式 —— 单条 path、fill="currentColor"、不加 stroke，
 // 颜色交给 CSS 的 color（官网 Header_mediaItem__mUuKL / Header_icon__3iDIG 就是这么做的）。
-// path 取自图标集里同风格的实心字形（simple-icons 的 github/x/rss，mdi 的 email）。
+// path 取自图标集里同风格的实心字形（simple-icons 的 github/x/rss，mdi 的 email），
+// 单条 path、fill=currentColor、不加 stroke。
 const social = [
 	{
 		label: "RSS",
@@ -148,9 +150,8 @@ const social = [
 	},
 ];
 
-// 黑 CTA 的三角标记（官网 Header_tri__KNP87 的三枚三角）
-const triPath =
-	"M23.146,13.962 L15.554,0.843 L30.739,0.843 Z M0.261,0.843 L15.446,0.843 L7.854,13.962 Z M15.554,27.156 L7.961,14.036 L23.146,14.036 Z";
+// 黑 CTA 左端的白色 ▼（官网 Header_tri__KNP87 那枚三角标记，收成一个向下的实心三角）
+const triPath = "M0.6,1.4 L11.4,1.4 L6,10.9 Z";
 
 const year = new Date().getFullYear();
 ---
@@ -234,54 +235,52 @@ const year = new Date().getFullYear();
 				</nav>
 
 				<div class="ef-rail-bottom">
-					<!-- 浅灰大圆角胶囊：留言 / 订阅。收起只露图标，悬停展开时加宽并浮出文字 -->
-					<div class="Header_buttonFrameContainer__Uvshp">
+					<!-- 第一组：横向铺满的浅灰圆角块（留言 / 订阅）—— 图标在左、文字左对齐 -->
+					<div class="ef-rail-menu">
 						{
 							railFoot.map((item) => (
-								<a class="Header_button__b0gdu" href={item.href} aria-label={item.label}>
+								<a class="ef-rail-menu-row" href={item.href} aria-label={item.label}>
 									<svg
-										class="Header_icon__3iDIG"
+										class="ef-rail-menu-icon"
 										viewBox={item.vb}
 										xmlns="http://www.w3.org/2000/svg"
 										aria-hidden="true"
 									>
 										<path fill-rule="evenodd" fill="currentColor" d={item.d} />
 									</svg>
-									<span class="Header_textWrapper__o9aHt">{item.label}</span>
+									<span class="ef-rail-menu-label">{item.label}</span>
 								</a>
 							))
 						}
 					</div>
 
-					<!-- 官网黑 CTA（Header_buttonPreserveBg）：三角 logo + 细分隔线 + 竖排「全部文章」 -->
-					<a class="Header_buttonPreserveBg__rEZGT" href="/archive/" aria-label="全部文章">
-						<span class="Header_bg___kVDv" />
+					<!-- 第二组：横向长条黑色 CTA —— ▼ + 竖向白分隔线 + 横排白字 -->
+					<a class="ef-rail-cta" href="/archive/" aria-label="全部文章">
 						<svg
-							class="Header_tri__KNP87"
-							viewBox="0 0 32 27"
+							class="ef-rail-cta-tri"
+							viewBox="0 0 12 12"
 							xmlns="http://www.w3.org/2000/svg"
 							aria-hidden="true"
 						>
-							<path fill-rule="evenodd" fill="currentColor" d={triPath} />
+							<path fill="currentColor" d={triPath} />
 						</svg>
-						<span class="Header_divider__tUYjO" />
-						<span class="Header_text__52fEh">全部文章</span>
+						<span class="ef-rail-cta-line" />
+						<span class="ef-rail-cta-text">全部文章</span>
 					</a>
 
-					<!-- 一排小圆角方块的社交图标：方块照官网 Header_iconButton__KWPpn，
-					     字形照官网 Header_mediaItem__mUuKL —— 单色实心、currentColor、无 stroke -->
+					<!-- 第三组：一排小圆角方块的社交图标 -->
 					<div class="ef-rail-social">
 						{
 							social.map((item) => (
 								<a
-									class="Header_iconButton__KWPpn"
+									class="ef-rail-social-btn"
 									href={item.href}
 									aria-label={item.label}
 									target={item.external ? "_blank" : undefined}
 									rel={item.external ? "noopener noreferrer" : undefined}
 								>
 									<svg
-										class="Header_icon__3iDIG"
+										class="ef-rail-social-icon"
 										viewBox={item.vb}
 										xmlns="http://www.w3.org/2000/svg"
 										aria-hidden="true"
@@ -293,9 +292,9 @@ const year = new Date().getFullYear();
 						}
 					</div>
 
-					<!-- 最底部：一行很小的品牌标记（官网是 Arknights: Endfield 小 logo + 版本号） -->
+					<!-- 第四组：极小的品牌标记（官网那里是一枚极小的图形 logo） -->
 					<p class="ef-rail-mark">
-						<span class="ef-rail-mark-brand">LegspCpd</span>
+						<span class="ef-rail-mark-brand">LEGSPCPD</span>
 						<span class="ef-rail-mark-ver">// BLOG &copy; {year}</span>
 					</p>
 				</div>
