@@ -135,7 +135,21 @@ const year = new Date().getFullYear();
 	skipBreadcrumbStructuredData={skipBreadcrumbStructuredData}
 	hasWallpaper={hasWallpaper}
 >
-	<slot slot="head" name="head" />
+	<Fragment slot="head">
+		<slot name="head" />
+		<!-- 全站只有浅色一种基调：清掉 localStorage 里遗留的 dark（否则 Waline/Giscus/
+		     代码高亮这些第三方件会跟着走暗色，和浅色外壳撞在一起）。不写回 localStorage。 -->
+		<script is:inline>
+			(function () {
+				var de = document.documentElement;
+				de.style.colorScheme = "light";
+				if (!de.classList.contains("dark")) return;
+				de.classList.remove("dark");
+				var t = window.__ffTheme;
+				if (t && t.light) de.setAttribute("data-theme", t.light);
+			})();
+		</script>
+	</Fragment>
 	<div class="ef-shell" data-ef-shell>
 		<BootScreen />
 
