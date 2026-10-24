@@ -295,13 +295,13 @@ const year = new Date().getFullYear();
 					<!-- 3) 浅灰条：收起 = 4.5u × 2.75u 圆角小方块（居中的「前往」图标）；
 						展开 = 19.5u × 2.75u，换成一条连续的图标行（官网 8 个、无缝隙） -->
 					<div class="ef-rail-social">
-						<a
+						<button
+							type="button"
 							class="ef-rail-jump"
-							href="https://github.com/legspcpd"
+							data-href="https://github.com/legspcpd"
+							data-ext="1"
 							aria-label="GitHub"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
+							>
 							<svg
 								class="ef-rail-jump-icon"
 								viewBox="0 0 32 20"
@@ -310,16 +310,16 @@ const year = new Date().getFullYear();
 							>
 								<path fill-rule="evenodd" fill="currentColor" d={jumpPath} />
 							</svg>
-						</a>
+						</button>
 						<div class="ef-rail-social-list">
 							{
 								railSocial.map((item) => (
-									<a
+									<button
+										type="button"
 										class="ef-rail-social-item"
-										href={item.href}
+										data-href={item.href}
+										data-ext={item.ext ? "1" : "0"}
 										aria-label={item.label}
-										target={item.ext ? "_blank" : undefined}
-										rel={item.ext ? "noopener noreferrer" : undefined}
 									>
 										<svg
 											viewBox="0 0 24 24"
@@ -328,7 +328,7 @@ const year = new Date().getFullYear();
 										>
 											<path fill-rule="evenodd" fill="currentColor" d={item.d} />
 										</svg>
-									</a>
+									</button>
 								))
 							}
 						</div>
@@ -399,6 +399,22 @@ const year = new Date().getFullYear();
 		sync();
 		document.addEventListener("swup:page:view", function () {
 			setTimeout(sync, 0);
+		});
+	})();
+</script>
+<script is:inline>
+	/* 竖排栏底部图标：官网那里是按钮不是 <a>，悬停不会浮出链接地址。
+	   我们用 button + data-href，保留点击跳转但不弹浏览器提示。 */
+	(function () {
+		if (window.__efRailJump) return;
+		window.__efRailJump = 1;
+		document.addEventListener("click", function (e) {
+			var t = e.target && e.target.closest && e.target.closest("[data-href]");
+			if (!t) return;
+			var href = t.getAttribute("data-href");
+			if (!href) return;
+			if (t.getAttribute("data-ext") === "1") window.open(href, "_blank", "noopener");
+			else window.location.href = href;
 		});
 	})();
 </script>
