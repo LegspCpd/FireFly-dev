@@ -1158,3 +1158,13 @@ body.ef-contours {
 /* 当前项灰块的宽度 / 层级规则已随结构迁到 §3（.Header_overlay__33Sha 真实子节点）：
    灰块是导航项的第一个子节点，图标与文字在它之后按 DOM 顺序绘制，
    不再需要 z-index:-1，也不需要 > * 或 ::before 的层级补丁。 */
+
+/* 竖排栏底部图标已从 <a> 改成 <button>：官网那里悬停不会浮出链接地址，
+   我们之前用 <a href> 会弹浏览器提示，改掉。这里只重置 button 的 UA 样式。 */
+button.ef-rail-social-item, button.ef-rail-jump {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+}
