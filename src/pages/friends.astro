@@ -1,6 +1,9 @@
 ---
 import { getEntry, render } from "astro:content";
 import Comment from "@components/comment/index.astro";
+// 页名图标来源：官网无「友链」，取 navAicGameplay（竖排栏 /friends/ 同 key）；
+// 容器沿用本页既有的 .page-icon 黑块（与 gallery / projects 等页同一个写法）。
+import EfIcon from "@components/common/EfIcon.astro";
 import Markdown from "@components/common/Markdown.astro";
 import { Icon } from "astro-icon/components";
 import {
@@ -54,7 +57,8 @@ const description =
       <div class="mb-4">
         <div class="page-heading">
           <div class="page-icon" aria-hidden="true">
-            <Icon name="material-symbols:group" />
+            {/* 官网无「友链」，取 navAicGameplay（竖排栏 /friends/ 同 key） */}
+            <EfIcon name="navAicGameplay" />
           </div>
           <div>
             {/* skill：页头 = // 眉标 + 中文标题，标题下三色条 */}
@@ -69,7 +73,7 @@ const description =
             style="font-family: inherit"
             class="ef-btn small ml-auto shrink-0"
           >
-            <Icon name="material-symbols:add-link" class="text-base" />
+            <EfIcon name="jump" class="text-base" />
             <span class="hidden sm:inline">申请友链</span>
             <span class="sm:hidden">申请</span>
           </button>
@@ -81,8 +85,8 @@ const description =
         items.length > 0 && (
           <friend-filter class="mb-6 ef-form">
             <div class="relative mb-3">
-              <Icon
-                name="material-symbols:search"
+              <EfIcon
+                name="magnifier"
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-lg pointer-events-none"
               />
               <input
@@ -117,7 +121,7 @@ const description =
       {removedFriends.length > 0 && (
         <div class="not-prose mt-8 rounded-2xl border border-(--line-divider) overflow-hidden">
           <div class="flex items-center gap-2 px-4 sm:px-5 py-3.5 border-b border-(--line-divider)">
-            <Icon name="material-symbols:link-off" class="text-(--primary)" />
+            <EfIcon name="jump" class="text-(--primary)" />
             <h3 class="text-base font-bold text-black/90 dark:text-white/90">已移除的友链</h3>
             <span class="ml-auto text-xs text-black/50 dark:text-white/50">{removedFriends.length} 条</span>
           </div>
@@ -149,7 +153,7 @@ const description =
         {
           items.length === 0 && (
             <div class="col-span-full flex flex-col items-center justify-center py-12 text-neutral-400 dark:text-neutral-500">
-              <Icon name="material-symbols:group-off-outline" class="text-4xl mb-3" />
+              <EfIcon name="navBust" class="text-4xl mb-3" />
               <div class="text-sm">{i18n(I18nKey.friendsEmpty)}</div>
             </div>
           )
@@ -167,8 +171,8 @@ const description =
               <div class="absolute inset-0 bg-(--primary) opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none" />
 
               {/* 外部链接图标 - 固定在卡片右上角 */}
-              <Icon
-                name="material-symbols:arrow-outward-rounded"
+              <EfIcon
+                name="sectionArrow"
                 class="absolute top-3 right-3 text-(--primary) text-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
               />
 
@@ -455,6 +459,7 @@ const description =
       <div class="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-(--line-divider)">
         <h3 id="fa-title" class="text-lg font-bold text-black dark:text-white">申请友链</h3>
         <button type="button" data-apply-close class="w-8 h-8 flex items-center justify-center rounded-md text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer" aria-label="关闭" style="font-family: inherit">
+          {/* 保留第三方：官网 122 个内联 svg 里没有 ✕ 形，取不到替代 */}
           <Icon name="material-symbols:close" class="text-xl" />
         </button>
       </div>

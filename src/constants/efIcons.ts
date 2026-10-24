@@ -437,3 +437,74 @@ export const EF_ICONS: Record<EfIconKey, EfIconDef> = {
 		source: "__08-AIC_h5Icon__adHvF「//ENDFIELD」字标（index.html 内联 svg #102）",
 	},
 };
+
+/* ------------------------------------------------------------------ *
+ * 站内用法对照（图标一致性改造，2026-10）
+ *
+ * 一、页名图标（页面标题旁的小图标）
+ *   /                   最新文章           navHome
+ *   /archive/           归档               navLore
+ *   /categories/        分类               navCalendar
+ *   /tags/              标签               navInformation
+ *   /series/            系列               navOperator
+ *   /friends/           友链               navAicGameplay
+ *   /about/             关于               navNotice
+ *   /guestbook/         留言               navBust
+ *   /search/            搜索               magnifier（官网 magnifier 原图即放大镜，精确对应）
+ *   —— 上面 9 条与 EndfieldLayout 竖排栏各路由用的 key 一一对应：点导航与到页后看到同一个图形。
+ *
+ *   /booknav/           书签导航           navCube（官网无书签形）
+ *   /bangumi/           番组计划           shareBilibili（官网分享位第 3 项是电视形）
+ *   /myanimelist/       AnimeList          pageDoc
+ *   /vndb/              VNDB               pageDoc
+ *   /bilibili/          哔哩哔哩           shareBilibili（官网第 3 个分享位就是 bilibili）
+ *   /dynamic/           动态               navCube
+ *   /sponsor/           打赏               shareFace（官网无打赏形）
+ *   /gallery/           相册               blocks（点阵格 = 图片墙；albumDeco 是 166×19 装饰横条，做图标不成立）
+ *   /projects/          项目               cogPlay
+ *
+ * 二、正文 / 元信息里复用的语义映射
+ *   日期、阅读时长        navCalendar
+ *   标签                  shareHash（# 号）
+ *   分类（正文元信息）    blocks（与路由页名图标区分开）
+ *   浏览量                shareWeibo（官网分享位第 2 项，眼形）
+ *   加密 / 锁定           shieldCharge
+ *   外链、前往、推荐      sectionArrow / jump
+ *   翻页、展开、收起      arrowSmall（官网 18×27 右指箭头；左 / 下 / 上方向用 style="transform: rotate(…)deg"）
+ *   字数                  pageDoc
+ *   下载                  download
+ *   分享                  shareClaw（官网分享位第 1 项，爪印）
+ *
+ * 三、仍保留 material-symbols 的地方（官网 122 个内联 svg 去重后只有 43 个形状，
+ *     下面这些语义在官网里确实没有对应图形，故不动；每处调用点都已就地注释）
+ *   ✕ 关闭        friends.astro 申请弹窗、DynamicGallery.astro 退出全屏
+ *   ✓ 对勾        SharePoster.svelte「已复制」
+ *   ♥ 心形        bilibili.astro 点赞
+ *   定位针        gallery/[album].astro ×2、AlbumCard.astro、DynamicItemTemplate.astro
+ *   引号          DynamicItemTemplate.astro 条目装饰引号
+ *   RSS           atom.astro / rss.astro
+ *   —— 共 11 处，全部落在 src/pages/** 与 src/components/** 内。
+ *
+ * 四、从第三方图标集清零、改为纯 CSS 的：
+ *   搜索中转圈    AdvancedSearch.svelte —— 官网 122 个内联 svg 里没有转圈形，原先引
+ *                 svg-spinners:ring-resize，现改纯 CSS 圆环（.ef-spinner）；border 粗细
+ *                 用 em，缩放时粗细与直径同比。
+ *
+ * 五、照规范必须保留第三方品牌标识的（换成终末地图形反而是错的）：
+ *   src/components/misc/License.astro  5 处 fa7-brands / fa7-regular
+ *       （creative-commons、-zero、-pd、osi、copyright）
+ *       —— CC 与 OSI 是法定标识，版权符号是通用符号，都不能替换成站点的装饰图形。
+ *   src/config/sponsorConfig.ts        1 处 fa7-brands:alipay（收款渠道品牌标识）
+ *
+ * 六、本次允许改动范围之外（src/config/**、src/utils/**、src/content/**）仍引用第三方
+ *     图标集的（渲染它们的组件在范围内，但图标名来自配置 / 正文：改配置越界，
+ *     改组件则要在视图里塞一张「第三方图标名 → EfIconKey」的映射表，得不偿失）：
+ *   src/config/navBarConfig.ts    19 处 material-symbols
+ *       （只被 config 桶文件引用，新版竖排栏已不消费，属遗留配置）
+ *   src/config/booknavConfig.ts    5 处 material-symbols（书签分组图标，经 booknav-utils 渲染）
+ *   src/config/profileConfig.ts    1 处 material-symbols（attach-email）
+ *   src/utils/projects-utils.ts    4 处 material-symbols（项目状态徽标）
+ *   src/content/projects/*.md      2 处 material-symbols:menu-book + 2 处 fa7-brands:github
+ *       （项目 frontmatter 自带的链接 / 图标，属站点内容）
+ * ------------------------------------------------------------------ */
+

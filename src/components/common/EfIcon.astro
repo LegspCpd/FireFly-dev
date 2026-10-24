@@ -1,0 +1,71 @@
+---
+/**
+ * 官网图标渲染器。
+ *
+ * 站内所有页面标题 / 竖排栏 / 分享位的图标都从这里出，几何数据一律取自
+ * @/constants/efIcons 的 EF_ICONS（官网 index.html 内联 svg 逐字照抄），
+ * 不再 import material-symbols / fa7-brands 等第三方图标集。
+ *
+ * 尺寸策略：默认 width/height = 1em，跟随祖先元素的 font-size ——
+ *   - .page-icon 盒子自带 font-size: 2.5rem，直接得到 2.5rem 的图标；
+ *   - 页面标题内联时加 inline，自动缩到标题字号的 0.68em 并留出间距。
+ * 颜色策略：fill: currentColor，跟随 color，与官网 svg 一致。
+ */
+import { EF_ICONS, type EfIconKey } from "@/constants/efIcons";
+
+interface Props {
+	/** 官网图标表里的 key（见 efIcons.ts 的 EfIconKey）。 */
+	name: EfIconKey;
+	/** 额外 class（可选）。注意 Astro 的 scope 不穿透组件，改尺寸优先用外层的 font-size。 */
+	class?: string;
+	/** 给了就渲染成有语义的图（role="img" + <title>），不给则 aria-hidden，语义交给旁边文字。 */
+	title?: string;
+	/** 页面标题内联用法：缩到 0.68em、居中对齐、右侧留 0.4em 间距。 */
+	inline?: boolean;
+	/** 需要旋转 / 微调尺寸时的内联样式（如 style="transform: rotate(90deg)"）。 */
+	style?: string;
+}
+
+const {
+	name,
+	class: className = "",
+	title,
+	inline = false,
+	style,
+} = Astro.props;
+const icon = EF_ICONS[name];
+---
+
+<svg
+	class:list={["ef-icon", inline && "ef-icon-inline", className]}
+	style={style}
+	xmlns="http://www.w3.org/2000/svg"
+	viewBox={icon.viewBox}
+	fill="currentColor"
+	fill-rule={icon.fillRule}
+	role={title ? "img" : undefined}
+	aria-hidden={title ? undefined : "true"}
+	focusable="false"
+>
+	{title ? <title>{title}</title> : null}
+	{icon.extra ? <Fragment set:html={icon.extra} /> : null}
+	{icon.paths.map((d) => <path d={d} fill={icon.pathFill} />)}
+</svg>
+
+<style>
+	.ef-icon {
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		flex: none;
+		vertical-align: -0.125em;
+	}
+
+	/* 页面标题（.ef-page-name / .ef-sec-title，字号 --ef-fs-title）左侧的小图标。
+	   0.62em 是照官网导航「图标 ≲ 一个汉字高」的比例取的。 */
+	.ef-icon-inline {
+		font-size: 0.62em;
+		vertical-align: 0.02em;
+		margin-inline-end: 0.5em;
+	}
+</style>

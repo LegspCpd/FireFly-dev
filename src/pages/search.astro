@@ -1,4 +1,6 @@
 ---
+// 页名图标来源：搜索：官网 magnifier 即放大镜，精确对应（竖排栏没有搜索项，故取形状本身）。
+import EfIcon from "@components/common/EfIcon.astro";
 import AdvancedSearch from "@components/pages/AdvancedSearch.svelte";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
@@ -16,7 +18,7 @@ const description = "";
         <!-- 官网骨架：眉标 + 页名（AdvancedSearch 自身的标题传空，避免重复一层） -->
         <div class="card-base p-8 md:p-10 mb-4">
             <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// SEARCH</p>
-            <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{title}</h1>
+            <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1"><EfIcon name="magnifier" inline />{title}</h1>
         </div>
         <AdvancedSearch client:load title="" description="" />
     </div>

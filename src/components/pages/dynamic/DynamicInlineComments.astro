@@ -1,5 +1,5 @@
 ---
-import { Icon } from "astro-icon/components";
+import EfIcon from "@components/common/EfIcon.astro";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 
@@ -12,12 +12,19 @@ const { src } = Astro.props;
 
 <dynamic-inline-comments class="page-inline-comments" data-src={src}>
 	<button type="button" class="page-comment-toggle btn-plain" data-comment-toggle>
-		<Icon name="material-symbols:chat-bubble-outline-rounded" />
+		<EfIcon name="navNotice" />
 		<span>{i18n(I18nKey.comments)}</span>
-		<Icon
-			name="material-symbols:expand-more-rounded"
+		<EfIcon
+			name="arrowSmall"
 			class="page-comment-chevron"
 		/>
 	</button>
 	<div class="page-comment-panel" data-comment-panel hidden></div>
 </dynamic-inline-comments>
+
+<style>
+	/* 官网 arrowSmall 是「右指箭头」；折叠态要「下指」，基准转 90°；展开态由 pages/dynamic.css 既有规则转 180° */
+	.page-comment-chevron {
+		transform: rotate(90deg);
+	}
+</style>

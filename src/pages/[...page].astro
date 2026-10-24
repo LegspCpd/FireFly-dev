@@ -1,5 +1,7 @@
 ---
 import type { GetStaticPaths } from "astro";
+// 页名图标来源：最新文章（首页）：官网无「最新文章」，取 navHome（竖排栏 / 同 key）。
+import EfIcon from "@components/common/EfIcon.astro";
 import HeroCanvas from "@components/common/HeroCanvas.astro";
 import EndfieldPostGrid from "@components/layout/EndfieldPostGrid.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
@@ -25,7 +27,7 @@ const isHome = page.currentPage === 1;
 						<div class="ef-sec-head">
 							<div>
 								<p class="ef-eyebrow">// LATEST</p>
-								<h2 class="ef-sec-title">最新文章</h2>
+								<h2 class="ef-sec-title"><EfIcon name="navHome" inline />最新文章</h2>
 							</div>
 							<p class="ef-sec-count">{page.data.length} 篇文章</p>
 						</div>
@@ -39,7 +41,7 @@ const isHome = page.currentPage === 1;
 					<div class="ef-sec-head">
 						<div>
 							<p class="ef-eyebrow">// ARCHIVE</p>
-							<h1 class="ef-sec-title">第 {page.currentPage} 页</h1>
+							<h1 class="ef-sec-title"><EfIcon name="navHome" inline />第 {page.currentPage} 页</h1>
 						</div>
 						<p class="ef-sec-count">{page.data.length} 篇文章</p>
 					</div>

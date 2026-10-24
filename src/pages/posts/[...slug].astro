@@ -1,4 +1,5 @@
 ---
+import EfIcon from "@components/common/EfIcon.astro";
 import { render } from "astro:content";
 import Comment from "@components/comment/index.astro";
 import Markdown from "@components/common/Markdown.astro";
@@ -21,7 +22,6 @@ import {
 	getPostUrlBySlug,
 	removeFileExtension,
 } from "@utils/url-utils";
-import { Icon } from "astro-icon/components";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import CoverImage from "@/components/common/CoverImage.astro";
@@ -269,14 +269,14 @@ const tocHeadings = efTocHeadings(headings);
             />
             <div class="absolute inset-x-4 top-3 z-10 flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs font-medium text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.9)]">
               <div class="flex items-center gap-1 whitespace-nowrap">
-                <Icon name="material-symbols:notes-rounded" class="text-base" />
+                <EfIcon name="pageDoc" class="text-base" />
                 <span>
                   {remarkPluginFrontmatter.words}
                   {" " + i18n(remarkPluginFrontmatter.words === 1 ? I18nKey.wordCount : I18nKey.wordsCount)}
                 </span>
               </div>
               <div class="flex items-center gap-1 whitespace-nowrap">
-                <Icon name="material-symbols:schedule-outline-rounded" class="text-base" />
+                <EfIcon name="navCalendar" class="text-base" />
                 <span>
                   {remarkPluginFrontmatter.minutes}
                   {" " + i18n(remarkPluginFrontmatter.minutes === 1 ? I18nKey.minuteCount : I18nKey.minutesCount)}
@@ -284,7 +284,7 @@ const tocHeadings = efTocHeadings(headings);
               </div>
               {entry.data.password && (
                 <div class="flex items-center gap-1 whitespace-nowrap">
-                  <Icon name="material-symbols:lock-outline" class="text-base" />
+                  <EfIcon name="shieldCharge" class="text-base" />
                   <span>{i18n(I18nKey.postEncrypted)}</span>
                 </div>
               )}
@@ -428,7 +428,7 @@ const tocHeadings = efTocHeadings(headings);
                             class="inline-flex items-center gap-2 px-6 py-3 bg-(--primary) text-white dark:text-black/70 rounded-lg font-medium hover:bg-(--primary)/80 hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
                           >
                             <span>{i18n(I18nKey.sponsor)}</span>
-                            <Icon name="fa7-solid:arrow-right" class="text-sm" />
+                            <EfIcon name="arrowSmall" class="text-sm" />
                           </a>
                         )
                       }

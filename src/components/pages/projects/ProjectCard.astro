@@ -1,5 +1,6 @@
 ---
 import { Icon } from "astro-icon/components";
+import EfIcon from "@components/common/EfIcon.astro";
 import CoverImage from "@/components/common/CoverImage.astro";
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
@@ -68,14 +69,14 @@ const coverClass = gridCoverFullWidth
       />
     ) : (
       <div class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-        <Icon name="material-symbols:rocket-launch" class="text-gray-400 text-6xl" />
+        <EfIcon name="cogPlay" class="text-gray-400 text-6xl" />
       </div>
     )}
     <!-- 悬浮：变暗 + 箭头（同文章列表网格模式） -->
     <div class="absolute inset-0 pointer-events-none z-10 transition group-hover:bg-black/30" />
     <div class="absolute inset-0 pointer-events-none z-20 flex items-center justify-center">
-      <Icon
-        name="material-symbols:chevron-right-rounded"
+      <EfIcon
+        name="arrowSmall"
         class="transition opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100 text-white text-5xl"
       />
     </div>
@@ -104,7 +105,7 @@ const coverClass = gridCoverFullWidth
       {published && (
         <div class="flex items-center">
           <div class="meta-icon">
-            <Icon name="material-symbols:calendar-today-outline-rounded" class="text-xl" />
+            <EfIcon name="navCalendar" class="text-xl" />
           </div>
           <span class="text-50 text-sm font-medium">{formatDateToYYYYMMDD(published)}</span>
         </div>
@@ -112,7 +113,7 @@ const coverClass = gridCoverFullWidth
       {visibleTags.length > 0 && (
         <div class="flex items-center">
           <div class="meta-icon">
-            <Icon name="material-symbols:tag-rounded" class="text-xl" />
+            <EfIcon name="shareHash" class="text-xl" />
           </div>
           <span class="flex flex-row flex-nowrap items-center">
             {visibleTags.map((tag, i) => (
@@ -172,7 +173,7 @@ const coverClass = gridCoverFullWidth
           class="inline-flex items-center gap-1 text-xs font-medium text-neutral-500 dark:text-neutral-400 hover:text-(--primary) transition-colors ml-auto"
         >
           {i18n(I18nKey.projectDetails)}
-          <Icon name="material-symbols:chevron-right-rounded" class="text-sm" />
+          <EfIcon name="arrowSmall" class="text-sm" />
         </a>
       </div>
   </div>

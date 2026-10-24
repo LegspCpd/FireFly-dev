@@ -1,4 +1,5 @@
 ---
+import EfIcon from "@components/common/EfIcon.astro";
 import { render } from "astro:content";
 import Markdown from "@components/common/Markdown.astro";
 import { Icon } from "astro-icon/components";
@@ -74,7 +75,7 @@ const visibleTags = tags || [];
         href={url("/projects/")}
         class="inline-flex items-center gap-1.5 text-sm text-(--primary) hover:underline mb-4"
       >
-        <Icon name="material-symbols:arrow-back" class="text-base" />
+        <EfIcon name="arrowSmall" class="text-base" style="transform: rotate(180deg)" />
         {i18n(I18nKey.projectBack)}
       </a>
 
@@ -101,7 +102,7 @@ const visibleTags = tags || [];
         <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
           <div class="flex items-center">
             <div class="meta-icon">
-              <Icon name="material-symbols:calendar-today-outline-rounded" class="text-xl" />
+              <EfIcon name="navCalendar" class="text-xl" />
             </div>
             <time datetime={published.toISOString()} class="text-50 text-sm font-medium">
               {formatDateToYYYYMMDD(published)}
@@ -110,7 +111,7 @@ const visibleTags = tags || [];
           {visibleTags.length > 0 && (
             <div class="flex items-center">
               <div class="meta-icon">
-                <Icon name="material-symbols:tag-rounded" class="text-xl" />
+                <EfIcon name="shareHash" class="text-xl" />
               </div>
               <span class="flex flex-wrap items-center">
                 {visibleTags.map((tag, i) => (

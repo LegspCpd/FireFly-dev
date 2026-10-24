@@ -1,6 +1,8 @@
 ---
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
+// 页名图标来源：分类：官网无「分类」，取 navCalendar（竖排栏 /categories/ 同 key）。
+import EfIcon from "@components/common/EfIcon.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getCategoryList } from "@/utils/content-utils";
 
@@ -13,7 +15,7 @@ const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18
     <div class="card-base p-8 md:p-10 mb-4">
         <!-- 眉标 + 页名 + 计数（官网骨架） -->
         <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// CATEGORIES</p>
-        <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{i18n(I18nKey.categories)}</h1>
+        <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1"><EfIcon name="navCalendar" inline />{i18n(I18nKey.categories)}</h1>
         <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">
             {i18n(I18nKey.allCategories)} · {countLabel(totalPosts)}
         </p>

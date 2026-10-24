@@ -1,4 +1,5 @@
 ---
+import EfIcon from "@components/common/EfIcon.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getSortedPosts } from "@utils/content-utils";
 import { formatDateToYYYYMMDD } from "@utils/date-utils";
@@ -16,6 +17,7 @@ const recentPosts = posts.slice(0, 6);
         <div class="card-base rounded-(--radius-large) p-8 mb-6">
             <div class="text-center">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-(--primary) rounded-2xl mb-4">
+                    {/* 保留第三方：官网无 RSS 形 */}
                     <Icon name="material-symbols:rss-feed" class="text-white text-3xl" />
                 </div>
                 <div class="text-3xl font-bold text-(--primary) mb-3">{i18n(I18nKey.atom)}</div>
@@ -30,7 +32,7 @@ const recentPosts = posts.slice(0, 6);
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div class="flex items-center">
                     <div class="w-12 h-12 bg-(--primary) rounded-xl flex items-center justify-center mr-4">
-                        <Icon name="material-symbols:link" class="text-white text-xl" />
+                        <EfIcon name="jump" class="text-white text-xl" />
                     </div>
                     <div>
                         <h3 class="font-semibold text-90 mb-1">{i18n(I18nKey.atomLink)}</h3>
@@ -57,7 +59,7 @@ const recentPosts = posts.slice(0, 6);
         <!-- 最新文章预览 -->
         <div class="card-base rounded-(--radius-large) p-6 mb-6">
             <h2 class="text-xl font-bold text-90 mb-4 flex items-center">
-                <Icon name="material-symbols:article" class="mr-2 text-(--primary)" />
+                <EfIcon name="pageDoc" class="mr-2 text-(--primary)" />
                 {i18n(I18nKey.rssLatestPosts)}
             </h2>
             <div class="space-y-4">

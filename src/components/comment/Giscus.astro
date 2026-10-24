@@ -10,9 +10,19 @@ const lightTheme = "light";
 const darkTheme = "dark";
 ---
 
-<!-- 
+<!--
   Giscus 官方Web Component用法，兼容Astro静态输出，无需import包，无需NPM依赖！
   参考：https://giscus.app/ 详情配置说明
+
+  关于评论框内部图标（★ 与全站官网 svg 图标的一致性说明）：
+  该组件最终渲染的是一个 https://giscus.app 的**跨域 iframe**，表情回应按钮、
+  "Sign in with GitHub" 登录按钮等图形全在 iframe 自己的文档里：
+    - 父页 CSS 无法穿透跨域 iframe（没有 shadow DOM、没有 ::part 出口）；
+    - 父页也没有任何可注入 iframe 内的样式钩子。
+  所以这两枚图标无法用背景图 / CSS 遮罩换成官网 svg，本仓库刻意不做无效的
+  "覆盖样式"（写了也不会生效）。若要换，只有一条路：把 theme 指到一个自定义
+  giscus 主题 CSS（giscus 会把该 CSS 注入 iframe 内部），而那需要新增一个
+  public/** 下的 css 文件并在 giscus 侧生效，超出本次改动范围，留作后续。
 -->
 <giscus-widget
   id="comments"

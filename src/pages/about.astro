@@ -1,6 +1,8 @@
 ---
 
 import { getEntry, render } from "astro:content";
+// 页名图标来源：关于：官网无「关于」，取 navNotice（竖排栏 /about/ 同 key）。
+import EfIcon from "@components/common/EfIcon.astro";
 import Markdown from "@components/common/Markdown.astro";
 import { profileConfig } from "@/config/profileConfig";
 import { siteConfig } from "@/config/siteConfig";
@@ -33,7 +35,7 @@ const jsonLd = buildProfilePage({
         <div class="card-base z-10 px-9 py-6 relative w-full ef-sheet ">
             <!-- 官网骨架：眉标 + 页名 + 副字段（与 categories / tags / friends 同一套） -->
             <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// ABOUT</p>
-            <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{i18n(I18nKey.about)}</h1>
+            <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1"><EfIcon name="navNotice" inline />{i18n(I18nKey.about)}</h1>
             <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">{profileConfig.bio}</p>
             <Markdown class="mt-2">
                 <Content />

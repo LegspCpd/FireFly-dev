@@ -1,4 +1,5 @@
 ---
+import EfIcon from "@components/common/EfIcon.astro";
 import { Icon } from "astro-icon/components";
 import { booknavPageConfig, siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
@@ -49,7 +50,8 @@ const description =
       <div class="mb-4">
         <div class="page-heading">
           <div class="page-icon" aria-hidden="true">
-            <Icon name="material-symbols:bookmarks" />
+            {/* 页名图标：官网无「书签导航」，取 navCube（方形箱体形） */}
+<EfIcon name="navCube" />
           </div>
           <div>
             <h2>{title}</h2>
@@ -63,8 +65,8 @@ const description =
           <booknav-list>
             {/* 搜索框 */}
             <div class="relative mb-3">
-              <Icon
-                name="material-symbols:search"
+              <EfIcon
+                name="magnifier"
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-lg pointer-events-none"
               />
               <input
@@ -162,8 +164,8 @@ const description =
                         </div>
 
                         {/* 外部链接图标 - 固定在卡片右上角 */}
-                        <Icon
-                          name="material-symbols:arrow-outward-rounded"
+                        <EfIcon
+                          name="sectionArrow"
                           class="absolute top-3 right-3 text-(--primary) text-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
                         />
 
@@ -185,13 +187,13 @@ const description =
 
             {/* 搜索无结果提示 */}
             <div class="booknav-empty hidden flex-col items-center justify-center py-12 text-neutral-400 dark:text-neutral-500">
-              <Icon name="material-symbols:search-off-rounded" class="text-4xl mb-3" />
+              <EfIcon name="magnifier" class="text-4xl mb-3" />
               <div class="text-sm">{i18n(I18nKey.searchNoResults)}</div>
             </div>
           </booknav-list>
         ) : (
           <div class="flex flex-col items-center justify-center py-16 text-neutral-400 dark:text-neutral-500">
-            <Icon name="material-symbols:bookmarks" class="text-6xl mb-4 opacity-50" />
+            <EfIcon name="navCube" class="text-6xl mb-4 opacity-50" />
             <p class="text-lg">{i18n(I18nKey.booknavEmpty)}</p>
           </div>
         )

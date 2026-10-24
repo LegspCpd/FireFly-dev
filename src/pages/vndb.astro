@@ -1,7 +1,7 @@
 ---
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { Icon } from "astro-icon/components";
+import EfIcon from "@components/common/EfIcon.astro";
 import VndbGrid from "@/components/pages/vndb/VndbGrid.svelte";
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
@@ -114,7 +114,8 @@ const activeTab = tabs[0]?.id || "all";
         <div class="mb-6">
           <div class="page-heading">
             <div class="page-icon" aria-hidden="true">
-              <Icon name="material-symbols:chrome-reader-mode-rounded" />
+              {/* 页名图标：官网无「VNDB」，取 pageDoc（文档页形） */}
+              <EfIcon name="pageDoc" />
             </div>
             <div>
               <h2>{i18n(I18nKey.vndb)}</h2>
@@ -134,7 +135,7 @@ const activeTab = tabs[0]?.id || "all";
             {!isUserIdConfigured ? (
               <div class="text-center py-16">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-(--btn-regular-bg) rounded-full mb-6 border border-(--line-divider)">
-                  <Icon name="material-symbols:settings" class="text-[2rem] text-(--btn-content)" />
+                  <EfIcon name="cogPlay" class="text-[2rem] text-(--btn-content)" />
                 </div>
                 <h2 class="text-xl font-semibold text-black/80 dark:text-white/80 mb-3">
                   {i18n(I18nKey.vndbNotConfigured)}
@@ -161,7 +162,7 @@ const activeTab = tabs[0]?.id || "all";
             {fetchFailed ? (
               <div class="text-center py-16">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-(--btn-regular-bg) rounded-full mb-6 border border-(--line-divider)">
-                  <Icon name="material-symbols:error-outline" class="text-[2rem] text-(--ef-ink-2)" />
+                  <EfIcon name="navNotice" class="text-[2rem] text-(--ef-ink-2)" />
                 </div>
                 <h2 class="text-xl font-semibold text-black/80 dark:text-white/80 mb-3">
                   {i18n(I18nKey.vndbFetchError)}
@@ -182,7 +183,7 @@ const activeTab = tabs[0]?.id || "all";
             ) : (
               <div class="text-center py-16">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-(--btn-regular-bg) rounded-full mb-6 border border-(--line-divider)">
-                  <Icon name="material-symbols:settings" class="text-[2rem] text-(--btn-content)" />
+                  <EfIcon name="cogPlay" class="text-[2rem] text-(--btn-content)" />
                 </div>
                 <h2 class="text-xl font-semibold text-black/80 dark:text-white/80 mb-3">
                   {isUserIdConfigured ? i18n(I18nKey.vndbEmpty) : i18n(I18nKey.vndbNotConfigured)}

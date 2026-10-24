@@ -1,4 +1,5 @@
 ---
+import EfIcon from "@components/common/EfIcon.astro";
 import { Icon } from "astro-icon/components";
 import EncryptedContent from "@/components/features/EncryptedContent.astro";
 import PhotoCard from "@/components/pages/gallery/PhotoCard.astro";
@@ -56,7 +57,7 @@ const coverLqipProps = cover
           href={url("/gallery/")}
           class="absolute top-4 left-4 inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-white bg-black/30 hover:bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors"
         >
-          <Icon name="material-symbols:arrow-back" class="text-base" />
+          <EfIcon name="arrowSmall" class="text-base" style="transform: rotate(180deg)" />
           {i18n(I18nKey.galleryBackToAlbums)}
         </a>
         <!-- 封面上的信息 -->
@@ -72,18 +73,19 @@ const coverLqipProps = cover
           <div class="flex items-center gap-4 text-sm text-white/80 flex-wrap">
             {albumMeta.date && (
               <span class="inline-flex items-center gap-1">
-                <Icon name="material-symbols:calendar-today" class="text-sm" />
+                <EfIcon name="navCalendar" class="text-sm" />
                 {albumMeta.date}
               </span>
             )}
             {albumMeta.location && (
               <span class="inline-flex items-center gap-1">
+                {/* 保留第三方：官网无定位针形 */}
                 <Icon name="material-symbols:location-on" class="text-sm" />
                 {albumMeta.location}
               </span>
             )}
             <span class="inline-flex items-center gap-1">
-              <Icon name="material-symbols:photo-library" class="text-sm" />
+              <EfIcon name="blocks" class="text-sm" />
               {photos.length} {i18n(I18nKey.galleryPhotos)}
             </span>
           </div>
@@ -104,7 +106,7 @@ const coverLqipProps = cover
           href={url("/gallery/")}
           class="inline-flex items-center gap-1 text-sm text-(--primary) hover:underline mb-3"
         >
-          <Icon name="material-symbols:arrow-back" class="text-base" />
+          <EfIcon name="arrowSmall" class="text-base" style="transform: rotate(180deg)" />
           {i18n(I18nKey.galleryBackToAlbums)}
         </a>
         <div class="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100">
@@ -113,12 +115,13 @@ const coverLqipProps = cover
         <div class="flex items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400 mt-2 flex-wrap">
           {albumMeta.date && (
             <span class="inline-flex items-center gap-1">
-              <Icon name="material-symbols:calendar-today" class="text-sm" />
+              <EfIcon name="navCalendar" class="text-sm" />
               {albumMeta.date}
             </span>
           )}
           {albumMeta.location && (
             <span class="inline-flex items-center gap-1">
+              {/* 保留第三方：官网无定位针形 */}
               <Icon name="material-symbols:location-on" class="text-sm" />
               {albumMeta.location}
             </span>
@@ -164,7 +167,7 @@ const coverLqipProps = cover
         )
       ) : (
         <div class="flex flex-col items-center justify-center py-16 text-neutral-400 dark:text-neutral-500">
-          <Icon name="material-symbols:photo-library" class="text-6xl mb-4 opacity-50" />
+          <EfIcon name="blocks" class="text-6xl mb-4 opacity-50" />
           <p class="text-lg">{i18n(I18nKey.galleryNoAlbums)}</p>
         </div>
       )}

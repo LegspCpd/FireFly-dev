@@ -1,5 +1,5 @@
 ---
-import { Icon } from "astro-icon/components";
+import EfIcon from "@components/common/EfIcon.astro";
 import { commentConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
@@ -74,7 +74,7 @@ const visibleTags =
   {
     pinned && (
       <div class="pinned-btn flex items-center gap-1 bg-(--btn-regular-bg) text-(--btn-content) rounded-md px-2 py-1.5 font-bold">
-        <Icon name="material-symbols:pinboard" class="text-xl" />
+        <EfIcon name="arrowSmall" class="text-xl" style="transform: rotate(-90deg)" />
         <span class="text-sm">{i18n(I18nKey.pinned)}</span>
       </div>
     )
@@ -84,8 +84,8 @@ const visibleTags =
     showPublished && (
       <div class="flex items-center">
         <div class="meta-icon">
-          <Icon
-            name="material-symbols:calendar-today-outline-rounded"
+          <EfIcon
+            name="navCalendar"
             class="text-xl"
           />
         </div>
@@ -103,8 +103,8 @@ const visibleTags =
       updated.getTime() !== published.getTime() && (
         <div class="flex items-center">
           <div class="meta-icon">
-            <Icon
-              name="material-symbols:edit-calendar-outline-rounded"
+            <EfIcon
+              name="navCalendar"
               class="text-xl"
             />
           </div>
@@ -119,7 +119,7 @@ const visibleTags =
     showCategory && (
       <div class="flex items-center">
         <div class="meta-icon">
-          <Icon name="material-symbols:book-2-outline-rounded" class="text-xl" />
+          <EfIcon name="blocks" class="text-xl" />
         </div>
         <div class="flex flex-row flex-nowrap items-center">
           <a
@@ -145,7 +145,7 @@ const visibleTags =
       >
         <div class="flex flex-row flex-wrap items-center">
           <div class="meta-icon">
-            <Icon name="material-symbols:tag-rounded" class="text-xl" />
+            <EfIcon name="shareHash" class="text-xl" />
           </div>
           {visibleTags &&
             visibleTags.length > 0 &&
@@ -186,8 +186,8 @@ const visibleTags =
       id && (
         <div class="flex items-center">
           <div class="meta-icon">
-            <Icon
-              name="material-symbols:visibility-outline-rounded"
+            <EfIcon
+              name="shareWeibo"
               class="text-xl"
             />
           </div>
@@ -208,8 +208,8 @@ const visibleTags =
       id && (
         <div class="flex items-center">
           <div class="meta-icon">
-            <Icon
-              name="material-symbols:visibility-outline-rounded"
+            <EfIcon
+              name="shareWeibo"
               class="text-xl"
             />
           </div>
@@ -233,8 +233,8 @@ const visibleTags =
       id && (
         <div class="flex items-center">
           <div class="meta-icon">
-            <Icon
-              name="material-symbols:visibility-outline-rounded"
+            <EfIcon
+              name="shareWeibo"
               class="text-xl"
             />
           </div>
@@ -255,7 +255,7 @@ const visibleTags =
     showWords && typeof words === "number" && (
       <div class="flex items-center">
         <div class="meta-icon">
-          <Icon name="material-symbols:notes-rounded" class="text-xl" />
+          <EfIcon name="pageDoc" class="text-xl" />
         </div>
         <span class="text-50 text-sm font-medium">
           {words} {i18n(words === 1 ? I18nKey.wordCount : I18nKey.wordsCount)}
@@ -268,7 +268,7 @@ const visibleTags =
     showReadingTime && typeof minutes === "number" && (
       <div class="flex items-center">
         <div class="meta-icon">
-          <Icon name="material-symbols:schedule-outline-rounded" class="text-xl" />
+          <EfIcon name="navCalendar" class="text-xl" />
         </div>
         <span class="text-50 text-sm font-medium">
           {minutes} {i18n(minutes === 1 ? I18nKey.minuteCount : I18nKey.minutesCount)}
@@ -281,7 +281,7 @@ const visibleTags =
     password && (
       <div class="flex items-center">
         <div class="meta-icon">
-          <Icon name="material-symbols:lock-outline" class="text-xl" />
+          <EfIcon name="shieldCharge" class="text-xl" />
         </div>
         <span class="text-50 text-sm font-medium">
           {i18n(I18nKey.postEncrypted)}

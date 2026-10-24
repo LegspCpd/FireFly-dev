@@ -1,5 +1,6 @@
 ---
 import { Icon } from "astro-icon/components";
+import EfIcon from "@components/common/EfIcon.astro";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 
@@ -22,6 +23,7 @@ const { sourceId } = Astro.props;
 	<div class="page-gallery-viewer" data-gallery-viewer hidden>
 		<div class="page-gallery-toolbar">
 			<button type="button" class="btn-plain page-gallery-action" data-gallery-collapse>
+				<!-- 保留第三方：官网 122 个内联 svg 里没有 ✕ / 退出全屏形，取不到替代 -->
 				<Icon name="material-symbols:close-fullscreen-rounded" />
 				<span>{i18n(I18nKey.dynamicCollapseGallery)}</span>
 			</button>
@@ -32,7 +34,7 @@ const { sourceId } = Astro.props;
 				data-gallery-lightbox
 				data-type="image"
 			>
-				<Icon name="material-symbols:zoom-in-rounded" />
+				<EfIcon name="magnifier" />
 				<span>{i18n(I18nKey.dynamicViewOriginal)}</span>
 			</button>
 			<span class="page-gallery-counter" data-gallery-counter aria-live="polite"></span>
@@ -46,7 +48,7 @@ const { sourceId } = Astro.props;
 				aria-label={i18n(I18nKey.dynamicPreviousImage)}
 				title={i18n(I18nKey.dynamicPreviousImage)}
 			>
-				<Icon name="material-symbols:chevron-left-rounded" />
+				<EfIcon name="arrowSmall" style="transform: rotate(180deg)" />
 			</button>
 			<img class="page-gallery-main-image" data-gallery-main alt="" />
 			<button
@@ -56,7 +58,7 @@ const { sourceId } = Astro.props;
 				aria-label={i18n(I18nKey.dynamicNextImage)}
 				title={i18n(I18nKey.dynamicNextImage)}
 			>
-				<Icon name="material-symbols:chevron-right-rounded" />
+				<EfIcon name="arrowSmall" />
 			</button>
 		</div>
 

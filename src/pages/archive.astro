@@ -1,4 +1,6 @@
 ---
+// 页名图标来源：归档：官网无「归档」，取 navLore（资料/文档形，竖排栏 /archive/ 同 key）。
+import EfIcon from "@components/common/EfIcon.astro";
 import EndfieldPostGrid from "@components/layout/EndfieldPostGrid.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getSortedPosts } from "@/utils/content-utils";
@@ -12,7 +14,7 @@ const posts = await getSortedPosts();
 		<section class="ef-sec">
 			<div class="ef-sec-head">
 				<p class="ef-eyebrow" data-replay="ef-in-power">// ARCHIVE</p>
-				<h1 class="ef-sec-title" data-replay="ef-in-power" style="--i: 1">归档</h1>
+				<h1 class="ef-sec-title" data-replay="ef-in-power" style="--i: 1"><EfIcon name="navLore" inline />归档</h1>
 				<p class="ef-sec-count ef-field" data-replay="ef-in-power" style="--i: 2">{posts.length} 篇文章</p>
 			</div>
 			<EndfieldPostGrid posts={posts} columns={3} />

@@ -1,5 +1,6 @@
 <script lang="ts">
 import { onMount } from "svelte";
+import EfIcon from "@/components/common/EfIcon.svelte";
 import Icon from "@/components/common/Icon.svelte";
 import { siteConfig } from "@/config";
 import iconsData from "@/constants/icons-data.json";
@@ -626,7 +627,8 @@ function portal(node: HTMLElement) {
   on:click={generatePoster}
   aria-label="Generate Share Poster"
 >
-  <Icon icon="material-symbols:share" />
+  <!-- 官网分享位第 1 项（爪印），精确对应「分享」 -->
+  <EfIcon name="shareClaw" />
   <span>{i18n(I18nKey.shareArticle)}</span>
 </button>
 
@@ -656,10 +658,12 @@ function portal(node: HTMLElement) {
           on:click={copyLink}
         >
           {#if copied}
+            <!-- 保留第三方：官网 122 个内联 svg 里没有 ✓ 形 -->
             <Icon icon="material-symbols:check" />
             <span>{i18n(I18nKey.copied)}</span>
           {:else}
-            <Icon icon="material-symbols:link" />
+            <!-- 官网无「复制链接」，取 jump（官网「前往 / 跳转」图标） -->
+            <EfIcon name="jump" />
             <span>{i18n(I18nKey.copyLink)}</span>
           {/if}
         </button>
@@ -669,7 +673,8 @@ function portal(node: HTMLElement) {
           on:click={downloadPoster}
           disabled={!posterImage}
         >
-          <Icon icon="material-symbols:download" />
+          <!-- 官网 downloader_icon__kcnSL 下载图标，精确对应 -->
+          <EfIcon name="download" />
           {i18n(I18nKey.savePoster)}
         </button>
       </div>

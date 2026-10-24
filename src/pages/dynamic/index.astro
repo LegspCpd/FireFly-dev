@@ -1,5 +1,5 @@
 ---
-import { Icon } from "astro-icon/components";
+import EfIcon from "@components/common/EfIcon.astro";
 import DynamicFeed from "@/components/pages/dynamic/DynamicFeed.svelte";
 import DynamicItemTemplate from "@/components/pages/dynamic/DynamicItemTemplate.astro";
 import { commentConfig, dynamicConfig, siteConfig } from "@/config";
@@ -35,7 +35,8 @@ const memos = dynamicConfig.memos;
 			<header class="page-header card-base">
 				<div class="page-heading">
 					<div class="page-icon" aria-hidden="true">
-						<Icon name="material-symbols:forum-rounded" />
+						{/* 页名图标：官网无「动态」，取 navCube（方箱形） */}
+<EfIcon name="navCube" />
 					</div>
 					<div>
 						<h2 id="dynamic-page-title">{title}</h2>
@@ -46,13 +47,13 @@ const memos = dynamicConfig.memos;
 					class="page-count"
 					aria-label={i18n(I18nKey.dynamic)}
 				>
-					<Icon name="material-symbols:dynamic-feed-rounded" />
+					<EfIcon name="navCube" />
 					<strong data-dynamic-page-count>0</strong>
 					<span>{i18n(I18nKey.dynamic)}</span>
 				</div>
 				<div class="page-filter">
 					<label class="page-search">
-						<Icon name="material-symbols:search-rounded" />
+						<EfIcon name="magnifier" />
 						<input
 							type="search"
 							data-dynamic-search
@@ -60,11 +61,11 @@ const memos = dynamicConfig.memos;
 						/>
 					</label>
 					<label class="page-year-select">
-						<Icon name="material-symbols:calendar-month-rounded" />
+						<EfIcon name="navCalendar" />
 						<select data-year-select aria-label={i18n(I18nKey.year)}>
 							<option value="all">{i18n(I18nKey.dynamicAllYears)}</option>
 						</select>
-						<Icon name="material-symbols:arrow-drop-down-rounded" />
+						<EfIcon name="arrowSmall" style="transform: rotate(90deg)" />
 					</label>
 				</div>
 			</header>

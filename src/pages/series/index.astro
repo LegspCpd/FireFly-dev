@@ -1,7 +1,8 @@
 ---
-import { Icon } from "astro-icon/components";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
+// 页名图标来源：系列：官网无「系列」，取 navOperator（竖排栏 /series/ 同 key）。
+import EfIcon from "@components/common/EfIcon.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getSeriesList } from "@/utils/content-utils";
 import { getPostUrlBySlug } from "@/utils/url-utils";
@@ -14,7 +15,7 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
     <!-- 官网骨架：眉标 + 页名 + 副字段（与 categories / tags / friends / about 逐字同一套） -->
     <div class="card-base px-8 py-6 mb-4">
         <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// SERIES</p>
-        <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{i18n(I18nKey.series)}</h1>
+        <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1"><EfIcon name="navOperator" inline />{i18n(I18nKey.series)}</h1>
         <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">
             {i18n(I18nKey.allSeries)} · {totalPosts} {i18n(I18nKey.postsCount)}
         </p>
@@ -33,7 +34,7 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
                                 class="series-acc-header group flex w-full items-center gap-3 p-5 md:p-6 pb-3 cursor-pointer select-none text-left transition"
                             >
                                 <span class="shrink-0 w-12 h-12 rounded-full bg-(--primary)/10 group-hover:bg-(--primary)/20 flex items-center justify-center transition-colors">
-                                    <Icon name="material-symbols:layers" aria-hidden="true" class="text-2xl text-(--primary)" />
+                                    <EfIcon name="navOperator" aria-hidden="true" class="text-2xl text-(--primary)" />
                                 </span>
                                 <span class="flex-1 min-w-0">
                                     <span class="block text-lg font-bold text-90 truncate group-hover:text-(--primary) transition">
@@ -43,8 +44,8 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
                                         {series.count} {i18n(I18nKey.postsCount)}
                                     </span>
                                 </span>
-                                <Icon
-                                    name="material-symbols:keyboard-arrow-down-rounded"
+                                <EfIcon
+                                    name="arrowSmall"
                                     aria-hidden="true"
                                     class="acc-arrow shrink-0 text-[1.25rem] text-30 group-hover:text-(--primary) transition-transform duration-300"
                                 />
@@ -70,8 +71,8 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
                                                     <span class="flex-1 min-w-0 font-bold text-sm text-black/75 dark:text-white/75 truncate transition group-hover:text-(--primary)">
                                                         {post.data.title}
                                                     </span>
-                                                    <Icon
-                                                        name="material-symbols:chevron-right-rounded"
+                                                    <EfIcon
+                                                        name="arrowSmall"
                                                         aria-hidden="true"
                                                         class="shrink-0 text-xl text-black/15 dark:text-white/15 transition group-hover:text-(--primary) group-hover:translate-x-0.5"
                                                     />
@@ -87,7 +88,7 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
             </div>
         ) : (
             <div class="card-base px-8 py-12 text-center">
-                <Icon name="material-symbols:layers" class="text-5xl text-30 mx-auto mb-4" />
+                <EfIcon name="navOperator" class="text-5xl text-30 mx-auto mb-4" />
                 <p class="text-30">{i18n(I18nKey.noSeries)}</p>
             </div>
         )
@@ -132,6 +133,10 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
 </EndfieldLayout>
 
 <style>
+    /* 官网 arrowSmall 是「右指箭头」；折叠态要「下指」，基准转 90°，展开态由下方规则再转 180° */
+    .acc-arrow {
+        transform: rotate(90deg);
+    }
     .series-acc-header[aria-expanded="true"] .acc-arrow {
         transform: rotate(180deg);
     }
