@@ -981,38 +981,68 @@ friend-filter button.ef-chip[data-active] {
 
 /* 50) 首屏旧类已删除（HeroCanvas 现在用 .ef-hero*，样式在组件内）。 */
 
-/* ==== 51) 官网字体与字级（族名 / 字级 / 字重 / 行高 / 字距全部照官网 CSS）====
-   逐条抄自 F:/web/endfield-official/css/*.css，只做一处换算：
-   官网 html{font-size:min(.625vw,1.111111vh)}，1920×1080 下 1rem = 12px，
-   与本站的 --efu 完全同源 —— 所以每一档直接写官网那个 rem 值乘以 --efu。
+/* ==== 51) 官网字体与字级（族名 / 字级 / 字重 / 行高 / 字距全部照官网）====
+   逐条抄自 F:/web/endfield-official/（index.html + css/*.css）与官网线上实测，
+   只做一处换算：官网 html{font-size:min(.625vw,1.111111vh)}，1920×1080 下
+   1rem = 12px，与本站的 --efu 完全同源 —— 每档直接写官网那个 rem 值乘以 --efu。
 
    · 族名：官网用「族名分字重」（SansRegular / SansMedium / SansBold / SansBlack、
-     Gilroy-*、Novecentosanswide-Medium/DemiBold/Bold），@font-face 一律 weight:400，
-     不靠 weight 轴。本地只有 5 款 woff2，按官网语义注册：
-       SansRegular → Gilroy-Medium   （官网 SansRegular = Gilroy-Regular，本地无该字重）
-       SansMedium  → Gilroy-Medium   （官网正文）
-       SansBold    → Gilroy-ExtraBold（官网标题/强调）
+     Gilroy-Light/Medium/ExtraBold、Novecentosanswide-Medium/DemiBold/Bold、
+     Roboto-Regular/Black、SpaceGrotesk、ProtestStrike-Regular），
+     所有 @font-face 一律 weight:400，不靠 weight 轴。
+
+   · 关键事实（别再按名字猜）：官网那四个 Sans* **不是 Gilroy，是 HarmonyOS Sans SC**。
+     它们由官网 JS 注入 @font-face（src 走 next 的 asset 模块
+     static/media/font/HarmonyOS_Sans_SC_*.woff2），CSS 文本里 grep 不到，
+     所以只看 css/*.css 会误以为这四个族没定义（旧版本这里就误判成 Gilroy）。
+     线上实测（官网页面内 canvas，100px 量 "Hamburgefonstiv aegs 0123 Arknights"）：
+        SansRegular        1753.4
+        HarmonyOS_SC_Reg   1753.4   ← 完全一致
+        Gilroy-Medium      1720.7   ← 不一致
+     字形位图哈希同样：SansRegular == HarmonyOS_SC_Reg ≠ Gilroy-Medium。
+     因此四个 Sans* 按官网原族名指向 HarmonyOS_Sans_SC_Regular/Medium/Bold/Black，
+     Latin 部分即与官网逐字同源。Gilroy 在官网是独立族名（Gilroy-Medium 等），
+     只有显式写 family 的地方才用到它；官网也**没有** Gilroy-Regular 这个文件。
+
    · 字级：1rem 微标 / 1.125 导航 / 1.25 标签 / 1.375 辅助 / 1.5 元信息 /
            1.625 正文 / 1.75 卡片标题与按钮 / 1.875 导语 / 2.25 区块小标题 /
            2.5 页标题 / 3 文章标题 / 4.5 展示标题
    · 行高：官网长正文 .protocol_body{line-height:1.8}；标题与展示块 1；
            文章标题 4.375rem/3rem = 1.458；元信息 2rem/1.5rem = 1.333
    · 字距：宽体大标题 -.02em，大写标签 .08em
-   · 中文：官网自己没有中文字体文件，走系统栈 —— 这里照抄官网那条 CJK 栈，
-           不再自己挑字体。 */
+   · 中文：这四个 HarmonyOS 文件是官网发的子集（各约 210KB），子集外的字照样落到
+           官网那条 CJK 系统栈。这里保持同一顺序：Sans* → CJK 栈。
+   · unicode-range：官网 14 个族全部没有 unicode-range（默认 U+0-10FFFF），照抄，
+           不自己加子集切分。
+   · font-display：官网 CSS 里那 10 个族写 swap；Sans* 由 JS 注入没写（默认 auto）。
+           这里统一 swap，避免 4×210KB 的阻塞期，除此之外与官网逐字一致。 */
+
+/* —— 官网 Sans* 四档 = HarmonyOS Sans SC（正文/导航/日期/摘要全走这里）—— */
 @font-face {
   font-family: SansRegular;
-  src: url("/endfield-ui/official/font/Gilroy-Medium.woff2") format("woff2");
+  src: url("/endfield-ui/official/font/HarmonyOS_Sans_SC_Regular.woff2") format("woff2");
   font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: SansMedium;
-  src: url("/endfield-ui/official/font/Gilroy-Medium.woff2") format("woff2");
+  src: url("/endfield-ui/official/font/HarmonyOS_Sans_SC_Medium.woff2") format("woff2");
   font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: SansBold;
-  src: url("/endfield-ui/official/font/Gilroy-ExtraBold.woff2") format("woff2");
+  src: url("/endfield-ui/official/font/HarmonyOS_Sans_SC_Bold.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: SansBlack;
+  src: url("/endfield-ui/official/font/HarmonyOS_Sans_SC_Black.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
+/* —— 官网其余族名（原样注册，供按名引用，未用到的不会被下载）—— */
+@font-face {
+  font-family: Gilroy-Light;
+  src: url("/endfield-ui/official/font/Gilroy-Light.woff2") format("woff2");
   font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
@@ -1040,6 +1070,26 @@ friend-filter button.ef-chip[data-active] {
   src: url("/endfield-ui/official/font/Novecentosanswide-Bold.woff2") format("woff2");
   font-weight: 400; font-style: normal; font-display: swap;
 }
+@font-face {
+  font-family: Roboto-Regular;
+  src: url("/endfield-ui/official/font/Roboto-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: Roboto-Black;
+  src: url("/endfield-ui/official/font/Roboto-Black.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: SpaceGrotesk;
+  src: url("/endfield-ui/official/font/SpaceGrotesk.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: ProtestStrike-Regular;
+  src: url("/endfield-ui/official/font/ProtestStrike-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
 
 :root {
   /* 官网单位：1rem = min(.625vw, 1.111111vh)。竖排栏内还有一份同值声明
@@ -1056,6 +1106,9 @@ friend-filter button.ef-chip[data-active] {
   --ef-font-sans: SansMedium, var(--ef-font-cjk);
   --ef-font-regular: SansRegular, var(--ef-font-cjk);
   --ef-font-bold: SansBold, var(--ef-font-cjk);
+  /* 官网 SansBlack 只在两处广告/页脚位用到；本站目前无对应元素，
+     注册好备用，别处要用力重感时直接引用它即可。 */
+  --ef-font-black: SansBlack, var(--ef-font-cjk);
   --ef-font-wide: "Novecentosanswide-DemiBold", "Novecentosanswide-Medium",
     "Novecentosanswide-Bold", var(--ef-font-cjk);
   --ef-font-num: "Novecentosanswide-Medium", var(--ef-font-cjk);
