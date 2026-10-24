@@ -1,0 +1,118 @@
+---
+// 文章正文目录 + 返回顶部（官网阅读页右侧 margin 一栏）。
+// 结构照官网公告正文的目录块：细线面板、拉丁大写小标、当前项黄竖条。
+// 返回顶部用官网 index.html 里 .Header_tri__KNP87 的原 path（白三角那条），
+// 这里旋转 180° 当「向上」，不引入任何第三方图标集。
+import { efTocHeadings } from "@utils/ef-toc";
+
+interface Props {
+	headings?: import("astro").MarkdownHeading[];
+	/* 没有目录的文章（短记）也留一个返回顶部 */
+	backToTop?: boolean;
+}
+
+const { headings = [], backToTop = true } = Astro.props;
+// 收录规则与文章页共用一份（@utils/ef-toc）
+const items = efTocHeadings(headings);
+const triPath =
+	"M23.146,13.962 L15.554,0.843 L30.739,0.843 L23.146,13.962 ZM0.261,0.843 L15.446,0.843 L7.854,13.962 L0.261,0.843 ZM15.554,27.156 L7.961,14.036 L23.146,14.036 L15.554,27.156 Z";
+---
+
+{
+	(items.length > 0 || backToTop) && (
+		<nav class="ef-toc" aria-label="文章目录">
+			{items.length > 0 && <p class="ef-toc-head">// CONTENTS</p>}
+			{items.length > 0 && (
+				<ul class="ef-toc-list">
+					{items.map((h) => (
+						<li class:list={["ef-toc-item", { "ef-toc-sub": h.depth === 3 }]}>
+							<a href={`#${h.slug}`} data-no-swup>
+								{h.text}
+							</a>
+						</li>
+					))}
+				</ul>
+			)}
+			<a class="ef-toc-top" href="#ef-main" data-no-swup aria-label="返回顶部">
+				<svg viewBox="0 0 31 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+					<path fill-rule="evenodd" fill="currentColor" d={triPath} />
+				</svg>
+				<span>返回顶部</span>
+			</a>
+		</nav>
+	)
+}
+
+<style>
+	.ef-toc {
+		position: sticky;
+		top: calc(3 * var(--efu));
+		border: 1px solid var(--ef-rule);
+		background: color-mix(in srgb, var(--ef-panel) 78%, transparent);
+	}
+	.ef-toc-head {
+		margin: 0;
+		padding: 0.6rem 0.85rem;
+		border-bottom: 1px solid var(--ef-rule);
+		font-family: var(--ef-font-sans);
+		font-size: var(--ef-fs-nav);
+		font-weight: 400;
+		letter-spacing: var(--ef-ls-wide);
+		text-transform: uppercase;
+		color: var(--ef-ink-2);
+	}
+	.ef-toc-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		max-height: 60vh;
+		overflow-y: auto;
+	}
+	.ef-toc-item {
+		margin: 0;
+		border-bottom: 1px solid color-mix(in srgb, var(--ef-rule) 70%, transparent);
+	}
+	.ef-toc-item:last-child {
+		border-bottom: 0;
+	}
+	.ef-toc-item a {
+		display: block;
+		padding: 0.42rem 0.85rem;
+		border-left: 2px solid transparent;
+		font-size: var(--ef-fs-small);
+		line-height: var(--ef-lh-ui);
+		color: var(--ef-ink-2);
+		text-decoration: none;
+	}
+	.ef-toc-sub a {
+		padding-left: 1.6rem;
+	}
+	.ef-toc-item a:hover {
+		border-left-color: var(--ef-signal);
+		background: color-mix(in srgb, var(--ef-panel) 92%, transparent);
+		color: var(--ef-ink);
+	}
+	/* 返回顶部：官网黑块里的白三角，旋转 180° 指向上 */
+	.ef-toc-top {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.85rem;
+		border-top: 1px solid var(--ef-rule);
+		font-family: var(--ef-font-sans);
+		font-size: var(--ef-fs-nav);
+		letter-spacing: var(--ef-ls-wide);
+		color: var(--ef-ink-2);
+		text-decoration: none;
+	}
+	.ef-toc-top svg {
+		width: 0.7rem;
+		height: 0.7rem;
+		transform: rotate(180deg);
+	}
+	.ef-toc-top:hover {
+		background: var(--ef-signal);
+		color: #161616;
+	}
+</style>

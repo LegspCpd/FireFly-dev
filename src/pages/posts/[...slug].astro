@@ -14,6 +14,7 @@ import {
 	getSeriesPosts,
 	getSortedPosts,
 } from "@utils/content-utils";
+import { efTocHeadings } from "@utils/ef-toc";
 import {
 	getCategoryUrl,
 	getFileDirFromPath,
@@ -26,6 +27,8 @@ import utc from "dayjs/plugin/utc";
 import CoverImage from "@/components/common/CoverImage.astro";
 import PostMetadata from "@/components/layout/PostMeta.astro";
 import EfArticle from "@components/common/EfArticle.astro";
+import EfToc from "@components/common/EfToc.astro";
+import { jumpPath, triPath } from "@/constants/efIcons";
 import RecommendedPost from "@/components/misc/RecommendedPost.astro";
 import SeriesNav from "@/components/misc/SeriesNav.astro";
 import SharePoster from "@/components/misc/SharePoster.svelte";
@@ -204,6 +207,9 @@ const _sortedForNo = await getSortedPosts();
 const _idx = _sortedForNo.findIndex((x: any) => x.id === entry.id);
 const postNo = _idx >= 0 ? _sortedForNo.length - _idx : null;
 const seriesData = await getSeriesPosts(entry);
+
+// 文章目录（收录规则见 @utils/ef-toc）：这里只用来决定文章页是否开右侧 margin 一栏
+const tocHeadings = efTocHeadings(headings);
 ---
 
 <EndfieldLayout
@@ -248,16 +254,7 @@ const seriesData = await getSeriesPosts(entry);
     type="application/ld+json"
     set:html={JSON.stringify(jsonLd)}
   />
-  <div
-    class="flex w-full rounded-(--radius-large) overflow-hidden relative mb-4"
-  >
-    <div
-      id="post-container"
-      class:list={[
-        "card-base z-10 px-6 md:px-9 pt-6 pb-4 relative w-full ",
-        {},
-      ]}
-    >
+  <div id="post-container" class="ef-wrap">
       {
         usePostCoverOverlay && processedImage && (
           <div class="-mx-6 md:-mx-9 -mt-6 mb-6 h-48 md:h-64 relative onload-animation">
@@ -315,59 +312,9 @@ const seriesData = await getSeriesPosts(entry);
         )
       }
 
-      <!-- word count and reading time -->
-      {
-        !usePostCoverOverlay && (
-          <div
-            class="flex flex-row text-black/30 dark:text-white/30 gap-5 mb-3 transition onload-animation"
-          >
-            <div class="flex flex-row items-center">
-              <div
-                class="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50 flex items-center justify-center mr-2"
-              >
-                <Icon name="material-symbols:notes-rounded" />
-              </div>
-              <div class="text-sm">
-                {remarkPluginFrontmatter.words}
-                {" " + i18n(I18nKey.wordsCount)}
-              </div>
-            </div>
-            <div class="flex flex-row items-center">
-              <div
-                class="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50 flex items-center justify-center mr-2"
-              >
-                <Icon name="material-symbols:schedule-outline-rounded" />
-              </div>
-              <div class="text-sm">
-                {remarkPluginFrontmatter.minutes}
-                {
-                  " " +
-                    i18n(
-                      remarkPluginFrontmatter.minutes === 1
-                        ? I18nKey.minuteCount
-                        : I18nKey.minutesCount
-                    )
-                }
-              </div>
-            </div>
-            {entry.data.password && (
-              <div class="flex flex-row items-center">
-                <div
-                  class="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50 flex items-center justify-center mr-2"
-                >
-                  <Icon name="material-symbols:lock-outline" />
-                </div>
-                <div class="text-sm">
-                  {i18n(I18nKey.postEncrypted)}
-                </div>
-              </div>
-            )}
-          </div>
-        )
-      }
-
-      {/* 标题与字段：按《终末地》官网骨架（EfArticle）。
-          data-pagefind-body 留在包裹层，保证 Pagefind 的索引范围与原来一致。 */}
+      {/* 文章主体：标题与字段（官网骨架 EfArticle）→ 正文进它的 .ef-prose 槽
+          → 文末（系列 / 分享 / 版权）进 after 槽；目录挂 margin 槽。
+          data-pagefind-body 留在包裹层，Pagefind 的索引范围与原来一致。 */}
       {
         !usePostCoverOverlay && (
           <div class="onload-animation" data-pagefind-body>
@@ -380,46 +327,51 @@ const seriesData = await getSeriesPosts(entry);
               words={remarkPluginFrontmatter.words}
               minutes={remarkPluginFrontmatter.minutes}
               lede={entry.data.description}
-            />
-            {!showPostCover && (
-              <div class="border-(--line-divider) border-b mt-4 mb-5" />
-            )}
-          </div>
-        )
-      }
+              margin={true}
+            >
+              {
+                showPostCover && processedImage && (
+                  <CoverImage
+                    id="post-cover"
+                    src={processedImage}
+                    basePath={getFileDirFromPath(entry.filePath || "")}
+                    alt={entry.data.title}
+                    class="mb-8 rounded-xl onload-animation"
+                    preview={false}
+                    naturalHeight
+                    apiUrls={apiUrls}
+                  />
+                )
+              }
 
-      {
-        seriesData && (
-          <SeriesNav
-            seriesName={seriesData.seriesName}
-            posts={seriesData.posts}
-            currentPostId={entry.id}
-          />
-        )
-      }
+              {
+                entry.data.password ? (
+                  <EncryptedPost
+                    password={entry.data.password}
+                    slug={entry.id}
+                    hint={entry.data.passwordHint}
+                  >
+                    <Markdown class="markdown-content onload-animation">
+                      <Content />
+                    </Markdown>
+                  </EncryptedPost>
+                ) : (
+                  <Markdown class="markdown-content onload-animation">
+                    <Content />
+                  </Markdown>
+                )
+              }
 
-      {
-        showPostCover && !usePostCoverOverlay && processedImage && (
-          <div class="mt-4">
-            <CoverImage
-              id="post-cover"
-              src={processedImage}
-              basePath={getFileDirFromPath(entry.filePath || "")}
-              alt={entry.data.title}
-              class="mb-8 rounded-xl onload-animation"
-              preview={false}
-              naturalHeight
-              apiUrls={apiUrls}
-            />
-          </div>
-        )
-      }
-
-      {entry.data.password ? (
-        <EncryptedPost password={entry.data.password} slug={entry.id} hint={entry.data.passwordHint}>
-          <Markdown class="mb-6 markdown-content onload-animation">
-            <Content />
-          </Markdown>
+              <Fragment slot="after">
+                {
+                  seriesData && (
+                    <SeriesNav
+                      seriesName={seriesData.seriesName}
+                      posts={seriesData.posts}
+                      currentPostId={entry.id}
+                    />
+                  )
+                }
 
           {/* 打赏按钮 & 分享按钮 */}
           {
@@ -429,13 +381,10 @@ const seriesData = await getSeriesPosts(entry);
                   <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-3 flex-1">
                       <div class="h-12 w-12 rounded-lg bg-(--primary) flex items-center justify-center text-white dark:text-black/70 shrink-0">
-                        <Icon
-                          name={sponsorConfig.showButtonInPost &&
-                          siteConfig.pages.sponsor
-                            ? "material-symbols:favorite"
-                            : "material-symbols:share"}
-                          class="text-2xl"
-                        />
+                        {/* 官网 .Header_shareIcon__dqsKL 的原 path，不用第三方图标集 */}
+                        <svg class="ef-share-icon" viewBox="0 0 32 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path fill-rule="evenodd" fill="currentColor" d={jumpPath} />
+                        </svg>
                       </div>
                       <div>
                         <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
@@ -504,100 +453,13 @@ const seriesData = await getSeriesPosts(entry);
               />
             )
           }
-        </EncryptedPost>
-      ) : (
-        <>
-          <Markdown class="mb-6 markdown-content onload-animation">
-            <Content />
-          </Markdown>
+              </Fragment>
 
-          {/* 打赏按钮 & 分享按钮 */}
-          {
-            showPostActionCard && (
-              <div class="mb-6 rounded-xl onload-animation">
-                <div class="p-6 bg-(--license-block-bg) rounded-xl">
-                  <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center gap-3 flex-1">
-                      <div class="h-12 w-12 rounded-lg bg-(--primary) flex items-center justify-center text-white dark:text-black/70 shrink-0">
-                        <Icon
-                          name={sponsorConfig.showButtonInPost &&
-                          siteConfig.pages.sponsor
-                            ? "material-symbols:favorite"
-                            : "material-symbols:share"}
-                          class="text-2xl"
-                        />
-                      </div>
-                      <div>
-                        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
-                          {
-                            sponsorConfig.showButtonInPost && siteConfig.pages.sponsor
-                              ? i18n(I18nKey.sponsorButton)
-                              : i18n(I18nKey.shareOnSocial)
-                          }
-                        </h3>
-                        <p class="text-sm text-neutral-600 dark:text-neutral-400">
-                          {
-                            sponsorConfig.showButtonInPost && siteConfig.pages.sponsor
-                              ? i18n(I18nKey.sponsorButtonText)
-                              : i18n(I18nKey.shareOnSocialDescription)
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                      {
-                        siteConfig.post.share && (
-                          <SharePoster
-                            client:visible
-                            title={entry.data.title}
-                            author={entry.data.author || profileConfig.name}
-                            description={entry.data.description || entry.data.title}
-                            pubDate={formatDateToYYYYMMDD(entry.data.published)}
-                            coverImage={posterCoverUrl}
-                            coverImageSelector={posterCoverSelector}
-                            url={Astro.url.href}
-                            siteTitle={siteConfig.title}
-                            avatar={posterAvatarUrl}
-                            avatarSelector={posterAvatarSelector}
-                          />
-                        )
-                      }
-                      {
-                        showSponsorButton && (
-                          <a
-                            href={url("/sponsor/")}
-                            class="inline-flex items-center gap-2 px-6 py-3 bg-(--primary) text-white dark:text-black/70 rounded-lg font-medium hover:bg-(--primary)/80 hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
-                          >
-                            <span>{i18n(I18nKey.sponsor)}</span>
-                            <Icon name="fa7-solid:arrow-right" class="text-sm" />
-                          </a>
-                        )
-                      }
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          }
-
-          {
-            licenseConfig.enable && (
-              <License
-                title={entry.data.title}
-                id={entry.id}
-                pubDate={entry.data.published}
-                author={entry.data.author}
-                sourceLink={entry.data.sourceLink}
-                licenseName={entry.data.licenseName}
-                licenseUrl={entry.data.licenseUrl}
-                class="mb-6 rounded-xl license-container onload-animation"
-              />
-            )
-          }
-        </>
-      )}
-    </div>
-  </div>
+              <EfToc slot="margin" headings={tocHeadings} />
+            </EfArticle>
+          </div>
+        )
+      }
 
   <!-- 上次编辑时间 -->
   {
@@ -615,13 +477,6 @@ const seriesData = await getSeriesPosts(entry);
           data-threshold={outdatedThreshold}
         >
           <div class="flex items-center gap-2">
-            <div class="transition h-9 w-9 rounded-lg overflow-hidden relative flex items-center justify-center mr-0">
-              <Icon
-                name="material-symbols:history-rounded"
-                class="text-4xl text-(--primary) transition-transform group-hover:translate-x-0.5 bg-(--enter-btn-bg) p-2 rounded-md"
-              />
-            </div>
-
             <div class="flex flex-col gap-0.1">
               <div class="text-[1.0rem] leading-tight text-black/75 dark:text-white/75">
                 {i18n(I18nKey.lastModifiedPrefix)}{dateStr}
@@ -678,10 +533,10 @@ const seriesData = await getSeriesPosts(entry);
       class="w-full font-bold overflow-hidden active:scale-95"
     >
       <div class="btn-card rounded-2xl w-full h-15 max-w-full px-4 flex items-center justify-start! gap-4">
-        <Icon
-          name="material-symbols:chevron-left-rounded"
-          class="text-[2rem] text-(--primary)"
-        />
+        {/* 上一篇：官网 .Header_tri__KNP87 的白三角，转 90° 指向左 */}
+        <svg class="ef-page-arrow" viewBox="0 0 31 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill-rule="evenodd" fill="currentColor" d={triPath} />
+        </svg>
         <div class="overflow-hidden transition text-ellipsis whitespace-nowrap max-w-[calc(100%-3rem)] text-black/75 dark:text-white/75">
           {entry.data.nextTitle || i18n(I18nKey.home)}
         </div>
@@ -696,10 +551,10 @@ const seriesData = await getSeriesPosts(entry);
         <div class="overflow-hidden transition text-ellipsis whitespace-nowrap max-w-[calc(100%-3rem)] text-black/75 dark:text-white/75">
           {entry.data.prevTitle || i18n(I18nKey.home)}
         </div>
-        <Icon
-          name="material-symbols:chevron-right-rounded"
-          class="text-[2rem] text-(--primary)"
-        />
+        {/* 下一篇：同一枚三角，转 90° 指向右 */}
+        <svg class="ef-page-arrow ef-page-arrow-next" viewBox="0 0 31 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill-rule="evenodd" fill="currentColor" d={triPath} />
+        </svg>
       </div>
     </a>
       </div>
@@ -719,4 +574,5 @@ const seriesData = await getSeriesPosts(entry);
 
   <!-- 评论 -->
   {entry.data.comment && !entry.data.password && <Comment post={entry} />}
+  </div>
 </EndfieldLayout>

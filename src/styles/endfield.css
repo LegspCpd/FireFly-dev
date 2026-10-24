@@ -50,15 +50,15 @@
   );
 }
 
-/* `//` 眉标：宽体大写小字 + 字距 0.14em（skill：英文标签全大写、字距 0.14em；中文不加字距） */
+/* `//` 眉标：官网大写标签一律 SansMedium + 字距 .08em（见 §51 的字距变量）。
+   字级/字距交给 endfield-shell.css 的同名规则（同一份 token），这里只管颜色。 */
 .ef-eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-family: var(--ef-font-sans);
+  font-weight: 400;
+  letter-spacing: var(--ef-ls-wide);
   text-transform: uppercase;
-  font-stretch: 125%;
   color: var(--ef-ink-2);
-  line-height: 1.2;
+  line-height: var(--ef-lh-head);
 }
 
 /* ===== 结构件工具类（skill 部件速查）===== */
@@ -70,11 +70,11 @@
   padding: 2px 8px;
   background: var(--ef-ink);
   color: var(--ef-paper);
-  font-weight: 700;
-  font-stretch: 112%;
+  font-family: var(--ef-font-num);
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: var(--ef-fs-micro);
+  line-height: var(--ef-lh-ui);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
 }
 
@@ -332,8 +332,8 @@ a[href^="/archive/?category="] h2 {
   white-space: normal !important;
   overflow: visible !important;
   text-overflow: clip !important;
-  font-size: 0.95rem !important;
-  line-height: 1.3 !important;
+  font-size: var(--ef-fs-small) !important;
+  line-height: var(--ef-lh-head) !important;
   word-break: break-word;
 }
 a[href^="/archive/?category="] p {
@@ -451,7 +451,7 @@ mark {
 }
 .meta-divider::before {
   content: "│";
-  font-size: 13px;
+  font-size: var(--ef-fs-nav);
   color: var(--ef-ink-2);
   font-weight: 400;
 }
@@ -476,7 +476,7 @@ mark {
   content: "│";
   margin-right: 6px;
   color: var(--ef-ink-2);
-  font-size: 13px;
+  font-size: var(--ef-fs-nav);
   font-weight: 400;
 }
 .meta-divider + *::before {
@@ -498,9 +498,9 @@ a:has(> .shrink-0.w-6.h-6) {
 }
 a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6 {
   padding: 0.1rem 0.8rem 0.1rem 0.5rem !important;
-  font-size: 0.8rem;
-  font-weight: 500;
-  font-stretch: 112%;
+  font-family: var(--ef-font-num);
+  font-size: var(--ef-fs-micro);
+  font-weight: 400;
   background: var(--ef-tag-bg, var(--ef-ink)) !important;
   color: var(--ef-tag-fg, var(--ef-paper)) !important;
   border-radius: 0 !important;
@@ -512,7 +512,7 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
   opacity: 0.72;
   margin-right: 2px;
   font-size: 0.85em;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--ef-ls-wide);
 }
 
 /* 22) 文章页的分享框 / 版权框：主题是「带底色的圆角卡片」，
@@ -547,32 +547,77 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
   content: none !important;
 }
 
-/* 24) 阅读页的字阶与留白（对照 skill 样例：大标题、一栏宽正文、行高松）。
-      只作用在文章正文与文章标题，不动列表页的紧凑密度。 */
+/* 24) 阅读页的字阶与留白（全部走 §51 的官网字级/行高/字距变量）。
+      只作用在文章正文与文章标题，不动列表页的紧凑密度。
+      标题档：官网 NoticeDetail_title = 3rem / line-height 4.375rem（=1.458）。 */
+/* 字距：官网中文标题实测 letter-spacing:normal，不加负字距。 */
 [data-pagefind-meta="title"] {
-  font-size: clamp(1.85rem, 3.2vw, 2.5rem) !important;
-  line-height: 1.28 !important;
-  letter-spacing: -0.01em;
+  font-size: var(--ef-fs-title) !important;
+  line-height: var(--ef-lh-title) !important;
 }
 .custom-md {
-  font-size: 1.0625rem;
-  line-height: 1.9;
+  font-family: var(--ef-font-sans);
+  font-size: var(--ef-fs-body);
+  line-height: var(--ef-lh-body);
+  /* 主题给 .prose 的正文色是 Tailwind 的灰（oklch .373 …）。
+     官网正文是纯墨 #191919，这里按官网归位。 */
+  color: var(--ef-ink);
 }
 .custom-md :is(p, ul, ol) {
-  margin-bottom: 1.3rem;
+  margin-bottom: 1.3em;
 }
 .custom-md h2 {
-  font-size: 1.45rem;
-  margin-top: 2.6rem;
-  margin-bottom: 1rem;
+  font-size: var(--ef-fs-subhead);
+  line-height: var(--ef-lh-head);
+  margin-top: 1.6em;
+  margin-bottom: 0.7em;
 }
 .custom-md h3 {
-  font-size: 1.2rem;
-  margin-top: 2rem;
-  margin-bottom: 0.8rem;
+  font-size: var(--ef-fs-lede);
+  line-height: var(--ef-lh-head);
+  margin-top: 1.5em;
+  margin-bottom: 0.6em;
+}
+.custom-md h4 {
+  font-size: var(--ef-fs-card);
+  line-height: var(--ef-lh-head);
+  margin-top: 1.4em;
+  margin-bottom: 0.5em;
 }
 .custom-md :is(pre, blockquote, table) {
-  margin: 1.6rem 0;
+  margin: 1.6em 0;
+}
+/* 上一篇 / 下一篇：官网 Button 的字级（1.75rem）+ SansMedium（中文由回退栈渲染，
+   字重仍是 400，与官网一致），压掉主题挂的 font-bold。 */
+#post-container .btn-card {
+  font-family: var(--ef-font-sans);
+  font-size: var(--ef-fs-card);
+  font-weight: 400;
+}
+
+/* 文章页的官方图标：分页箭头（官网三角）×2、分享图标（官网 shareIcon）。
+   尺寸走 --efu，颜色跟随所在的按钮/方块，所以用 currentColor。 */
+.ef-page-arrow {
+  width: calc(1.15 * var(--efu));
+  height: auto;
+  flex: 0 0 auto;
+  /* 官网三角是正三角；上一篇指向左、下一篇指向右，靠 90° 旋转 */
+  transform: rotate(-90deg);
+  color: var(--ef-ink-2);
+}
+.ef-page-arrow-next { transform: rotate(90deg); }
+a:hover .ef-page-arrow { color: var(--ef-ink); }
+.ef-share-icon {
+  width: calc(1.6 * var(--efu));
+  height: auto;
+}
+
+/* 元信息（日期、字数、分类）：官网 NoticeDetail_date = 1.5rem / 2rem = 1.333 */
+.custom-md time,
+.custom-md .post-meta-root {
+  font-family: var(--ef-font-regular);
+  font-size: var(--ef-fs-meta);
+  line-height: var(--ef-lh-meta);
 }
 
 /* 25) 首页只留展示：没有侧栏，网格改单列（Swup 容器保留，转场不受影响） */
@@ -646,15 +691,13 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
 /* 年份行改成两列，圆点隐藏后不留空档 */
 .archive-year-toggle { grid-template-columns: auto minmax(0, 1fr) !important; }
 
-/* 29) 阅读宽度：正文栏限宽居中（实测文章正文 1248px，一行太长） */
+/* 29) 阅读宽度：文章页的版心就是 .ef-wrap（#post-container 现在挂在它上面），
+   正文窄栏由 .ef-prose（endfield-shell.css §5，65u ≈ 780px ≈ 40 字）控制，
+   不再单独给 #post-container 限宽（以前限到 54rem，两侧空出一大片）。 */
 #content-wrapper { max-width: 76rem; margin-inline: auto; }
-/* 文章正文：约 46rem，接近官网的窄栏阅读 */
-/* 主题给 .custom-md 挂了 Tailwind 的 max-w-none! 工具类（!important），
-   必须用 id 级选择器才压得过 */
-#post-container { max-width: 54rem !important; margin-inline: auto !important; }
+/* 主题给 .custom-md 挂了 Tailwind 的 max-w-none! 工具类，内容只会撑到
+   .ef-prose 的 65u 上限，这里保证它不被别的规则再拉宽 */
 #post-container .custom-md { max-width: 100% !important; margin-inline: 0 !important; }
-/* 文章页的标题与字段行也跟着收窄对齐 */
-.ef-article { max-width: 52rem; margin-inline: auto; }
 /* 列表页（归档/分类/标签/友链）内容栏收窄 */
 #content-wrapper > * { max-width: 76rem; margin-inline: auto; }
 
@@ -714,7 +757,8 @@ button, .btn { border-radius: 0 !important; }
 
 /* ===== 33) 正文自带目录块 + 评论区 ===== */
 #post-container .custom-md h2#目录 {
-  font-size: 0.82rem !important; letter-spacing: 0.1em;
+  font-family: var(--ef-font-sans);
+  font-size: var(--ef-fs-nav) !important; letter-spacing: var(--ef-ls-wide);
   color: var(--ef-ink-2) !important; margin: 1.6rem 0 0.5rem !important;
 }
 #post-container .custom-md h2#目录 + ul {
@@ -732,7 +776,7 @@ button, .btn { border-radius: 0 !important; }
   display: block; padding: 0.42rem 0.85rem;
   border-left: 2px solid transparent;
   color: var(--ef-ink-2) !important; text-decoration: none !important;
-  font-size: 0.86rem; line-height: 1.6;
+  font-size: var(--ef-fs-small); line-height: var(--ef-lh-ui);
 }
 #post-container .custom-md h2#目录 + ul li a:hover {
   border-left-color: var(--ef-signal); color: var(--ef-ink) !important;
@@ -741,6 +785,10 @@ button, .btn { border-radius: 0 !important; }
 
 /* 评论区：同款细线面板，去掉主题的圆角与阴影 */
 #post-comments {
+  /* 文章页里它本来就在 .ef-wrap 里；留言板/友链的评论框是兄弟节点，
+     原来铺满 1815px，这里按官网版心收齐 */
+  max-width: calc(96 * var(--efu));
+  margin-inline: auto;
   border: 1px solid var(--ef-rule) !important;
   background: color-mix(in srgb, var(--ef-panel) 78%, transparent) !important;
   border-radius: 0 !important; box-shadow: none !important;
@@ -768,9 +816,11 @@ button, .btn { border-radius: 0 !important; }
 /* ===== 35) 首屏旧类（.ef-ch-*）已随 HeroCanvas 重写删除，见 endfield-shell.css ===== */
 
 /* ===== 36) 页名骨架（配合套件 ef-ledger / ef-field 使用）===== */
+/* 页名的字级/字重/行高由 endfield-shell.css 的 .ef-page-name 统一给（§51 token），
+   这里只剩版式边距，避免两处各写一套字号。 */
 .ef-page-name {
-  margin: 0.1rem 0 0.35rem; font-size: clamp(1.6rem, 3.4vw, 2.2rem);
-  font-weight: 800; font-stretch: 118%; line-height: 1.2; color: var(--ef-ink);
+  margin: 0.1rem 0 0.35rem;
+  color: var(--ef-ink);
 }
 .ef-page-sub { margin: 0 0 1.6rem; color: var(--ef-ink-2) !important; }
 .ef-page-list { margin-top: 0.4rem; }
@@ -931,40 +981,133 @@ friend-filter button.ef-chip[data-active] {
 
 /* 50) 首屏旧类已删除（HeroCanvas 现在用 .ef-hero*，样式在组件内）。 */
 
-/* ==== 51) 官网字体（Gilroy + Novecentosanswide，取自官网 CDN，站主同意少量使用）==== 
-   官网正文字体是 Gilroy（几何无衬线）、标题是 Novecentosanswide（宽体）；中文走系统字体。
-   这两点正是「像不像官网」感知上最大的一块 —— 此前全站用的是系统 sans。
-   字体文件 7~17KB/款，共约 64KB。 */
+/* ==== 51) 官网字体与字级（族名 / 字级 / 字重 / 行高 / 字距全部照官网 CSS）====
+   逐条抄自 F:/web/endfield-official/css/*.css，只做一处换算：
+   官网 html{font-size:min(.625vw,1.111111vh)}，1920×1080 下 1rem = 12px，
+   与本站的 --efu 完全同源 —— 所以每一档直接写官网那个 rem 值乘以 --efu。
+
+   · 族名：官网用「族名分字重」（SansRegular / SansMedium / SansBold / SansBlack、
+     Gilroy-*、Novecentosanswide-Medium/DemiBold/Bold），@font-face 一律 weight:400，
+     不靠 weight 轴。本地只有 5 款 woff2，按官网语义注册：
+       SansRegular → Gilroy-Medium   （官网 SansRegular = Gilroy-Regular，本地无该字重）
+       SansMedium  → Gilroy-Medium   （官网正文）
+       SansBold    → Gilroy-ExtraBold（官网标题/强调）
+   · 字级：1rem 微标 / 1.125 导航 / 1.25 标签 / 1.375 辅助 / 1.5 元信息 /
+           1.625 正文 / 1.75 卡片标题与按钮 / 1.875 导语 / 2.25 区块小标题 /
+           2.5 页标题 / 3 文章标题 / 4.5 展示标题
+   · 行高：官网长正文 .protocol_body{line-height:1.8}；标题与展示块 1；
+           文章标题 4.375rem/3rem = 1.458；元信息 2rem/1.5rem = 1.333
+   · 字距：宽体大标题 -.02em，大写标签 .08em
+   · 中文：官网自己没有中文字体文件，走系统栈 —— 这里照抄官网那条 CJK 栈，
+           不再自己挑字体。 */
 @font-face {
-  font-family: "EF Gilroy";
+  font-family: SansRegular;
   src: url("/endfield-ui/official/font/Gilroy-Medium.woff2") format("woff2");
-  font-weight: 400 500; font-style: normal; font-display: swap;
+  font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
-  font-family: "EF Gilroy";
+  font-family: SansMedium;
+  src: url("/endfield-ui/official/font/Gilroy-Medium.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: SansBold;
   src: url("/endfield-ui/official/font/Gilroy-ExtraBold.woff2") format("woff2");
-  font-weight: 600 900; font-style: normal; font-display: swap;
+  font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
-  font-family: "EF Wide";
+  font-family: Gilroy-Medium;
+  src: url("/endfield-ui/official/font/Gilroy-Medium.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: Gilroy-ExtraBold;
+  src: url("/endfield-ui/official/font/Gilroy-ExtraBold.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: Novecentosanswide-Medium;
   src: url("/endfield-ui/official/font/Novecentosanswide-Medium.woff2") format("woff2");
-  font-weight: 400 500; font-style: normal; font-display: swap;
+  font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
-  font-family: "EF Wide";
+  font-family: Novecentosanswide-DemiBold;
   src: url("/endfield-ui/official/font/Novecentosanswide-DemiBold.woff2") format("woff2");
-  font-weight: 600; font-style: normal; font-display: swap;
+  font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
-  font-family: "EF Wide";
+  font-family: Novecentosanswide-Bold;
   src: url("/endfield-ui/official/font/Novecentosanswide-Bold.woff2") format("woff2");
-  font-weight: 700 900; font-style: normal; font-display: swap;
+  font-weight: 400; font-style: normal; font-display: swap;
 }
+
 :root {
-  --ef-font-sans: "EF Gilroy", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
-  --ef-font-wide: "EF Wide", "EF Gilroy", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* 官网单位：1rem = min(.625vw, 1.111111vh)。竖排栏内还有一份同值声明
+     （.ef-shell，窄屏媒体查询会把它换成 9px），这里只为字级换算提供同一个基准。 */
+  --efu: min(0.625vw, 1.111111vh);
+
+  /* 中文回退栈 = 官网 CSS 里的原值 */
+  --ef-font-cjk:
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "PingFang TC",
+    "Microsoft YaHei", "Microsoft JhengHei", "Hiragino Sans GB",
+    "Hiragino Kaku Gothic Pro", "Yu Gothic UI", Meiryo, "Apple SD Gothic Neo",
+    "Malgun Gothic", "Leelawadee UI", Thonburi, "Noto Sans", sans-serif;
+
+  --ef-font-sans: SansMedium, var(--ef-font-cjk);
+  --ef-font-regular: SansRegular, var(--ef-font-cjk);
+  --ef-font-bold: SansBold, var(--ef-font-cjk);
+  --ef-font-wide: "Novecentosanswide-DemiBold", "Novecentosanswide-Medium",
+    "Novecentosanswide-Bold", var(--ef-font-cjk);
+  --ef-font-num: "Novecentosanswide-Medium", var(--ef-font-cjk);
   --font-sans: var(--ef-font-sans);
+
+  /* 套件（public/endfield-ui/endfield.css，先于本表加载）里读界面/正文的是它自己那
+     两个变量，值原本是 Saira / Noto Sans SC。这里按官网栈接管，组件不用改。 */
+  --ef-font-ui: var(--ef-font-sans);
+  --ef-font-text: var(--ef-font-sans);
+  /* 套件的字级变量里，字段行（日期/编号/分类）与正文这两档直接对应官网取值，
+     一并接管；其余档位是套件内部组件尺度，不动。 */
+  --ef-t-field: var(--ef-fs-meta); /* 官网 1.5rem   —— 日期、编号、字段 */
+  --ef-t-body: var(--ef-fs-body); /* 官网 1.625rem —— 正文 */
+
+  /* —— 字级（官网 rem，1rem = --efu = 12px @1920）—— clamp 上限即官网像素，
+     下限只保证窄屏可读；官网窄屏另有一套 H5，这里不照搬。 */
+  --ef-fs-1: clamp(11px, calc(1 * var(--efu)), 12px);          /* 1rem   */
+  --ef-fs-2: clamp(12px, calc(1.125 * var(--efu)), 13.5px);    /* 1.125  */
+  --ef-fs-3: clamp(13px, calc(1.25 * var(--efu)), 15px);       /* 1.25   */
+  --ef-fs-4: clamp(13px, calc(1.375 * var(--efu)), 16.5px);    /* 1.375  */
+  --ef-fs-5: clamp(14px, calc(1.5 * var(--efu)), 18px);        /* 1.5    */
+  --ef-fs-6: clamp(15px, calc(1.625 * var(--efu)), 19.5px);    /* 1.625  */
+  --ef-fs-7: clamp(16px, calc(1.75 * var(--efu)), 21px);       /* 1.75   */
+  --ef-fs-8: clamp(17px, calc(1.875 * var(--efu)), 22.5px);    /* 1.875  */
+  --ef-fs-9: clamp(20px, calc(2.25 * var(--efu)), 27px);       /* 2.25   */
+  --ef-fs-10: clamp(22px, calc(2.5 * var(--efu)), 30px);       /* 2.5    */
+  --ef-fs-11: clamp(26px, calc(3 * var(--efu)), 36px);         /* 3      */
+  --ef-fs-12: clamp(32px, calc(4.5 * var(--efu)), 54px);       /* 4.5    */
+
+  /* 角色别名（官网里这些角色就是这些字级） */
+  --ef-fs-micro: var(--ef-fs-1);
+  --ef-fs-nav: var(--ef-fs-2);
+  --ef-fs-label: var(--ef-fs-3);
+  --ef-fs-small: var(--ef-fs-4);
+  --ef-fs-meta: var(--ef-fs-5);
+  --ef-fs-body: var(--ef-fs-6);
+  --ef-fs-card: var(--ef-fs-7);
+  --ef-fs-lede: var(--ef-fs-8);
+  --ef-fs-subhead: var(--ef-fs-9);
+  --ef-fs-title: var(--ef-fs-11);
+
+  /* —— 行高 / 字距 —— */
+  --ef-lh-tight: 1;
+  --ef-lh-ui: 1.5;
+  --ef-lh-body: 1.8;
+  --ef-lh-head: 1.25;
+  --ef-lh-title: 1.458;
+  --ef-lh-meta: 1.333;
+  /* 字距只有一处：拉丁大写标签的 .08em（中文内容官网实测是 normal，不加） */
+  --ef-ls-wide: 0.08em;
 }
+
 body, button, input, select, textarea { font-family: var(--ef-font-sans); }
 h1, h2, h3, h4,
 .ef-article-title, .ef-eyebrow, .ef-hero-title, .ef-hero-hollow,

@@ -16,47 +16,14 @@
    规则已整体删除（对应的 DOM 已不存在）。
    ========================================================================== */
 
-/* ---------- 0. 官网字体 -------------------------------------------------
-   官网 @font-face 的实际字体族名是 SansMedium / SansBold / Gilroy-* /
-   Novecentosanswide-*。这里把本地已有的 woff2 用官网的名字注册一遍，
-   这样下面照抄的 font-family 声明可以原样保留。
-   中文没有对应的官方字体文件，落到系统 CJK 字体（与官网一致的做法）。 */
+/* ---------- 0. 官网字体与字级 -------------------------------------------
+   @font-face（SansRegular / SansMedium / SansBold / Gilroy-* /
+   Novecentosanswide-*）与字级、行高、字距变量（--ef-font-* / --ef-fs-* /
+   --ef-lh-* / --ef-ls-*）都只有一份owner：src/styles/endfield.css §51，
+   主样式表全站加载，本表直接引用，不再重复注册。 */
 
-@font-face {
-  font-family: SansMedium;
-  src: url("/endfield-ui/official/font/Gilroy-Medium.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: SansBold;
-  src: url("/endfield-ui/official/font/Gilroy-ExtraBold.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: Novecentosanswide-Medium;
-  src: url("/endfield-ui/official/font/Novecentosanswide-Medium.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: Novecentosanswide-DemiBold;
-  src: url("/endfield-ui/official/font/Novecentosanswide-DemiBold.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: Novecentosanswide-Bold;
-  src: url("/endfield-ui/official/font/Novecentosanswide-Bold.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+/* 竖排栏里的字号取自官网 1920×1080 实测几何，是栏宽推导出来的固定 u 值，
+   不属于页面字级，所以下面照旧写 calc(N * var(--efu))。 */
 
 /* ---------- 1. 外壳与色板 -------------------------------------------------
    官网实测色板：#f2f2f2 纸张 / #ffffff 白面 / #191919 墨 / #fffa00 信号黄（只做点缀）
@@ -65,9 +32,8 @@
    唯一保留暗色的是加载屏（BootScreen 的 #141414，与官网上屏一致）。 */
 
 .ef-shell {
-  /* 官网单位：1rem = min(.625vw, 1.111111vh)；1920×1080 下 1u = 12px */
-  --efu: min(0.625vw, 1.111111vh);
-
+  /* 官网单位 --efu（= 官网的 1rem）定义在 :root（src/styles/endfield.css §51），
+     与全站字级共用同一个基准；窄屏媒体查询在文件末尾把它换成 9px。 */
   --ef-black: #191919;
   --ef-yellow: #fffa00;
   --ef-steel: #35373c;
@@ -108,11 +74,10 @@
   color: var(--ef-ink);
   /* 主题里若还存着 dark，把原生控件（滚动条、表单、默认色）也扳回亮色 */
   color-scheme: light;
-  font-family:
-    SansMedium, "EF Gilroy", system-ui, -apple-system, "PingFang SC",
-    "Microsoft YaHei", "Noto Sans SC", sans-serif;
-  font-size: clamp(15px, calc(1.45 * var(--efu)), 19px);
-  line-height: 1.75;
+  /* 正文 = 官网 NoticeDetail_content 的 1.625rem，行高 = 官网长正文的 1.8 */
+  font-family: var(--ef-font-sans);
+  font-size: var(--ef-fs-body);
+  line-height: var(--ef-lh-body);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -227,21 +192,21 @@ body.ef-contours {
   white-space: nowrap;
 }
 .ef-rail-wordmark-tag {
-  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-family: var(--ef-font-sans);
   font-size: calc(0.66 * var(--efu));
   line-height: 1;
   letter-spacing: 0.18em;
   color: #999;
 }
 .ef-rail-wordmark {
-  font-family: Novecentosanswide-Bold, SansBold, sans-serif;
+  font-family: var(--ef-font-wide);
   font-size: calc(1.3 * var(--efu));
   line-height: 1.05;
   letter-spacing: 0.01em;
   text-transform: uppercase;
 }
 .ef-rail-wordmark-en {
-  font-family: SansMedium, system-ui, sans-serif;
+  font-family: var(--ef-font-sans);
   font-size: calc(0.66 * var(--efu));
   line-height: 1;
   letter-spacing: 0.3em;
@@ -387,7 +352,7 @@ body.ef-contours {
   top: 50%;
   z-index: 1;
   pointer-events: none;
-  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-family: var(--ef-font-sans);
   font-size: calc(1.125 * var(--efu));
   line-height: 1.25;
   opacity: 0;
@@ -499,7 +464,7 @@ body.ef-contours {
   top: calc(1.5 * var(--efu));
   white-space: nowrap;
   pointer-events: none;
-  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-family: var(--ef-font-sans);
   font-size: calc(1.125 * var(--efu));
   line-height: 1;
   text-align: left;
@@ -581,7 +546,7 @@ body.ef-contours {
   left: calc(2.25 * var(--efu));
   transform: translate3d(-50%, 0, 0);
   width: calc(3.0625 * var(--efu));
-  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-family: var(--ef-font-sans);
   font-size: calc(1.25 * var(--efu));
   line-height: 1.125;
   letter-spacing: 0.05em;
@@ -596,7 +561,7 @@ body.ef-contours {
   left: calc(12.1875 * var(--efu));
   bottom: calc(2 * var(--efu));
   transform: translate3d(-50%, 50%, 0);
-  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-family: var(--ef-font-sans);
   font-size: calc(1.25 * var(--efu));
   line-height: 1;
   letter-spacing: 0.05em;
@@ -691,7 +656,7 @@ body.ef-contours {
 .ef-rail-mark-brand,
 .ef-rail-mark-ver {
   display: block;
-  font-family: Novecentosanswide-Medium, SansMedium, system-ui, sans-serif;
+  font-family: var(--ef-font-num);
   font-size: calc(0.46 * var(--efu));
   line-height: 1;
   letter-spacing: 0.12em;
@@ -783,19 +748,23 @@ body.ef-contours {
   margin-bottom: calc(2.5 * var(--efu));
   border-bottom: 1px solid var(--ef-rule);
 }
+/* 官网页面标题 = NoticeDetail_title 的 3rem / 行高 1 / SansBold。
+   字距：官网中文元素实测 letter-spacing:normal，负字距只加在拉丁大标题上，
+   所以这里不加字距。 */
 .ef-sec-title,
 .ef-page-name {
   margin: 0;
-  font-family: SansBold, Novecentosanswide-Bold, system-ui, sans-serif;
-  font-size: calc(3.4 * var(--efu));
-  line-height: 1;
-  letter-spacing: -0.01em;
+  font-family: var(--ef-font-bold);
+  font-size: var(--ef-fs-title);
+  font-weight: 400;
+  line-height: var(--ef-lh-tight);
   color: var(--ef-ink);
 }
+/* 计数是字段：官网 SansMedium 1.25rem + 等宽数字 */
 .ef-sec-count {
   margin-inline-start: auto;
-  font-family: SansMedium, system-ui, sans-serif;
-  font-size: calc(1.25 * var(--efu));
+  font-family: var(--ef-font-num);
+  font-size: var(--ef-fs-label);
   color: var(--ef-ink-2);
   font-variant-numeric: tabular-nums;
 }
@@ -803,13 +772,32 @@ body.ef-contours {
 /* 眉标：官网英文标签一律 Gilroy 大写、字距 .14em */
 .ef-eyebrow {
   margin: 0;
-  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
-  font-size: calc(1.1 * var(--efu));
+  font-family: var(--ef-font-sans);
+  font-size: var(--ef-fs-nav);
   font-weight: 400;
-  letter-spacing: 0.14em;
+  /* 眉标是拉丁大写标签，官网这类标签带 .08em 字距；中文内容不加字距 */
+  letter-spacing: var(--ef-ls-wide);
   text-transform: uppercase;
   color: var(--ef-ink-2);
-  line-height: 1.2;
+  line-height: var(--ef-lh-head);
+}
+
+/* 文章正文栏：官网公告正文是「一栏窄版心」（正文 1.625rem，约 40 字/行）。
+   套件 .ef-prose 默认 max-width: var(--ef-measure) = 40rem，与官网比例不符，
+   这里按官网版心比例给 65u（1920 下 = 780px ≈ 40 字）。 */
+.ef-prose {
+  max-width: min(100%, calc(65 * var(--efu)));
+}
+
+/* 单页（关于 / 留言板 / 友链）：这三个页面早就写了 ef-sheet，但一直没定义，
+   内容因此铺满整个 1815px。官网版心是 96u = 1152px，这里把版心补上；
+   白面与细线由 .ef-shell .card-base 给，不重复写。 */
+.ef-sheet {
+  max-width: calc(96 * var(--efu));
+  margin-inline: auto;
+}
+.ef-sheet .custom-md {
+  max-width: min(100%, calc(65 * var(--efu)));
 }
 
 /* ---------- 6. 卡片（官网 #f2f2f2 面 + 4px 圆角 + 黄块） ---------------- */
@@ -888,9 +876,9 @@ body.ef-contours {
   align-items: center;
   gap: calc(1 * var(--efu));
   margin: 0;
-  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
-  font-size: calc(1.05 * var(--efu));
-  letter-spacing: 0.08em;
+  font-family: var(--ef-font-regular);
+  font-size: var(--ef-fs-meta);
+  line-height: var(--ef-lh-meta);
   color: var(--ef-ink-2);
   font-variant-numeric: tabular-nums;
 }
@@ -903,17 +891,17 @@ body.ef-contours {
 }
 .ef-card-title {
   margin: 0;
-  font-family: SansBold, Novecentosanswide-Bold, system-ui, sans-serif;
-  font-size: calc(1.65 * var(--efu));
-  line-height: 1.35;
+  font-family: var(--ef-font-bold);
+  font-size: var(--ef-fs-card);
+  line-height: var(--ef-lh-head);
   color: var(--ef-ink);
   transition: color 0.2s;
 }
 .ef-card-desc {
   margin: 0;
   color: var(--ef-ink-2);
-  font-size: calc(1.3 * var(--efu));
-  line-height: 1.7;
+  font-size: var(--ef-fs-small);
+  line-height: var(--ef-lh-ui);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -931,9 +919,10 @@ body.ef-contours {
   padding: 0;
 }
 .ef-card-tags a {
+  font-family: var(--ef-font-sans);
   color: var(--ef-ink-2);
   text-decoration: none;
-  font-size: calc(1.05 * var(--efu));
+  font-size: var(--ef-fs-1);
 }
 .ef-card-tags a:hover {
   color: var(--ef-ink);
@@ -942,8 +931,8 @@ body.ef-contours {
 .ef-card-arrow {
   align-self: flex-end;
   margin-top: calc(0.5 * var(--efu));
-  font-family: SansMedium, sans-serif;
-  font-size: calc(1.5 * var(--efu));
+  font-family: var(--ef-font-sans);
+  font-size: var(--ef-fs-5);
   line-height: 1;
   color: var(--ef-ink-2);
   transition: transform 0.25s, color 0.2s;
@@ -973,8 +962,8 @@ body.ef-contours {
   border-radius: calc(0.25 * var(--efu));
   background: var(--ef-ink);
   color: var(--ef-panel);
-  font-family: SansMedium, system-ui, sans-serif;
-  font-size: calc(1.2 * var(--efu));
+  font-family: var(--ef-font-sans);
+  font-size: var(--ef-fs-label);
   letter-spacing: 0.04em;
   text-decoration: none;
   cursor: pointer;
@@ -996,13 +985,15 @@ body.ef-contours {
   flex-wrap: wrap;
   align-items: baseline;
   gap: calc(0.75 * var(--efu)) calc(2 * var(--efu));
-  font-size: calc(1.15 * var(--efu));
+  font-size: var(--ef-fs-nav);
+  line-height: var(--ef-lh-ui);
   color: var(--ef-ink-2);
 }
 .ef-foot-mark {
   margin: 0;
-  font-family: Novecentosanswide-Bold, SansBold, sans-serif;
-  font-size: calc(1.35 * var(--efu));
+  font-family: var(--ef-font-wide);
+  font-size: var(--ef-fs-small);
+  line-height: var(--ef-lh-tight);
   letter-spacing: 0.06em;
   color: var(--ef-ink);
   text-transform: uppercase;
@@ -1136,10 +1127,6 @@ body.ef-contours {
   }
   .ef-wrap {
     padding-inline: 1.1rem;
-  }
-  .ef-sec-title,
-  .ef-page-name {
-    font-size: 2rem;
   }
 }
 
