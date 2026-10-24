@@ -1,12 +1,15 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { commentConfig } from "@/config/commentConfig";
+import { siteConfig } from "@/config";
+import { commentConfig, efCommentConfig } from "@/config/commentConfig";
 import Key from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
+import { resolveCommentApiBase } from "@/utils/comment-api";
 import { removeFileExtension } from "@/utils/url-utils";
 import EfIcon from "@components/common/EfIcon.astro";
 import Artalk from "./Artalk.astro";
 import Disqus from "./Disqus.astro";
+import EfComments from "./EfComments.svelte";
 import Giscus from "./Giscus.astro";
 import Twikoo from "./Twikoo.astro";
 import Waline from "./Waline.astro";
@@ -32,8 +35,22 @@ const path = customPath
 const url = `${Astro.site?.href}${path}`;
 const postTitle = post && "title" in post.data ? post.data.title : undefined;
 
+/**
+ * 评论后端选择：
+ *   efCommentConfig.enabled = true  → 自建评论组件（平台无关的外部 API，见 docs/comment-api.md）
+ *   efCommentConfig.enabled = false → 回落到 commentConfig.type 的第三方评论系统
+ * 自建组件的地址来自 COMMENT_API_BASE / PUBLIC_COMMENT_API_BASE 环境变量
+ * （构建期解析好再传给岛），没配就进入演示态 —— 不白屏、不报错刷屏。
+ */
+const efEnabled = efCommentConfig.enabled === true;
+const efApiBase = efEnabled ? resolveCommentApiBase(efCommentConfig.apiBase) : "";
+/** 线程键：给外部 API 区分文章 / 留言板；pathPrefix 用于一个 API 服务多个站点时分区。 */
+const efThreadPath = `${efCommentConfig.pathPrefix || ""}${path}`;
+
 // 强制commentService类型为string，避免类型不兼容警告
-let commentService: string = commentConfig?.type || "none";
+let commentService: string = efEnabled
+	? "enfield"
+	: commentConfig?.type || "none";
 ---
 
 {
@@ -59,6 +76,15 @@ let commentService: string = commentConfig?.type || "none";
       </div>
       <!-- 评论内容区域 -->
       <div class="relative z-10 pl-2 pr-2">
+        {commentService === "enfield" && (
+          <EfComments
+            client:visible
+            path={efThreadPath}
+            apiBase={efApiBase}
+            locale={siteConfig.lang}
+            maxLength={efCommentConfig.maxLength}
+          />
+        )}
         {commentService === "twikoo" && <Twikoo path={path} />}
         {commentService === "waline" && <Waline path={path} />}
         {commentService === "giscus" && <Giscus />}

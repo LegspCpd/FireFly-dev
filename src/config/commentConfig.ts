@@ -1,5 +1,40 @@
 import type { CommentConfig } from "../types/commentConfig";
 
+/**
+ * 自建评论系统配置（终末地风格：官网图标 + 自有样式，无 iframe、无第三方脚本）。
+ *
+ * 为什么不挤进 commentConfig.type：那个联合类型在 src/types/commentConfig.ts，
+ * 本轮改动范围不含它，所以自建系统用独立开关表达。
+ *
+ * 后端是**平台无关**的外部 API 服务：本站同时部署在 Cloudflare Pages / Vercel /
+ * EdgeOne Pages，三边都只是静态页面，评论读写全靠这个地址。
+ * （也正因如此，代码里不会出现 functions/api/** 这类只在 CF Pages 生效的绑定。）
+ *
+ * 地址解析优先级：
+ *   window.__COMMENT_API_BASE__ > COMMENT_API_BASE / PUBLIC_COMMENT_API_BASE 环境变量
+ *   > 下面的 apiBase。
+ * 三者都为空 = 未配置 → 组件进入「演示态」（可输入、可预览、不落库、明确提示未配置）。
+ *
+ * 契约与后端选型（Supabase 建表 SQL / 现成 Worker 端点约定）见 docs/comment-api.md。
+ */
+export type EfCommentConfig = {
+	/** true = 用自建评论组件；false = 回落到 commentConfig.type 指定的第三方评论。 */
+	enabled: boolean;
+	/** 外部 API 根地址的兜底值。建议改用环境变量，不要在这里写死（会进仓库）。 */
+	apiBase: string;
+	/** 线程键前缀：一个 API 服务多个站点时用来分区，例如 "/blog"。 */
+	pathPrefix: string;
+	/** 单条评论长度上限（前后端应一致，后端也要校验）。 */
+	maxLength: number;
+};
+
+export const efCommentConfig: EfCommentConfig = {
+	enabled: true,
+	apiBase: "",
+	pathPrefix: "",
+	maxLength: 1000,
+};
+
 export const commentConfig: CommentConfig = {
 	// 评论系统类型: none, twikoo, waline, giscus, disqus, artalk，默认为none，即不启用评论系统
 	type: "giscus",
