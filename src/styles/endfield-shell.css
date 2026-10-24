@@ -490,8 +490,8 @@ body.ef-contours {
   background-color: #191919;
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(255, 255, 255, 0.07) 0,
-    rgba(255, 255, 255, 0.07) 1px,
+    rgba(255, 255, 255, 0.1) 0,
+    rgba(255, 255, 255, 0.1) 1px,
     rgba(255, 255, 255, 0) 1px,
     rgba(255, 255, 255, 0) calc(0.25 * var(--efu))
   );
