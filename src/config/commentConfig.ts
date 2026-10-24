@@ -16,11 +16,18 @@ import type { CommentConfig } from "../types/commentConfig";
  * 三者都为空 = 未配置 → 组件进入「演示态」（可输入、可预览、不落库、明确提示未配置）。
  *
  * 契约与后端选型（Supabase 建表 SQL / 现成 Worker 端点约定）见 docs/comment-api.md。
+ *
+ * 现在选的落地是 **Neon Data API**（PostgREST 风格托管 REST，无自建服务端）：
+ * 地址形如 https://<endpoint-id>.apirest.<region>.aws.neon.tech/<database>/rest/v1，
+ * 建表 SQL / 控制台开启步骤 / 排查见 docs/neon-data-api.md。
+ * 客户端按地址自动识别方言（以 /rest/v1 结尾 = Data API，字段用 nickname、
+ * 需要 Prefer: return=representation），组件不用改。
+ * **地址为空时依旧是演示态**，所以启用 Data API 之前这里就保持空串。
  */
 export type EfCommentConfig = {
 	/** true = 用自建评论组件；false = 回落到 commentConfig.type 指定的第三方评论。 */
 	enabled: boolean;
-	/** 外部 API 根地址的兜底值。建议改用环境变量，不要在这里写死（会进仓库）。 */
+	/** 外部 API 根地址的兜底值（Data API 时以 /rest/v1 结尾）。优先级最低，建议用环境变量。 */
 	apiBase: string;
 	/** 线程键前缀：一个 API 服务多个站点时用来分区，例如 "/blog"。 */
 	pathPrefix: string;
@@ -30,6 +37,9 @@ export type EfCommentConfig = {
 
 export const efCommentConfig: EfCommentConfig = {
 	enabled: true,
+	// 接 Neon Data API 时把下一行换成公开地址（不含密码；**启用 Data API 之后**再填，
+	// 否则评论区会变成错误条，而不是「未配置」的演示态）：
+	//   "https://ep-mute-term-a1vyn73h.apirest.ap-southeast-1.aws.neon.tech/neondb/rest/v1"
 	apiBase: "",
 	pathPrefix: "",
 	maxLength: 1000,

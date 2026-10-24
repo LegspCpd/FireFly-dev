@@ -377,7 +377,20 @@ Deno.serve(async (req) => {
 
 ---
 
-## 5. 验证
+## 5. 方案 C：Neon Data API（本站当前选用的落地）
+
+Neon 托管的 PostgREST 风格 REST 端点，**同样不需要自建服务端**：静态站直接 fetch
+`https://<endpoint-id>.apirest.<region>.aws.neon.tech/<database>/rest/v1`。
+没有 `Authorization` 头的请求会被网关切到数据库里的 `anonymous` 角色，
+能不能读、能写什么，全由 `GRANT` + RLS 决定（前端零密钥）。
+
+- 建表 SQL、控制台开启步骤、公开 URL、排查表：见 [neon-data-api.md](./neon-data-api.md)
+- 客户端不用改：`src/utils/comment-api.ts` 发现地址以 `/rest/v1` 结尾会自动切到
+  PostgREST 方言（`?select=…&path=eq.…&status=eq.visible`、
+  `Prefer: return=representation`、字段名 `nickname`），
+  归一化与错误收敛与 §2 完全一致；地址为空时仍是演示态。
+
+## 6. 验证
 
 ```bash
 # 1) 读
@@ -399,7 +412,7 @@ curl -s -D - -o /dev/null -X OPTIONS "https://comments.example.workers.dev/comme
 
 ---
 
-## 6. 排查清单
+## 7. 排查清单
 
 | 现象 | 多半是 |
 | --- | --- |
@@ -410,7 +423,7 @@ curl -s -D - -o /dev/null -X OPTIONS "https://comments.example.workers.dev/comme
 | 列表报 500 | 看错误条下方折叠的短文本；通常是建表少列 / 缺索引 / 绑定错数据库 |
 | EdgeOne 上 403 | 那台 Edge Function 的触发规则或 WAF 挡了 `/comments` |
 
-## 7. 反垃圾（按需加，都属于后端职责）
+## 8. 反垃圾（按需加，都属于后端职责）
 
 - **长度与频率**：`content ≤ 1000`、`author ≤ 40`，同 IP 每分钟 N 条（Workers KV / D1 计数都行）；
 - **验证码**：honeypot 字段或 Cloudflare Turnstile，token 在后端校验；

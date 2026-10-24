@@ -13,6 +13,14 @@
  *   2. 按 docs/comment-api.md 的契约发 GET / POST；
  *   3. 把后端返回的多种字段形状归一化成 CommentItem。所有失败都返回结果对象，
  *      **不抛异常** —— 组件据此降级成演示态 / 内联错误条，不会白屏、不会刷屏报错。
+ *
+ * 后端有两种方言，同一份代码按地址自动识别（组件不用改）：
+ *   - 通用契约：{base}/comments?path=…（自建 Worker / Supabase Edge Function 等）；
+ *   - Neon Data API（PostgREST / PostgREST 风格）：base 形如
+ *     https://<endpoint>.apirest.<region>.aws.neon.tech/<db>/rest/v1，
+ *     走 {base}/comments?select=…&path=eq.…（见 docs/neon-data-api.md）。
+ *     Data API 的**无 Authorization 请求**由网关切到数据库的 anonymous 角色，
+ *     所以浏览器里不需要、也不允许出现任何密钥。
  */
 
 /** 一条评论（已归一化）。 */
@@ -137,6 +145,35 @@ export function isCommentApiConfigured(base: string): boolean {
 	return normalizeApiBase(base).length > 0;
 }
 
+/**
+ * 是不是 Neon Data API（PostgREST）的根地址。
+ * 只有 …/rest/v1 结尾才算；通用契约后端不会长这样。
+ */
+export function isDataApiBase(raw: unknown): boolean {
+	return /\/rest\/v1$/i.test(normalizeApiBase(raw));
+}
+
+/** Data API 需要的列，与 docs/neon-data-api.md 的建表 SQL 一一对应。 */
+const DATA_API_COLUMNS =
+	"id,nickname,website,parent_id,content,created_at,status";
+/** 单次拉取上限：评论是倒序时间线，先取最新 200 条就够。 */
+const DATA_API_PAGE_SIZE = 200;
+
+/**
+ * PostgREST 的列表地址。过滤值写成 `eq.` 前缀，
+ * 免得 path 里的特殊字符被 PostgREST 误解析成运算符。
+ */
+function buildDataApiListUrl(base: string, path: string): string {
+	const params = new URLSearchParams({
+		select: DATA_API_COLUMNS,
+		path: `eq.${path}`,
+		status: "eq.visible",
+		order: "created_at.desc",
+		limit: String(DATA_API_PAGE_SIZE),
+	});
+	return `${base}/comments?${params.toString()}`;
+}
+
 function makeError(
 	kind: CommentApiErrorKind,
 	status: number,
@@ -256,8 +293,12 @@ function extractList(payload: unknown): CommentItem[] {
 	return items;
 }
 
-/** 创建响应容忍：{comment:{…}}、{data:{…}}、直接一条记录、空体（204）。 */
+/**
+ * 创建响应容忍：[{…}]（PostgREST `Prefer: return=representation`）、
+ * {comment:{…}}、{data:{…}}、直接一条记录、空体（204）。
+ */
 function extractItem(payload: unknown): CommentItem | null {
+	if (Array.isArray(payload)) return toCommentItem(payload[0] ?? null, 0);
 	if (isRecord(payload)) {
 		const nested = payload.comment ?? payload.data ?? payload.item;
 		const item = toCommentItem(nested ?? payload, 0);
@@ -281,7 +322,9 @@ export async function fetchComments(
 ): Promise<CommentListResult> {
 	const base = normalizeApiBase(thread.base);
 	if (!base) return { ok: false, error: makeError("invalid", 0, "no api base") };
-	const url = `${base}/comments?path=${encodeURIComponent(thread.path)}`;
+	const url = isDataApiBase(base)
+		? buildDataApiListUrl(base, thread.path)
+		: `${base}/comments?path=${encodeURIComponent(thread.path)}`;
 	let response: Response;
 	try {
 		response = await requestWithTimeout(
@@ -323,15 +366,27 @@ export async function postComment(
 	const author = draft.author.trim();
 	const content = draft.content.trim();
 	if (!content) return { ok: false, error: makeError("invalid", 0, "empty content") };
-	const body: Record<string, string> = { path: thread.path, content };
-	if (author) body.author = author;
+	// 两种方言的行字段名不同：通用契约用 author，Data API 用 nickname。
+	const dataApi = isDataApiBase(base);
+	const body: Record<string, string> = dataApi
+		? { path: thread.path, nickname: author, content, status: "visible" }
+		: { path: thread.path, content };
+	if (!dataApi && author) body.author = author;
+	const headers: Record<string, string> = {
+		"Content-Type": "application/json",
+		Accept: "application/json",
+	};
+	// Data API：要求回填插入后的整行（默认 201 空体），这样服务端 id / 时间能落到界面。
+	if (dataApi) headers.Prefer = "return=representation";
 	let response: Response;
 	try {
 		response = await requestWithTimeout(
-			`${base}/comments`,
+			dataApi
+				? `${base}/comments?select=${DATA_API_COLUMNS}`
+				: `${base}/comments`,
 			{
 				method: "POST",
-				headers: { "Content-Type": "application/json", Accept: "application/json" },
+				headers,
 				credentials: "omit",
 				body: JSON.stringify(body),
 			},
