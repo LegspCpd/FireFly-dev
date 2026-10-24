@@ -601,11 +601,11 @@ a:has(> .shrink-0.w-6.h-6) > .shrink-0.w-6.h-6::before {
   width: calc(1.15 * var(--efu));
   height: auto;
   flex: 0 0 auto;
-  /* 官网三角是正三角；上一篇指向左、下一篇指向右，靠 90° 旋转 */
-  transform: rotate(-90deg);
+  /* 官网那枚三角原图尖朝下：转 +90° 指向左（上一篇），-90° 指向右（下一篇） */
+  transform: rotate(90deg);
   color: var(--ef-ink-2);
 }
-.ef-page-arrow-next { transform: rotate(90deg); }
+.ef-page-arrow-next { transform: rotate(-90deg); }
 a:hover .ef-page-arrow { color: var(--ef-ink); }
 .ef-share-icon {
   width: calc(1.6 * var(--efu));
