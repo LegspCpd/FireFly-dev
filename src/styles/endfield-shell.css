@@ -83,9 +83,6 @@
   --ef-signal: var(--ef-yellow);
   --ef-rail-w: calc(7.5 * var(--efu));
   --ef-rail-w-open: calc(22.5 * var(--efu));
-  /* 底部那一列（胶囊 / 黑方块 / 小方块 / 标记）的容器宽度：收起态 = 栏宽，
-     这样整列永远落在栏内、悬停展开时不重排。窄屏由媒体查询改写成栏宽。 */
-  --ef-rail-col: calc(7.5 * var(--efu));
 
   /* 纸底 + 墨字：全站同一套，没有第二套暗色 */
   --ef-ink: #191919;
@@ -180,10 +177,14 @@ body.ef-contours {
   padding-inline: calc(4 * var(--efu));
 }
 
-/* ---------- 3. 竖排栏（官网 Header 模块原样搬用） ------------------------
+/* ---------- 3. 竖排栏（官网 Header_pcHeaderContainer 原样搬用） ----------
    官网原文：.Header_pcHeaderContainer__Sy_8l{position:relative;height:100vh;
    width:7.5rem;z-index:50;color:#191919;background-color:#fff}
-   → 按需求改成 fixed + 顶天立地（top/bottom/left 贴边、100dvh）。 */
+   官网展开是 JS 给容器加 .Header_detailActive__ngqkN：容器自身宽度**不变**
+   （永远 7.5rem），靠 :before 白面板 translate3d(15rem,0,0) 把白底滑出到
+   22.5rem 宽。这里按站主硬约束用等价做法：容器自己就是那块白面板（背景 #fff），
+   悬停 / 键盘聚焦时宽度 7.5u → 22.5u —— 白底跟着变宽，文字永远落在栏内。
+   其余几何全部取官网 1920×1080 实测值（1u = --efu = 12px）。 */
 
 .Header_pcHeaderContainer__Sy_8l {
   position: fixed;
@@ -198,7 +199,6 @@ body.ef-contours {
   overflow: hidden;
   transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
-/* 官网行为：默认收起只见图标，悬停（或键盘聚焦）展开出文字，移开缩回 */
 .Header_pcHeaderContainer__Sy_8l:hover,
 .Header_pcHeaderContainer__Sy_8l:focus-within {
   width: var(--ef-rail-w-open);
@@ -209,51 +209,47 @@ body.ef-contours {
   height: 100%;
 }
 
-/* 字标：官网 logo 位（top:1.25rem、宽 6.75rem、水平居中）。这里用站名字标，
-   形状与位置照官方 logo 槽位，不引入任何图片。 */
+/* 字标：官网 logo 槽位（top 1.5u、宽 5.1875u、水平居中；实测 62.3 × 67.8px）。
+   官网那里是「终末地」图形 logo，这里按站主给的排版放站名字标：
+   小字 + 大字标 + 英文，三段居中等宽，不含任何 <img>。 */
 .Header_logo__s3lE_ {
   position: absolute;
-  top: calc(1.75 * var(--efu));
+  top: calc(1.5 * var(--efu));
   left: 50%;
   transform: translate3d(-50%, 0, 0);
-  width: calc(6.75 * var(--efu));
+  width: calc(5.1875 * var(--efu));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(0.35 * var(--efu));
+  gap: calc(0.3 * var(--efu));
   color: #191919;
   text-decoration: none;
   white-space: nowrap;
 }
-.Header_logo__s3lE_ > svg {
-  display: block;
-  width: 100%;
-  height: auto;
+.ef-rail-wordmark-tag {
+  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-size: calc(0.66 * var(--efu));
+  line-height: 1;
+  letter-spacing: 0.18em;
+  color: #999;
 }
 .ef-rail-wordmark {
   font-family: Novecentosanswide-Bold, SansBold, sans-serif;
-  font-size: calc(1.04 * var(--efu));
-  line-height: 1;
-  letter-spacing: 0.02em;
+  font-size: calc(1.3 * var(--efu));
+  line-height: 1.05;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
 }
 .ef-rail-wordmark-en {
-  font-family: SansMedium, sans-serif;
-  font-size: calc(0.72 * var(--efu));
+  font-family: SansMedium, system-ui, sans-serif;
+  font-size: calc(0.66 * var(--efu));
   line-height: 1;
-  letter-spacing: 0.32em;
+  letter-spacing: 0.3em;
   color: #999;
 }
-/* 字标下面一条官网那种黄块（收起时是唯一的高饱和点） */
-.Header_logo__s3lE_::after {
-  content: "";
-  display: block;
-  width: calc(2.5 * var(--efu));
-  height: calc(0.25 * var(--efu));
-  background: #fffa00;
-}
 
-/* 导航列表：官网首项 top 12.875rem、项高 4.5rem、步长 5rem（= 4.5 + 0.5） */
+/* 导航列表：官网用内联 transform 逐项定位（首项 12.875rem、步长 5rem、项高 4.5rem）。
+   这里改成文档流 + gap .5u，几何结果完全相同（实测首项 y=154.5、项高 54）。 */
 .Header_navList__r2BGN {
   position: absolute;
   top: calc(12.875 * var(--efu));
@@ -274,8 +270,8 @@ body.ef-contours {
   color: inherit;
   text-decoration: none;
 }
-/* 官网 hover 底：left 1.5rem、宽 19.5rem、#e5e5e5、圆角 4px。
-   官网只在「非当前项」上显示它（:not(.Header_active)），当前项走下面的 overlay。 */
+/* 官网 hover 底（非当前项）：left 1.5u、宽 19.5u、#e5e5e5、圆角 .25u。
+   官网只在 .Header_detailActive（展开）时给它 opacity:1，收起态不显示。 */
 .Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB::before {
   content: "";
   position: absolute;
@@ -288,18 +284,20 @@ body.ef-contours {
   transition: opacity 0.2s;
   pointer-events: none;
 }
-.Header_pcHeaderContainer__Sy_8l
+.Header_pcHeaderContainer__Sy_8l:hover
+  .Header_navItem__c_fLB:not(.Header_active__jzCyf):hover::before,
+.Header_pcHeaderContainer__Sy_8l:focus-within
   .Header_navItem__c_fLB:not(.Header_active__jzCyf):hover::before {
   opacity: 1;
 }
-/* 当前页灰块：照官网 .Header_overlay__33Sha 做成**真实子节点**，不再用伪元素 ——
-     1) 它的包含块永远是当前这一项本身（.Header_navItem 已 position:relative），
-        所以灰块只会精确贴住当前项，不可能跑到别的行去；
-     2) 它是那一项的第一个子节点，图标与文字在它之后、按 DOM 顺序绘制，
-        因此**任何情况下都压不住图标与文字**，也就不可能再出现「无图标无文字的空条」；
-     3) 不再依赖 z-index:-1（负层级在部分引擎里会沉到祖先背景之后）。
-   官网几何：left 0、width calc(100% - 1rem)、height 5rem、box-sizing:border-box、
-   左边 .75rem 实心黑边、底色 #e6e6e6；比 4.5u 的导航项上下各多出 .25u。 */
+
+/* 当前页灰块（官网 .Header_overlay__33Sha）：真实子节点。
+   官网几何：left 0、height 5rem（比 4.5u 的导航项上下各多 .25u）、
+   左边 .75u 实心黑边、底色 #e6e6e6；
+   收起态 width = calc(100% - 1rem) = 6.5u（官网实测 78px），
+   展开态 width = calc(100% + 13.5rem) = 21u（官网实测 252px）。
+   当前项本项就是包含块，所以灰块只会精确贴住当前那一项；
+   它又是本项第一个子节点，图标与文字排在它之后，永远压不住内容。 */
 .Header_pcHeaderContainer__Sy_8l .Header_overlay__33Sha {
   display: none;
   position: absolute;
@@ -317,7 +315,6 @@ body.ef-contours {
   .Header_overlay__33Sha {
   display: block;
 }
-/* 悬停展开时栏宽 22.5u，灰块铺到官网的 21u（= 100% - 1.5u） */
 .Header_pcHeaderContainer__Sy_8l:hover
   .Header_navItem__c_fLB.Header_active__jzCyf
   .Header_overlay__33Sha,
@@ -327,11 +324,13 @@ body.ef-contours {
   width: calc(100% - 1.5 * var(--efu));
 }
 
-/* 图标：官网 left 3.75rem、top 2.25rem 垂直居中（项高 4.5rem，两者等价）、
-   宽度按官网 data-key 尺寸表（2.5u ~ 2.75u，大号实心象形），颜色官网默认 #d9d9d9 →
-   hover #858585 → 当前 #191919；站主要求白底栏里统一用 #191919（实心黑），
-   所以只有一种颜色，hover / 当前靠灰块区分。
-   z-index:1 是保险：图标永远压在灰块之上（正常靠 DOM 顺序已经如此）。 */
+/* 图标：官网 left 3.75u、竖居中；宽度按官网 data-key 尺寸表原值
+   （home 2.5u、operator 2.75u、lore 2.625u、information 2.6875u、
+     calendar 2.625u、aicGameplay 2.5625u、notice 2.75u）—— 这就是官网
+   index.html 里同名 svg 的实际渲染尺寸，没有再放大。
+   颜色官网默认 #d9d9d9（浅灰）→ hover #858585 → 当前项 #191919。
+   官网当前项用 !important 压 hover；这里不加 !important，靠「当前项规则写在
+   hover 规则之后 + 同等特异度」取胜。 */
 .Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB .Header_icon__3iDIG {
   position: absolute;
   left: calc(3.75 * var(--efu));
@@ -339,12 +338,22 @@ body.ef-contours {
   z-index: 1;
   transform: translate3d(-50%, -50%, 0);
   height: auto;
-  color: #191919;
+  color: #d9d9d9;
   transition: color 0.2s;
   white-space: nowrap;
   display: block;
 }
-/* 每项图标宽度照官网 data-key 的尺寸表 */
+.Header_pcHeaderContainer__Sy_8l
+  .Header_navItem__c_fLB:hover
+  .Header_icon__3iDIG {
+  color: #858585;
+}
+.Header_pcHeaderContainer__Sy_8l
+  .Header_navItem__c_fLB.Header_active__jzCyf
+  .Header_icon__3iDIG {
+  color: #191919;
+}
+/* 每项图标宽度照官网 data-key 的尺寸表（官网 CSS 原值） */
 .Header_pcHeaderContainer__Sy_8l [data-key="home"] .Header_icon__3iDIG {
   width: calc(2.5 * var(--efu));
 }
@@ -368,11 +377,9 @@ body.ef-contours {
   width: calc(2.75 * var(--efu));
 }
 
-/* 文字：官网 left 6.9375rem、top 2.25rem（= 项高一半，与图标同一条中线）、
-   宽 13.25rem、SansMedium 1.125rem（= 官网原值，实测行盒 16.9px 与官网一致）、
-   #191919、左对齐、收起时 opacity 0。
-   注意：位移量一律走 --efu；早先这里写的 -1rem 是浏览器默认 16px，
-   不是官网的 1u（1080p 下 12px），会多推 4px。 */
+/* 文字：官网 left 6.9375u、top 2.25u（= 项高一半，与图标同一条中线）、
+   宽 13.25u、SansMedium 1.125u、#191919、左对齐；收起 opacity 0 并左移 1u，
+   展开回到 x=0。实测官网展开态文字左边缘 83.2px = 6.9375u。 */
 .Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB .Header_textWrapper__o9aHt {
   position: absolute;
   width: calc(13.25 * var(--efu));
@@ -399,113 +406,115 @@ body.ef-contours {
   transform: translate3d(0, -50%, 0);
 }
 
-/* 分组细线（官网 divider：#d9d9d9 细线，收起时不可见） */
-.Header_pcHeaderContainer__Sy_8l .Header_divider__tUYjO {
-  position: relative;
-  width: calc(2.5 * var(--efu));
-  height: 1px;
-  margin-inline: auto;
-  background-color: #d9d9d9;
-  transition: opacity 0.2s;
-  opacity: 0;
-}
-.Header_pcHeaderContainer__Sy_8l:hover .Header_divider__tUYjO {
-  opacity: 1;
-}
+/* ---------- 4. 竖排栏底部（收起 = 竖向窄版；悬停展开 = 横向宽版） ---------
+   数值全部取自官网 PC 版 1920×1080 实测（1u = 12px）：
 
-/* ---------- 4. 竖排栏底部（竖向窄版：胶囊 / 黑方块 / 小方块 / 品牌标记） -----
-  官网 PC 版底部是一列**从上到下的窄竖版**（实测 1920×1080，1u = 12px）：
+   收起态（用户图1）
+     胶囊  .Header_buttonFrameBg      3.75u × 11.5625u，圆角 1.875u（pill）、
+           #f2f2f2，left 1.875u（居中），bottom 21.75u；三行各 3u、行距 .75u，
+           行图标 1.75u、#7c7c7c，行间 1.25u × 1px #ccc 细线（y 3.875u / 7.625u）
+     黑块  .Header_buttonPreserveBg   4.5u × 9.75u，left 1.5u，bottom 9.5625u
+     灰块  .Header_buttonShareBg      4.5u × 2.75u，left 1.5u，bottom 5.5625u
+     标记  .Header_switcher           3.25u 宽，中心 3.75u，bottom 1.9375u
 
-    1) 竖向胶囊  .Header_buttonFrameBg     宽 3.75u、高 11.5625u、圆角 1.875u（pill）、
-       底色 #f2f2f2、left 1.875u（水平居中）；里面 3 行，每行高 3u、行距 3.75u，
-       行图标 1.75u 居中，行间一条 1.25u × 1px 的 #ccc 细分隔线；
-    2) 竖向黑方块 .Header_buttonPreserveBg 宽 4.5u、高 9.75u、圆角 4px、left 1.5u、
-       底色 #191919 + 45° 斜纹；方块内自上而下：白色三角 logo（top 1.25u、宽 1.9375u）、
-       一条 3u × 2px 半透明白线（top 4.125u）、白字（top 5.625u、宽 3.0625u、1.25u、居中）；
-    3) 3u × 3u 圆角小方块，浅灰 #e5e5e5 + 深色「前往」图标（官网 .Header_buttonShareBg）；
-    4) 最底部一枚极小标记（官网是一行小 logo）；这里放 LEGSPCPD / // BLOG © 年份，#999。
+   展开态（用户图2）
+     胶囊  translate3d(1.5u, 6.25u, 0)、宽 19.5u、圆角 .25u；行图标右移 .6875u，
+           右侧文字淡入（中心绝对坐标 12.375u）
+     黑块  19.5u × 4u（bottom 不变）：竖排字淡出，横排字 + 竖细线淡入
+     灰块  4.5u → 19.5u，里面换成一条连续的图标行（官网 8 个，这里 6 个）
+     标记  右移 15u（中心 18.75u）
 
-  站主硬约束：这一列**必须完全落在竖排栏宽度之内**。收起态栏宽 7.5u，所以整列宽
-  固定为 --ef-rail-col（= 7.5u）并让子项水平居中，最宽的子项只有 4.5u（= 栏宽 60%），
-  横向不可能溢出；悬停展开到 22.5u 时这一列**原地不动、不重新排版**。
-  菜单文字与导航项一样，展开（hover / 键盘聚焦）时才淡入。 */
+   子项全部绝对定位（官网同款），坐标是固定 u 值，所以栏宽 7.5u → 22.5u 时
+   不会重排，也永远不会横向溢出白底栏。 */
 
 .ef-rail-bottom {
   position: absolute;
-  left: 0;
-  bottom: calc(1.9375 * var(--efu));
-  width: var(--ef-rail-col);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(1.25 * var(--efu));
+  inset: 0;
+  pointer-events: none;
+}
+.ef-rail-bottom > * {
+  pointer-events: auto;
 }
 
-/* 1) 竖向胶囊：宽 4.5u（= 收起栏宽的 60%），水平居中，3 行紧挨着 */
+/* 1) 胶囊：收起 3.75u 宽竖排（图标居中、无文字）；展开 19.5u 宽横排（图标在左、
+   文字居中偏右），行与行之间是铺满整块的细线。 */
 .ef-rail-menu {
-  width: calc(4.5 * var(--efu));
-  padding-block: calc(0.5 * var(--efu));
-  border-radius: calc(2.25 * var(--efu));
-  background-color: #e6e6e6;
+  position: absolute;
+  left: 0;
+  bottom: calc(21.75 * var(--efu));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.75 * var(--efu));
+  width: calc(3.75 * var(--efu));
+  height: calc(11.5625 * var(--efu));
+  padding-top: calc(0.5 * var(--efu));
+  padding-bottom: calc(0.5625 * var(--efu));
+  border-radius: calc(1.875 * var(--efu));
+  background-color: #f2f2f2;
+  transform: translate3d(calc(1.875 * var(--efu)), 0, 0);
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1),
+    width 0.3s cubic-bezier(0.2, 0, 0, 1),
+    border-radius 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 .ef-rail-menu-row {
   position: relative;
   display: block;
-  height: calc(2.75 * var(--efu));
-  color: #191919;
+  flex: 0 0 auto;
+  height: calc(3 * var(--efu));
+  color: inherit;
   text-decoration: none;
 }
-/* 行跟行之间一条很短的细分隔线（官网 Header_divider：1.25rem 宽、#ccc） */
+/* 行间细线：官网 .Header_divider__tUYjO 宽 1.25rem、#ccc，天在行间空隙正中。
+   展开时官网用 scaleX(13.8) 把它拉成 17.25u，这里直接改宽度。 */
 .ef-rail-menu-row + .ef-rail-menu-row::before {
   content: "";
   position: absolute;
-  top: 0;
+  top: calc(-0.375 * var(--efu) - 0.5px);
   left: 50%;
   transform: translate3d(-50%, 0, 0);
   width: calc(1.25 * var(--efu));
   height: 1px;
   background-color: #ccc;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 .ef-rail-menu-icon {
   position: absolute;
-  left: 50%;
+  left: calc(1.875 * var(--efu));
   top: 50%;
   transform: translate3d(-50%, -50%, 0);
   display: block;
-  height: calc(1.5 * var(--efu));
+  height: calc(1.75 * var(--efu));
   width: auto;
-  /* 官网 Header_buttonFrameContainer 的行图标是 #7c7c7c、hover #424242（不是墨黑）；
-     底部这一列是辅助功能，跟导航的实心黑图标拉开层次，和官网观感一致。 */
+  /* 官网 .Header_buttonFrameContainer 的行图标是 #7c7c7c、hover #424242 */
   color: #7c7c7c;
-  transition: color 0.2s;
+  transition: color 0.2s, left 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 .ef-rail-menu-row:hover .ef-rail-menu-icon {
   color: #424242;
 }
 .ef-rail-menu-label {
   position: absolute;
-  left: calc(100% + 0.75 * var(--efu));
-  top: 50%;
+  left: calc(10.875 * var(--efu));
+  top: calc(1.5 * var(--efu));
   white-space: nowrap;
   pointer-events: none;
   font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
-  font-size: calc(1.25 * var(--efu));
+  font-size: calc(1.125 * var(--efu));
   line-height: 1;
   text-align: left;
   color: #191919;
   opacity: 0;
-  transform: translate3d(calc(-0.5 * var(--efu)), -50%, 0);
+  transform: translate3d(calc(-50% - 2 * var(--efu)), -50%, 0);
   transition: opacity 0.2s, transform 0.3s;
 }
-.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-menu-label,
-.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-menu-label {
-  opacity: 1;
-  transform: translate3d(0, -50%, 0);
-}
 
-/* 2) 竖向黑方块：4.5u × 9.75u，水平居中；45° 斜纹用官网原式 linear-gradient */
+/* 2) 黑块：收起 4.5u × 9.75u 竖版（白三角 + 短白线 + 竖排白字 + 45° 斜纹）；
+   展开 19.5u × 4u 横版（白三角 + 竖细线 + 横排白字 + 45° 斜纹）。 */
 .ef-rail-cta {
-  position: relative;
+  position: absolute;
+  left: calc(1.5 * var(--efu));
+  bottom: calc(9.5625 * var(--efu));
   box-sizing: border-box;
   display: block;
   width: calc(4.5 * var(--efu));
@@ -528,32 +537,48 @@ body.ef-contours {
   );
   background-size: calc(0.5 * var(--efu)) calc(0.5 * var(--efu));
   text-decoration: none;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1),
+    height 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 .ef-rail-cta-tri {
   position: absolute;
   top: calc(1.25 * var(--efu));
-  left: 50%;
+  left: calc(2.25 * var(--efu));
   transform: translate3d(-50%, 0, 0);
   display: block;
   width: calc(1.9375 * var(--efu));
   height: auto;
   color: #fff;
 }
+/* 收起态那条 3u × 2px 半透明白线（官网 .Header_divider__tUYjO in preserveBg） */
 .ef-rail-cta-line {
   position: absolute;
   top: calc(4.125 * var(--efu));
-  left: 50%;
+  left: calc(2.25 * var(--efu));
   transform: translate3d(-50%, 0, 0);
   width: calc(3 * var(--efu));
   height: 2px;
   background-color: hsla(0, 0%, 100%, 0.3);
+  opacity: 1;
+  transition: opacity 0.2s;
 }
-/* 白字：宽 3.0625u、1.25u、居中 ——「全部文章」正好两行各两字，
-   从 5.625u 起排到 8.44u 结束，方块高 9.75u，绝不会被裁掉。 */
+/* 展开态那条 2px × 2.75u 竖细线（官网 .Header_divider2__mVfPt），left 5.3125u */
+.ef-rail-cta-rule {
+  position: absolute;
+  left: calc(5.3125 * var(--efu));
+  bottom: calc(2 * var(--efu));
+  transform: translate3d(0, 50%, 0);
+  width: 2px;
+  height: calc(2.75 * var(--efu));
+  background-color: hsla(0, 0%, 100%, 0.3);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+/* 竖排白字：宽 3.0625u、1.25u、居中，从 5.625u 起排两行 */
 .ef-rail-cta-text {
   position: absolute;
   top: calc(5.625 * var(--efu));
-  left: 50%;
+  left: calc(2.25 * var(--efu));
   transform: translate3d(-50%, 0, 0);
   width: calc(3.0625 * var(--efu));
   font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
@@ -562,59 +587,180 @@ body.ef-contours {
   letter-spacing: 0.05em;
   text-align: center;
   color: #fff;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+/* 横排白字：官网上官网 left 12.1875u、bottom 2u、translate3d(-50%,50%,0) */
+.ef-rail-cta-text-wide {
+  position: absolute;
+  left: calc(12.1875 * var(--efu));
+  bottom: calc(2 * var(--efu));
+  transform: translate3d(-50%, 50%, 0);
+  font-family: SansMedium, "EF Gilroy", system-ui, sans-serif;
+  font-size: calc(1.25 * var(--efu));
+  line-height: 1;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
 }
 
-/* 3) 3u × 3u 圆角小方块：浅灰底 + 深色「前往」图标（官网 .Header_buttonShareBg 的位置） */
+/* 3) 浅灰长条：收起是 4.5u × 2.75u 的圆角小方块 + 居中的「前往」图标；
+   展开拉到 19.5u × 2.75u，里面换成一条连续的无缝隙图标行。 */
+.ef-rail-social {
+  position: absolute;
+  left: calc(1.5 * var(--efu));
+  bottom: calc(5.5625 * var(--efu));
+  box-sizing: border-box;
+  width: calc(4.5 * var(--efu));
+  height: calc(2.75 * var(--efu));
+  border-radius: calc(0.3333 * var(--efu));
+  background-color: #e5e5e5;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
 .ef-rail-jump {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(3 * var(--efu));
-  height: calc(3 * var(--efu));
-  border-radius: calc(0.3333 * var(--efu));
-  background-color: #e5e5e5;
+  color: #4d4d4d;
   text-decoration: none;
-  transition: background-color 0.2s;
+  transition: color 0.2s, opacity 0.2s;
 }
 .ef-rail-jump:hover {
-  background-color: #fffa00;
+  color: #191919;
 }
 .ef-rail-jump-icon {
   display: block;
-  width: calc(1.5 * var(--efu));
+  width: calc(2 * var(--efu));
   height: auto;
-  color: #4d4d4d;
+}
+.ef-rail-social-list {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: calc(1.25 * var(--efu));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.ef-rail-social-item {
+  display: block;
+  flex: 0 0 auto;
+  color: #b3b3b3;
+  text-decoration: none;
   transition: color 0.2s;
 }
-.ef-rail-jump:hover .ef-rail-jump-icon {
+.ef-rail-social-item svg {
+  display: block;
+  width: auto;
+  max-width: calc(1.5 * var(--efu));
+  height: calc(1.5 * var(--efu));
+}
+.ef-rail-social-item:hover {
   color: #191919;
 }
 
-/* 4) 最底部：一枚极小标记（官网那里是一行小 logo） */
+/* 4) 最底：官网 .Header_switcher（一行小 logo：图形 + 两行极小字），宽 3.25u，
+   收起中心 3.75u，展开右移 15u。 */
 .ef-rail-mark {
+  position: absolute;
+  left: 0;
+  bottom: calc(1.9375 * var(--efu));
+  width: calc(3.25 * var(--efu));
+  margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(0.1875 * var(--efu));
-  margin: 0;
-  text-align: center;
+  gap: calc(0.35 * var(--efu));
+  color: #b9b9b9;
+  transform: translate3d(calc(3.75 * var(--efu) - 50%), 0, 0);
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
-.ef-rail-mark-brand {
-  font-family: Novecentosanswide-Bold, SansBold, sans-serif;
-  font-size: calc(0.625 * var(--efu));
-  line-height: 1;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #999;
-  white-space: nowrap;
+.ef-rail-mark-glyph {
+  display: block;
+  width: calc(1.5625 * var(--efu));
+  height: auto;
 }
+.ef-rail-mark-brand,
 .ef-rail-mark-ver {
-  font-family: SansMedium, system-ui, sans-serif;
-  font-size: calc(0.5417 * var(--efu));
+  display: block;
+  font-family: Novecentosanswide-Medium, SansMedium, system-ui, sans-serif;
+  font-size: calc(0.46 * var(--efu));
   line-height: 1;
-  letter-spacing: 0.06em;
-  color: #999;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #b9b9b9;
   white-space: nowrap;
+}
+
+/* ---- 展开态：整块底部换成横向宽版 ---- */
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-menu,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-menu {
+  width: calc(19.5 * var(--efu));
+  border-radius: calc(0.25 * var(--efu));
+  transform: translate3d(calc(1.5 * var(--efu)), calc(6.25 * var(--efu)), 0);
+}
+.Header_pcHeaderContainer__Sy_8l:hover
+  .ef-rail-menu-row
+  + .ef-rail-menu-row::before,
+.Header_pcHeaderContainer__Sy_8l:focus-within
+  .ef-rail-menu-row
+  + .ef-rail-menu-row::before {
+  width: calc(17.25 * var(--efu));
+}
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-menu-icon,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-menu-icon {
+  left: calc(2.5625 * var(--efu));
+}
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-menu-label,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-menu-label {
+  opacity: 1;
+  transform: translate3d(-50%, -50%, 0);
+}
+
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-cta,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-cta {
+  width: calc(19.5 * var(--efu));
+  height: calc(4 * var(--efu));
+}
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-cta-line,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-cta-line,
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-cta-text,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-cta-text {
+  opacity: 0;
+}
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-cta-rule,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-cta-rule,
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-cta-text-wide,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-cta-text-wide {
+  opacity: 1;
+}
+
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-social,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-social {
+  width: calc(19.5 * var(--efu));
+}
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-jump,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-jump {
+  opacity: 0;
+  pointer-events: none;
+}
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-social-list,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-social-list {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.Header_pcHeaderContainer__Sy_8l:hover .ef-rail-mark,
+.Header_pcHeaderContainer__Sy_8l:focus-within .ef-rail-mark {
+  transform: translate3d(calc(18.75 * var(--efu) - 50%), 0, 0);
 }
 
 /* ---------- 5. 内容页排版（官网 SectionTitle 量级） --------------------- */
@@ -888,12 +1034,12 @@ body.ef-contours {
 
 /* ---------- 8. 窄屏 ------------------------------------------------------
    官网在移动端换成 H5 顶栏；这里保留同一条竖排栏，收到图标列（不展开），
-   内容让出固定宽度，永远不会横向溢出。 */
+   底部仍是官网的竖向窄版，整列按栏宽居中，永不横向溢出。 */
 
 @media (max-width: 860px) {
   .ef-shell {
-    --ef-rail-w: 3.5rem;
     --efu: 9px;
+    --ef-rail-w: 3.5rem;
   }
   .Header_pcHeaderContainer__Sy_8l {
     width: 3.5rem;
@@ -905,9 +1051,13 @@ body.ef-contours {
   .Header_logo__s3lE_ {
     top: 0.9rem;
     width: 2.9rem;
+    gap: 0.2rem;
+  }
+  .ef-rail-wordmark-tag {
+    display: none;
   }
   .ef-rail-wordmark {
-    font-size: 0.62rem;
+    font-size: 0.66rem;
   }
   .ef-rail-wordmark-en {
     display: none;
@@ -923,7 +1073,6 @@ body.ef-contours {
     left: 0.35rem;
     width: 2.8rem;
   }
-  /* 当前项那条灰块 overlay：窄屏栏宽只有 3.5rem，按栏宽收窄（u = 9px） */
   .Header_pcHeaderContainer__Sy_8l .Header_overlay__33Sha {
     width: calc(100% - 2px);
     height: calc(100% + 0.5rem);
@@ -937,39 +1086,53 @@ body.ef-contours {
   .Header_textWrapper__o9aHt {
     display: none;
   }
-  /* 窄屏栏固定 3.5rem、不再展开：底部整列宽度就是栏宽，结构不变、不横向溢出 */
-  .ef-shell {
-    --ef-rail-col: 3.5rem;
+
+  /* 底部：栏宽只有 3.5rem 且不再展开 —— 整列按栏宽居中，只留竖向窄版。
+     （--efu = 9px，所以这里把每组的高度也按同一比例收一档。） */
+  .ef-rail-menu {
+    left: 50%;
+    height: calc(10.4 * var(--efu));
+    transform: translate3d(-50%, 0, 0);
   }
-  .ef-rail-bottom {
-    bottom: 0.625rem;
-    gap: calc(1 * var(--efu));
+  .ef-rail-menu-row {
+    height: calc(2.6 * var(--efu));
+  }
+  .ef-rail-menu-icon {
+    left: 50%;
+    height: calc(1.5 * var(--efu));
   }
   .ef-rail-menu-label,
   .ef-rail-cta-line,
+  .ef-rail-cta-rule,
   .ef-rail-cta-text,
-  .ef-rail-mark {
+  .ef-rail-cta-text-wide,
+  .ef-rail-social-list,
+  .ef-rail-mark-brand,
+  .ef-rail-mark-ver {
     display: none;
   }
-  .ef-rail-menu {
-    padding-block: calc(0.4 * var(--efu));
-  }
-  .ef-rail-menu-row {
-    height: calc(2.4 * var(--efu));
-  }
-  .ef-rail-menu-icon {
-    height: calc(1.3 * var(--efu));
-  }
   .ef-rail-cta {
-    height: calc(6.5 * var(--efu));
+    left: 50%;
+    height: calc(6.8 * var(--efu));
+    transform: translate3d(-50%, 0, 0);
   }
   .ef-rail-cta-tri {
-    top: calc(0.8 * var(--efu));
+    top: calc(0.9 * var(--efu));
     width: calc(1.6 * var(--efu));
   }
-  .ef-rail-jump {
-    width: calc(2.6 * var(--efu));
-    height: calc(2.6 * var(--efu));
+  .ef-rail-social {
+    left: 50%;
+    transform: translate3d(-50%, 0, 0);
+  }
+  .ef-rail-jump-icon {
+    width: calc(1.5 * var(--efu));
+  }
+  .ef-rail-mark {
+    left: 50%;
+    transform: translate3d(-50%, 0, 0);
+  }
+  .ef-rail-mark-glyph {
+    width: calc(2.2 * var(--efu));
   }
   .ef-wrap {
     padding-inline: 1.1rem;
