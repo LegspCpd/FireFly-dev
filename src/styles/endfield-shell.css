@@ -70,8 +70,12 @@
   --btn-content: #191919;
 
   min-height: 100dvh;
+  /* 全站唯一的那层不透明全屏底（对应官网 .bg_bgContainer） */
   background: var(--ef-paper);
   color: var(--ef-ink);
+  /* 全屏底不参与混合 / 滤镜，理由见上面 §1 的说明 */
+  filter: none;
+  mix-blend-mode: normal;
   /* 主题里若还存着 dark，把原生控件（滚动条、表单、默认色）也扳回亮色 */
   color-scheme: light;
   /* 正文 = 官网 NoticeDetail_content 的 1.625rem，行高 = 官网长正文的 1.8 */
@@ -81,10 +85,56 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* 官网没有背景纹理，去掉模板的等高线层与壁纸层 */
+/* ---- 全屏色罩：照官网首页的实际做法（2026-10-25 反查） -----------------
+   官网（F:/web/endfield-official/css/c1b6a925ef3d04ee.css 与线上首屏实测）：
+     · html、body 都没有 background（画布色由浏览器给）
+     · 整页只有【一层】不透明底色：
+         .bg_bgContainer__8_h2E{position:absolute;inset:0;background-color:#fff}
+     · KV 图靠 mask-image 两端各 80px 渐隐，融进那层底
+     · 全屏层里没有 rgba 覆盖层、没有 filter / mix-blend-mode / backdrop-filter
+       （仅有的 rgba(0,0,0,.4) 全屏层是弹窗，opacity 恒为 0）
+   结论：官网首页没有「色罩」，只有一层不透明底 + mask 融图。
+
+   本站原本有四层全屏不透明底（html / body / #swup-container / .ef-shell）各画一遍
+   #f2f2f2，外加两层会「盖一层半透明」的东西 —— 截图里那点偏色就出在后两层：
+
+   ① 等高线层 body.ef-contours::before（public/endfield-ui/endfield.css §157）
+      position:fixed; inset:0; z-index:-1; background:var(--ef-contour)
+      —— --ef-contour 在 endfield.css §49 被提到 color-mix(#141414 22%)，
+      也就是【22% 的黑铺满视口】，再叠一张大尺寸等高线 mask（52rem/40rem 两块）。
+      截图缩图后整片灰，压着 #FFFA00 的黄点看就是「灰绿」。官网没有这一层。
+      这里两层一起断：伪元素直接不生成（content:none 比 display:none 彻底 ——
+      后者元素还在，改回去就复活），同时把 --ef-contour 打成 transparent。
+
+   ② 加载屏 #ef-boot（BootScreen.astro）：position:fixed; inset:0; z-index:99999;
+      background:#141414，退出时 opacity 1s/延迟 1.4s 淡出，淡出期间还有一条
+      #FFFA00 的黄条 scaleX 扫过整屏。截图若落在这一秒里，整页就被 1%~2% 的
+      深灰/黄「染」了一层 —— 这正是「同一台机器截图，一会儿灰一会儿黄」的来源。
+      官网加载屏退出后整块卸载，这里在淡出结束后把该层从绘制树里摘掉（见 §1.5）。 */
 body.ef-contours::before,
 body.ef-contours::after {
-  display: none;
+  content: none;
+}
+
+/* ---- 1.5 加载屏退出后不再留全屏合成层 ------------------------------------
+   #ef-boot 淡出结束（延迟 1.4s + 1s ≈ 2.4s）后仍是 position:fixed 的全屏元素，
+   且带着 backdrop-filter（.is-sharp 之后是 blur(0)）—— 一个**铺满视口、带滤镜的
+   合成层**。官网的做法是退出即卸载；本站不动组件，只在这一层上补两件事：
+     · 淡出结束后 visibility:hidden：不再绘制，也不再参与合成；
+     · 退出期间去掉 backdrop-filter：blur(0) 的 backdrop root 没有视觉效果，
+       却会让整页走一条额外的离屏合成路径。
+   选择器前面带 body.ef-contours，是为了压过组件内 Astro 作用域选择器
+   （#ef-boot.is-leaving[data-astro-cid-*]）。 */
+body.ef-contours #ef-boot.is-leaving {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  /* 0s 动画 + 2.5s 延迟：只做「到点摘掉」，不参与淡出本身 */
+  animation: ef-boot-retire 0s linear 2.5s forwards;
+}
+@keyframes ef-boot-retire {
+  to {
+    visibility: hidden;
+  }
 }
 /* 站主要求：先不显示任何图片（竖排栏图标等一律走内联 SVG）。
    要恢复内容里的图片（友链头像、正文配图），删掉这一条即可。 */
@@ -94,13 +144,31 @@ body.ef-contours::after {
 .top-gradient-highlight {
   display: none;
 }
-/* 页面底色：主题在暗色下给 body 的暗纸色不再露出（加载屏才是唯一的暗色） */
+/* ---- 全屏底色的唯一 owner（照官网：整页只有一层不透明底） --------------
+   改之前 html / body.ef-contours / #swup-container / .ef-shell 各自画了一遍
+   同一个 #f2f2f2，共四层完全重合的不透明全屏层。四层同色不会「偏色」，
+   但一旦哪台机器上出现色差，四层里到底是谁画的根本查不出来 —— 官网只有一层，
+   这里也收成一层：
+
+     html            → 画布色（overscroll、地址栏收起后的露白都取它）
+     body.ef-contours→ transparent，不再自己再铺一遍
+     .ef-shell       → 唯一的元素级全屏底色（对应官网 .bg_bgContainer）
+     #swup-container → transparent（它只是 .ef-shell 里的一个滚动容器）
+
+   .ef-shell 是本站的全屏底，所以明确禁止它参与混合 / 滤镜：
+   不透明的全屏层加 filter / mix-blend-mode / backdrop-filter 不会改变它自己的
+   颜色，却会把它提升进一个独立的合成 / backdrop root，同一份代码在不同
+   GPU 驱动下的取整与色彩空间就可能不一样 —— 这正是「本地偏灰绿、线上偏淡黄」
+   这类只在截图里出现的偏色的常见来源。官网那层一个都没有。 */
 html {
   background: #f2f2f2;
   overflow-x: hidden;
 }
 body.ef-contours {
-  background: #f2f2f2;
+  background: transparent;
+  /* 等高线那层的颜色也一并打空：伪元素已经不生成，这里再兜一道，
+     任何规则把 content 改回来都不会再铺出 22% 的灰。 */
+  --ef-contour: transparent;
 }
 
 /* ---------- 2. 版心 ------------------------------------------------------ */
@@ -112,7 +180,8 @@ body.ef-contours {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--ef-paper);
+  /* 底色由 .ef-shell 出，这里不再叠第二层 */
+  background: transparent;
 }
 
 /* 主题在 endfield.css 里给 [aria-current="page"] 刷了信号黄底，竖排栏里不要它：
@@ -1021,74 +1090,250 @@ body.ef-contours {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- 8. 窄屏 ------------------------------------------------------
-   官网在移动端换成 H5 顶栏；这里保留同一条竖排栏，收到图标列（不展开），
-   底部仍是官网的竖向窄版，整列按栏宽居中，永不横向溢出。 */
+/* ---------- 7.5 滚动进场 / 视差（参数照官网） ---------------------------
+   官网首页的进场是「信号灯式闪三下」：
+     @keyframes __04-finalpage_flashing__w5gJk{0%{opacity:0}10%{opacity:.5}
+       11%{opacity:0}20%{opacity:.5}21%{opacity:0}40%{opacity:.5}41%{opacity:0}
+       to{opacity:1}}
+     .sectionContainer .decoLeft.active{animation: … 1s ease-out forwards}
+   触发靠 framer-motion 的 whileInView({once:true})，视差靠 useScroll/useTransform。
+   本站把「参数」与「触发」拆开：参数在这个文件，触发在
+   src/utils/ef-scroll-motion.ts（IntersectionObserver + passive scroll + rAF）。
+
+   为什么位移用 translate（独立属性）而不是 transform：
+   本站不少元素自带 transform（.ef-hero-side 的 translateY(-50%)、套件预设
+   ef-in-* 的关键帧也写 transform）。独立 translate 排在 transform 之前合成，
+   两者互不覆盖，进场位移、视差与元素原有变换才能安全叠加。
+
+   html.ef-motion 只在「脚本跑起来 + 系统没要求 reduced-motion」时挂上；
+   脚本不跑或用户要求减少动态时，下面所有规则都不命中，页面停在自然可见状态。 */
+
+@keyframes ef-flash {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  11% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.5;
+  }
+  21% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.5;
+  }
+  41% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+html.ef-motion [data-ef-reveal] {
+  transition:
+    opacity 0.7s cubic-bezier(0.2, 0, 0, 1) var(--ef-d, 0ms),
+    translate 0.7s cubic-bezier(0.2, 0, 0, 1) var(--ef-d, 0ms);
+}
+
+/* 上浮：2.5u 是官网 1rem 档的位移量级（1920 下 30px），窄屏按 u 自动收 */
+html.ef-motion [data-ef-reveal="up"] {
+  translate: 0 calc(var(--ef-py, 0px) + var(--ef-ry, 0px));
+}
+html.ef-motion [data-ef-reveal="up"]:not(.ef-in) {
+  --ef-ry: calc(2.5 * var(--efu));
+  opacity: 0;
+}
+html.ef-motion [data-ef-reveal="up"].ef-in {
+  --ef-ry: 0px;
+  opacity: 1;
+}
+
+/* 只淡入：元素自己带 transform 时用这一档，别和它的 transform 抢 */
+html.ef-motion [data-ef-reveal="fade"] {
+  translate: 0 var(--ef-py, 0px);
+  opacity: 0;
+}
+html.ef-motion [data-ef-reveal="fade"].ef-in {
+  opacity: 1;
+}
+
+/* 官网原版曲线：闪三下再定格 */
+html.ef-motion [data-ef-reveal="flash"] {
+  opacity: 0;
+}
+html.ef-motion [data-ef-reveal="flash"].ef-in {
+  animation: ef-flash 1s ease-out forwards;
+}
+
+/* 视差：脚本只写 --ef-py（0.5px 量化），位移全在合成层完成 */
+html.ef-motion [data-ef-parallax] {
+  translate: 0 var(--ef-py, 0px);
+  will-change: translate;
+}
+/* 同时要进场又要视差的元素：两个位移在同一个 translate 里相加（必须排在后面，
+   与上面两条同特异度，靠顺序取胜） */
+html.ef-motion [data-ef-reveal="up"][data-ef-parallax] {
+  translate: 0 calc(var(--ef-py, 0px) + var(--ef-ry, 0px));
+}
+
+/* 系统要求减少动态：全部停在自然状态，一条动画都不跑 */
+@media (prefers-reduced-motion: reduce) {
+  html.ef-motion [data-ef-reveal],
+  html.ef-motion [data-ef-parallax] {
+    opacity: 1;
+    translate: none;
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ---------- 8. 窄屏 H5 ----------------------------------------------------
+   官网窄屏不是「把桌面版缩一缩」，而是换一整套根字号 + 另一套 H5 版式：
+
+     · 根字号（F:/web/endfield-official/css/d27b439a0cf24257.css）
+         桌面  html{font-size:min(.625vw,1.111111vh)}        → 1920x1080 下 1rem=12px
+         H5    @media(scripting:none)and (orientation:portrait)
+                 {html{font-size:min(1.481481vw,.833333vh)}} → 810x1440 下 1rem=12px
+       即 H5 是同一套设计的**转置**：把 1920x1080 的画布转 90 度，参考画布 810x1440。
+       Chromium 390x844 实测官网 html 字号 = 5.77778px，与 1.481481vw*390 完全吻合。
+     · H5 字级：同一批角色，读数整体比桌面抬一档。实测（390x844，1u=5.7778px）
+         导航 1.125u(6.5px) · 标签 1.5u(8.67) · 小字 1.5625u(9.03) · 字段 1.75u(10.11)
+         正文 1.875u(10.83) · 卡片标题 2.25u(13) · 副标 2.5u(14.44) · 页面标题 3u(17.33)
+       对照桌面角色（1.125 / 1.25 / 1.375 / 1.5 / 1.625 / 1.75 / 1.875 / 2.25 / 3）
+       —— 阅读类整体 +0.25u，标题保持 3u。
+     · H5 版式：官网把 PC 竖排栏整条 display:none，换成 9.625u 高的 sticky 顶栏
+       （实测 .contentContainer 从 y=9.625u 开始）。本站竖排栏没有对应的 H5 组件，
+       按站主约束「竖排栏不遮内容」保留竖排栏，但栏宽 / 图标 / 行高全部改成
+       **由同一个 H5 根字号推出来的 u 值**，这样它和正文按同一条曲线缩放，
+       不会出现「栏是固定 56px、字却按视口缩」的错位。
+
+   字号的落地方式：--ef-fs-* 只有一份 owner（endfield.css 第 51 节），
+   它在桌面档写成 clamp(px 下限, N x --efu, px 上限)。窄屏这里重写同一批变量，
+   把角色换成官网 H5 的倍数；同时保留一个**可读性下限**（正文 12px、字段 11px、
+   微字 10px）—— 官网在 390px 上正文只有 10.83px，直接照搬会让长文不可读。
+   下限只在视口窄于约 432px 时才真正生效，再宽就完全按官网倍数等比放大。 */
 
 @media (max-width: 860px) {
   .ef-shell {
-    --efu: 9px;
-    --ef-rail-w: 3.5rem;
+    /* 官网 H5 的根字号（d27b439a0cf24257.css）：
+         @media (scripting:none) and (orientation:portrait)
+           { html { font-size: min(1.481481vw, .833333vh) } }
+       也就是把 1920×1080 的画布转 90 度，参考画布 810×1440 —— 390×844 实测
+       1u = 5.7778px，与 1.481481vw × 390 完全吻合。 */
+    --efu: min(1.481481vw, 0.833333vh);
+
+    /* 竖排栏宽度同样由根字号推出来：9.5u ≈ 55px @390（够放图标，又给内容让位）。
+       H5 没有第二套横向版，所以 --ef-rail-w-open 与收起态同值 —— 内容让位
+       永远等于栏宽，悬停也不会盖住正文。 */
+    --ef-rail-w: calc(9.5 * var(--efu));
+    --ef-rail-w-open: calc(9.5 * var(--efu));
+
+    /* --- 官网 H5 字级 ---
+       同一批角色在 H5 上整体抬一档：导航 1.125 / 标签 1.5 / 小字 1.5625 /
+       字段 1.75 / 正文 1.875 / 卡片标题 2.25 / 副标 2.5 / 页面标题 3 / 展示 4.5。
+       但 --efu 本身只有桌面的一半不到，两下一乘，390px 上正文≈10.8px ——
+       官网就是这个值。中文长文照搬不可读，所以每档留一个 px 下限
+       （正文 12 / 字段 11 / 微字 10），下限只在视口窄于约 430px 时才真的起作用。 */
+    --ef-fs-1: clamp(10px, calc(1.125 * var(--efu)), 12px);
+    --ef-fs-2: clamp(10px, calc(1.125 * var(--efu)), 13px);
+    --ef-fs-3: clamp(11px, calc(1.5 * var(--efu)), 15px);
+    --ef-fs-4: clamp(11px, calc(1.5625 * var(--efu)), 16px);
+    --ef-fs-5: clamp(11px, calc(1.75 * var(--efu)), 17px);
+    --ef-fs-6: clamp(12px, calc(1.875 * var(--efu)), 18px);
+    --ef-fs-7: clamp(13px, calc(2.25 * var(--efu)), 21px);
+    --ef-fs-8: clamp(14px, calc(2.5 * var(--efu)), 23px);
+    --ef-fs-9: clamp(14px, calc(2.5 * var(--efu)), 23px);
+    --ef-fs-10: clamp(15px, calc(2.75 * var(--efu)), 26px);
+    --ef-fs-11: clamp(17px, calc(3 * var(--efu)), 30px);
+    --ef-fs-12: clamp(20px, calc(4.5 * var(--efu)), 38px);
+
+    /* 角色别名必须在**同一个元素**上重算一遍：
+       :root 里的 "--ef-fs-body: var(--ef-fs-6)" 在根元素上就替换成了桌面值，
+       子元素继承到的是替换后的结果 —— 只覆盖 --ef-fs-6 是改不动它的（实测
+       窄屏正文字号仍是 15px 就是这个原因）。 */
+    --ef-fs-micro: var(--ef-fs-1);
+    --ef-fs-nav: var(--ef-fs-2);
+    --ef-fs-label: var(--ef-fs-3);
+    --ef-fs-small: var(--ef-fs-4);
+    --ef-fs-meta: var(--ef-fs-5);
+    --ef-fs-body: var(--ef-fs-6);
+    --ef-fs-card: var(--ef-fs-7);
+    --ef-fs-lede: var(--ef-fs-8);
+    --ef-fs-subhead: var(--ef-fs-9);
+    --ef-fs-title: var(--ef-fs-11);
+
+    /* H5 行高比桌面松一档：字号小了，行距不松会糊成一片 */
+    --ef-lh-body: 1.75;
+    --ef-lh-head: 1.35;
+    --ef-lh-ui: 1.65;
+    --ef-lh-title: 1.25;
   }
-  .Header_pcHeaderContainer__Sy_8l {
-    width: 3.5rem;
-  }
+
+  /* --- 竖排栏：只留图标列，永久收起；宽度 / 行高 / 图标全部走 u --- */
+  .Header_pcHeaderContainer__Sy_8l,
   .Header_pcHeaderContainer__Sy_8l:hover,
   .Header_pcHeaderContainer__Sy_8l:focus-within {
-    width: 3.5rem;
+    width: var(--ef-rail-w);
   }
   .Header_logo__s3lE_ {
-    top: 0.9rem;
-    width: 2.9rem;
-    gap: 0.2rem;
+    top: calc(1.75 * var(--efu));
+    width: calc(6 * var(--efu));
+    gap: calc(0.35 * var(--efu));
   }
-  .ef-rail-wordmark-tag {
-    display: none;
-  }
-  .ef-rail-wordmark {
-    font-size: 0.66rem;
-  }
+  .ef-rail-wordmark-tag,
   .ef-rail-wordmark-en {
     display: none;
   }
+  .ef-rail-wordmark {
+    font-size: calc(1.9 * var(--efu));
+    letter-spacing: 0.02em;
+  }
   .Header_navList__r2BGN {
-    top: 4.6rem;
-    gap: 0.25rem;
+    top: calc(8.4 * var(--efu));
+    gap: calc(0.7 * var(--efu));
   }
   .Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB {
-    height: 3rem;
+    height: calc(5.9 * var(--efu));
   }
   .Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB::before {
-    left: 0.35rem;
-    width: 2.8rem;
+    left: calc(0.7 * var(--efu));
+    width: calc(100% - 1.4 * var(--efu));
   }
+  /* 当前项灰块：跟着栏宽走，左黑边按 u 收窄 */
   .Header_pcHeaderContainer__Sy_8l .Header_overlay__33Sha {
-    width: calc(100% - 2px);
-    height: calc(100% + 0.5rem);
-    border-left-width: 5px;
+    top: calc(-0.35 * var(--efu));
+    width: calc(100% - 0.9 * var(--efu));
+    height: calc(6.6 * var(--efu));
+    border-left-width: calc(0.7 * var(--efu));
   }
+  /* 图标一律居中、按 u 定宽（覆盖上面那条 data-key 尺寸表） */
   .Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB .Header_icon__3iDIG,
   .Header_pcHeaderContainer__Sy_8l [data-key] .Header_icon__3iDIG {
     left: 50%;
-    width: 1.5rem;
+    width: calc(2.95 * var(--efu));
   }
   .Header_textWrapper__o9aHt {
     display: none;
   }
 
-  /* 底部：栏宽只有 3.5rem 且不再展开 —— 整列按栏宽居中，只留竖向窄版。
-     （--efu = 9px，所以这里把每组的高度也按同一比例收一档。） */
+  /* --- 底部：栏宽 9.5u 且不再展开，整列按栏宽居中，只留竖向窄版 --- */
   .ef-rail-menu {
     left: 50%;
     height: calc(10.4 * var(--efu));
     transform: translate3d(-50%, 0, 0);
   }
   .ef-rail-menu-row {
-    height: calc(2.6 * var(--efu));
+    height: calc(4.15 * var(--efu));
   }
   .ef-rail-menu-icon {
     left: 50%;
-    height: calc(1.5 * var(--efu));
+    height: calc(2.25 * var(--efu));
   }
   .ef-rail-menu-label,
   .ef-rail-cta-line,
@@ -1102,29 +1347,130 @@ body.ef-contours {
   }
   .ef-rail-cta {
     left: 50%;
-    height: calc(6.8 * var(--efu));
+    height: calc(6.75 * var(--efu));
     transform: translate3d(-50%, 0, 0);
   }
   .ef-rail-cta-tri {
-    top: calc(0.9 * var(--efu));
-    width: calc(1.6 * var(--efu));
+    top: calc(1 * var(--efu));
+    width: calc(1.56 * var(--efu));
   }
   .ef-rail-social {
     left: 50%;
     transform: translate3d(-50%, 0, 0);
   }
   .ef-rail-jump-icon {
-    width: calc(1.5 * var(--efu));
+    width: calc(1.9 * var(--efu));
   }
   .ef-rail-mark {
     left: 50%;
     transform: translate3d(-50%, 0, 0);
   }
   .ef-rail-mark-glyph {
-    width: calc(2.2 * var(--efu));
+    width: calc(2.4 * var(--efu));
+  }
+
+  /* --- 内容让位 / 版心 ---------------------------------------------------
+     官网 H5 的正文从「顶部 sticky 栏下方」开始，本站保留竖排栏，
+     所以 #swup-container 的 margin-left 已经是 9.5u；这里只再给版心一点呼吸位
+     （3.5u ≈ 20px @390）。栏宽 + 左右内边距永远是内容让位的总和，
+     不依赖任何写死的 px，窄到 320px 也不会横向溢出。 */
+  .ef-wrap {
+    padding-inline: calc(3.5 * var(--efu));
+  }
+  /* 桌面那两个「780px 窄版心」在窄屏没有意义，直接吃满 */
+  .ef-prose,
+  .ef-sheet,
+  .ef-sheet .custom-md {
+    max-width: 100%;
+  }
+
+  /* 区块节奏：桌面 4.5u，H5 用 6u —— u 只有桌面一半，绝对值反而更小 */
+  .ef-sec {
+    padding-block: calc(6 * var(--efu));
+  }
+  .ef-sec:first-child {
+    padding-top: calc(4.5 * var(--efu));
+  }
+  .ef-sec-head {
+    gap: calc(0.5 * var(--efu)) calc(1 * var(--efu));
+    padding-bottom: calc(1.75 * var(--efu));
+    margin-bottom: calc(3 * var(--efu));
+  }
+  /* 区块标题 / 页名 = 官网 H5 的 3u（390 上 17.3px），行高收到 1.15 */
+  .ef-sec-title,
+  .ef-page-name {
+    line-height: 1.15;
+    letter-spacing: 0;
+  }
+  /* 计数在窄屏不再抢同一行右端：标题换行后它单独一行、靠左 */
+  .ef-sec-count {
+    margin-inline-start: 0;
+  }
+
+  /* 卡片：H5 单列，内边距按 u 收，字号走上面的角色档 */
+  .ef-card {
+    gap: calc(1 * var(--efu));
+    padding: calc(2.5 * var(--efu));
+  }
+  .ef-card-desc {
+    -webkit-line-clamp: 2;
+  }
+
+  /* 按钮：整行铺满，触控高度不低于 40px（官网 H5 是 5u ≈ 29px，太小） */
+  .ef-pager a,
+  .ef-btn {
+    min-height: max(calc(5 * var(--efu)), 40px);
+    padding-inline: calc(2 * var(--efu));
+  }
+  .ef-pager {
+    gap: calc(1 * var(--efu));
+    padding-block: calc(4 * var(--efu));
+  }
+
+  /* 页脚：窄屏不再靠 margin-inline-start:auto 顶到右端 */
+  .ef-foot-inner {
+    gap: calc(0.75 * var(--efu)) calc(1.5 * var(--efu));
+  }
+  .ef-foot-meta {
+    margin-inline-start: 0;
+  }
+}
+
+/* --- 更窄档（<=560px）：官网 H5 在这一档只剩单列 ---
+   官网 H5 从头到尾就是单列；本站的卡片网格在这一档也压成一列
+   （720px 已经收过一次，这里保证 560 以下不会出现「两列挤成一行」），
+   并把长英文 / 长数字 / 长 URL 的断行打开 —— 宁可多折一行，也不许把版心顶破。 */
+@media (max-width: 560px) {
+  .ef-grid,
+  .ef-grid-2,
+  .ef-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .ef-shell {
+    /* 版心再收一档：3u ≈ 17px @390，栏宽仍是 9.5u */
+    --ef-rail-w: calc(9 * var(--efu));
+    --ef-rail-w-open: calc(9 * var(--efu));
   }
   .ef-wrap {
-    padding-inline: 1.1rem;
+    padding-inline: calc(3 * var(--efu));
+  }
+  .ef-sec-head {
+    align-items: flex-start;
+  }
+  /* 长 URL / 长英文单词 / 长数字不允许把版心顶破 */
+  .ef-shell-main,
+  .ef-sec,
+  .ef-card,
+  .ef-sheet,
+  .ef-card-title,
+  .ef-sec-title,
+  .ef-page-name {
+    overflow-wrap: anywhere;
+  }
+  .ef-foot-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(1.25 * var(--efu));
   }
 }
 

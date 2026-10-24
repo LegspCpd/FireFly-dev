@@ -14,24 +14,24 @@ const latestLabel = latest
 ---
 
 <section class="ef-hero">
-	<div class="ef-hero-inner">
-		<p class="ef-hero-eyebrow"><i aria-hidden="true"></i>// 01 HOME</p>
+	<div class="ef-hero-inner" data-ef-parallax="-0.035">
+		<p class="ef-hero-eyebrow" data-ef-reveal="flash"><i aria-hidden="true"></i>// 01 HOME</p>
 
-		<h1 class="ef-hero-title">自建服务记录</h1>
-		<p class="ef-hero-hollow" aria-hidden="true">CONFIG · PITFALL · TRADEOFF</p>
+		<h1 class="ef-hero-title" data-ef-reveal="up" style="--ef-d: 60ms">自建服务记录</h1>
+		<p class="ef-hero-hollow" aria-hidden="true" data-ef-reveal="up" style="--ef-d: 120ms">CONFIG · PITFALL · TRADEOFF</p>
 
-		<p class="ef-hero-lede">
+		<p class="ef-hero-lede" data-ef-reveal="up" style="--ef-d: 160ms">
 			Cloudflare / EdgeOne / 自建服务 —— 记录配置、踩坑与取舍。
 		</p>
 
-		<ul class="ef-hero-facts">
+		<ul class="ef-hero-facts" data-ef-reveal="up" style="--ef-d: 200ms">
 			<li><b>{postTotal}</b><span>篇文章</span></li>
 			<li><b>{tagTotal}</b><span>个标签</span></li>
 			<li><b>{catTotal}</b><span>个分类</span></li>
 			<li><b>{latestLabel}</b><span>最近更新</span></li>
 		</ul>
 
-		<div class="ef-hero-actions">
+		<div class="ef-hero-actions" data-ef-reveal="up" style="--ef-d: 240ms">
 			<a class="ef-hero-btn" href="/archive/">
 				<span>浏览全部文章</span><i aria-hidden="true">→</i>
 			</a>
@@ -39,7 +39,7 @@ const latestLabel = latest
 		</div>
 	</div>
 
-	<div class="ef-hero-side" aria-hidden="true">
+	<div class="ef-hero-side" aria-hidden="true" data-ef-reveal="fade" data-ef-parallax="0.09">
 		<p class="ef-hero-side-mark">LEGSPCPD</p>
 		<p class="ef-hero-side-scroll">SCROLL<span>↓</span></p>
 	</div>
@@ -246,22 +246,79 @@ const latestLabel = latest
 			display: none;
 		}
 	}
+	/* 窄屏 H5：字级 / 间距照官网 H5（root font-size:min(1.481481vw,.833333vh)，
+	   390×844 实测 1u = 5.7778px；角色档位与 --ef-fs-* 的 H5 版本在
+	   endfield-shell.css §8 统一定义，这里只调首屏自己的几何）。 */
 	@media (max-width: 860px) {
 		.ef-hero {
+			/* 官网 H5 首屏不是满屏：内容有多高就多高，别把正文顶到下一屏 */
 			min-height: auto;
 		}
 		.ef-hero-inner {
-			padding-block: calc(5 * var(--efu)) calc(4 * var(--efu));
+			max-width: 100%;
+			padding: calc(8 * var(--efu)) calc(3.5 * var(--efu)) calc(6 * var(--efu));
 		}
+		.ef-hero-eyebrow {
+			margin-bottom: calc(2 * var(--efu));
+			font-size: max(calc(1.15 * var(--efu)), 10px);
+		}
+		/* 7u ≈ 40px @390：六个汉字 = 242px < 版心 295px，一行放得下；
+		   26px 下限保证 320px 的老机型也不会折成三行。 */
+		.ef-hero-title {
+			font-size: clamp(26px, calc(7 * var(--efu)), 11rem);
+			line-height: 1.04;
+			letter-spacing: 0;
+		}
+		/* 空心斜纹小字：窄屏允许折行，并且必须能在版心里断开
+		   （原来 nowrap + overflow:hidden 会把右端 TRADEOFF 裁掉半截）。 */
 		.ef-hero-hollow {
+			margin-top: calc(2 * var(--efu));
+			font-size: max(calc(2.4 * var(--efu)), 12px);
 			white-space: normal;
+			overflow-wrap: anywhere;
 		}
+		.ef-hero-lede {
+			margin-top: calc(2 * var(--efu));
+			max-width: 100%;
+			font-size: var(--ef-fs-6);
+			line-height: 1.75;
+		}
+		/* 数值行：四列在 390 上挤成一行 10px 小字，改成 2×2 更清楚 */
 		.ef-hero-facts {
-			gap: 0 calc(1.5 * var(--efu));
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 0 calc(2 * var(--efu));
+			margin-top: calc(3 * var(--efu));
+		}
+		.ef-hero-facts b {
+			font-size: var(--ef-fs-9);
+		}
+		.ef-hero-facts li {
+			padding-block: calc(1 * var(--efu));
+		}
+		.ef-hero-facts span {
+			font-size: max(calc(1.1 * var(--efu)), 10px);
+		}
+		/* 按钮：竖排、整行宽，触控高度不低于 42px */
+		.ef-hero-actions {
+			flex-direction: column;
+			gap: calc(1.2 * var(--efu));
+			margin-top: calc(3 * var(--efu));
 		}
 		.ef-hero-btn {
+			width: 100%;
 			min-width: 0;
-			flex: 1 1 auto;
+			flex: 0 0 auto;
+			height: max(calc(5 * var(--efu)), 42px);
+			padding-inline: calc(2 * var(--efu));
+			font-size: var(--ef-fs-5);
 		}
 	}
 </style>
+
+<script>
+	/* 滚动进场 + 轻量视差（参数见 endfield-shell.css §7.5，实现见这个模块）。
+	   Astro 会把它打成模块脚本，只在首页加载；模块本身对 swup 切页做了重新初始化，
+	   所以进站后从首页跳到长页也继续生效。 */
+	import "@/utils/ef-scroll-motion";
+</script>
