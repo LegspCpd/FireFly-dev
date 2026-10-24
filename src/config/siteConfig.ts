@@ -54,7 +54,8 @@ export const siteConfig: SiteConfig = {
 		// 主题色的默认色相，范围从 0 到 360。
 		hue: 165,
 		// 默认模式："light" 亮色，"dark" 暗色，"system" 跟随系统
-		defaultMode: "dark",
+		// 站主 2026-10 要求全站浅色（唯一保留暗色的是加载屏），原来这里是 "dark"。
+		defaultMode: "light",
 	},
 
 	// 页面整体宽度（单位：rem）

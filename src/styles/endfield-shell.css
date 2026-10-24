@@ -59,9 +59,10 @@
 }
 
 /* ---------- 1. 外壳与色板 -------------------------------------------------
-   官网实测色板（见用户给定清单）：
-     #191919 暗底 / #fffa00 信号黄 / #35373c 深灰蓝 / #f2f2f2 纸张
-     #e5e5e5 浅边 / #00ffa2 绿 / #ff1aac 品红 / #999 #d9d9d9 #666 灰阶 */
+   官网实测色板：#f2f2f2 纸张 / #ffffff 白面 / #191919 墨 / #fffa00 信号黄（只做点缀）
+                   #e5e5e5 浅边 / #999 #d9d9d9 #666 灰阶
+   站主要求全站走浅色基调 —— 这里只有一套 token，不再分「首页暗底 / 内页纸底」；
+   唯一保留暗色的是加载屏（BootScreen 的 #141414，与官网上屏一致）。 */
 
 .ef-shell {
   /* 官网单位：1rem = min(.625vw, 1.111111vh)，钳到 9~12px 防止极端视口 */
@@ -83,42 +84,7 @@
   --ef-rail-w: calc(7.5 * var(--efu));
   --ef-rail-w-open: calc(22.5 * var(--efu));
 
-  min-height: 100dvh;
-  background: var(--ef-black);
-  color: var(--ef-paper-2);
-  font-family:
-    SansMedium, "EF Gilroy", system-ui, -apple-system, "PingFang SC",
-    "Microsoft YaHei", "Noto Sans SC", sans-serif;
-  font-size: clamp(15px, calc(1.45 * var(--efu)), 19px);
-  line-height: 1.75;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* 暗底（首页）：正文亮、面板比底色高一级 */
-.ef-shell {
-  --ef-ink: #f2f2f2;
-  --ef-ink-2: #999;
-  --ef-paper: #191919;
-  --ef-panel: #232323;
-  --ef-rule: #35373c;
-  --ef-chip: #35373c;
-  --ef-page-bg: #191919;
-  --ef-card-bg: #232323;
-  --deep-text: #f2f2f2;
-  --title-active: #f2f2f2;
-  --content-meta: #999;
-  --line-divider: #35373c;
-  --line-color: #35373c;
-  --page-bg: #191919;
-  --card-bg: #232323;
-  --float-panel-bg: #232323;
-  --btn-content: #f2f2f2;
-}
-
-/* 奶白纸张（内页）：纸底、墨字 */
-.ef-shell--light {
-  background: var(--ef-paper-2);
-  color: var(--ef-black);
+  /* 纸底 + 墨字：全站同一套，没有第二套暗色 */
   --ef-ink: #191919;
   --ef-ink-2: #666;
   --ef-paper: #f2f2f2;
@@ -136,6 +102,18 @@
   --card-bg: #ffffff;
   --float-panel-bg: #ffffff;
   --btn-content: #191919;
+
+  min-height: 100dvh;
+  background: var(--ef-paper);
+  color: var(--ef-ink);
+  /* 主题里若还存着 dark，把原生控件（滚动条、表单、默认色）也扳回亮色 */
+  color-scheme: light;
+  font-family:
+    SansMedium, "EF Gilroy", system-ui, -apple-system, "PingFang SC",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  font-size: clamp(15px, calc(1.45 * var(--efu)), 19px);
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* 官网没有背景纹理，去掉模板的等高线层与壁纸层 */
@@ -153,9 +131,13 @@ body.ef-contours::after {
 .top-gradient-highlight {
   display: none;
 }
+/* 页面底色：主题在暗色下给 body 的暗纸色不再露出（加载屏才是唯一的暗色） */
 html {
-  background: #191919;
+  background: #f2f2f2;
   overflow-x: hidden;
+}
+body.ef-contours {
+  background: #f2f2f2;
 }
 
 /* ---------- 2. 版心 ------------------------------------------------------ */
@@ -167,10 +149,7 @@ html {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: #191919;
-}
-.ef-shell--light #swup-container {
-  background: var(--ef-paper-2);
+  background: var(--ef-paper);
 }
 
 /* 主题在 endfield.css 里给 [aria-current="page"] 刷了信号黄底，竖排栏里不要它：
@@ -323,25 +302,18 @@ html {
   background: #191919;
 }
 
-/* 图标：官网 left 3.75rem、垂直居中、色 #d9d9d9 → hover #858585 → 当前 #191919 */
+/* 图标：官网 left 3.75rem、垂直居中。官网默认 #d9d9d9 → hover #858585 → 当前 #191919；
+   站主要求白底栏里图标与文字都用 #191919，所以这里只有一种颜色，hover/当前靠灰块区分。 */
 .Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB .Header_icon__3iDIG {
   position: absolute;
   left: calc(3.75 * var(--efu));
   top: 50%;
   transform: translate3d(-50%, -50%, 0);
   height: auto;
-  color: #d9d9d9;
+  color: #191919;
   transition: color 0.2s;
   white-space: nowrap;
   display: block;
-}
-.Header_pcHeaderContainer__Sy_8l .Header_navItem__c_fLB:hover .Header_icon__3iDIG {
-  color: #858585;
-}
-.Header_pcHeaderContainer__Sy_8l
-  .Header_navItem__c_fLB.Header_active__jzCyf
-  .Header_icon__3iDIG {
-  color: #191919;
 }
 /* 每项图标宽度照官网 data-key 的尺寸表 */
 .Header_pcHeaderContainer__Sy_8l [data-key="home"] .Header_icon__3iDIG {
@@ -407,104 +379,129 @@ html {
   opacity: 1;
 }
 
-/* ---------- 4. 竖排栏底部（官网 buttonFrame + buttonPreserveBg） --------- */
+/* ---------- 4. 竖排栏底部（官网 buttonFrame + buttonPreserveBg） ---------
+   展开后从上到下：
+     1) 浅灰大圆角胶囊（#e5e5e5）：留言 / 订阅，图标 + 文字竖向排列；收起只剩图标。
+     2) 黑色竖条方块 4.5u × 9.75u：白色三角 logo、一条细分隔线、竖排白字「全部文章」。
+   尺寸照官网：胶囊 3.75rem × 11.5625rem / 圆角 1.875rem；黑块 4.5rem × 9.75rem；
+   两者在官网 showPreserveButton 变体里的间距是 2.4375rem（21.75 - 19.3125）。
+   这里只按用户要求改了两处：胶囊收起做成 4.5u 宽（与黑块同宽、同左缘，图标居中），
+   展开加宽到 10.25u（文字左缘 6.9375u，与导航文字落在同一条竖线上），
+   底色用 #e5e5e5。两者都贴左，上下留官网那种间距。 */
 
 .ef-rail-bottom {
   position: absolute;
-  left: 0;
+  left: calc(1.5 * var(--efu));
   bottom: calc(2.25 * var(--efu));
-  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: calc(2.1875 * var(--efu));
+  align-items: flex-start;
+  gap: calc(2.4375 * var(--efu));
 }
 
-/* 官网 .Header_buttonFrameBg：宽 3.75rem、圆角 1.875rem、底 #f2f2f2。
-   官网是独立兄弟节点 + 固定高度（11.5625rem）；这边放进容器里 inset:0 撑满，
-   收起/展开都不用手算高度，视觉一致。 */
-.Header_buttonFrameBg__2UVLH {
-  position: absolute;
-  inset: 0;
-  border-radius: calc(1.875 * var(--efu));
-  background-color: #f2f2f2;
-  pointer-events: none;
-}
+/* 胶囊：官网把背景单独挂在 .Header_buttonFrameBg 上（它的按钮是绝对定位的兄弟节点）；
+   这边按钮走文档流，背景与尺寸合到容器这一层，视觉一致。 */
 .Header_buttonFrameContainer__Uvshp {
   position: relative;
-  width: calc(3.75 * var(--efu));
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: calc(1.25 * var(--efu));
-  padding-block: calc(1.25 * var(--efu));
+  justify-content: center;
+  width: calc(4.5 * var(--efu));
+  height: calc(11.5625 * var(--efu));
+  border-radius: calc(2.25 * var(--efu));
+  background-color: #e5e5e5;
+  overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.Header_pcHeaderContainer__Sy_8l:hover .Header_buttonFrameContainer__Uvshp,
+.Header_pcHeaderContainer__Sy_8l:focus-within .Header_buttonFrameContainer__Uvshp {
+  width: calc(10.25 * var(--efu));
 }
 
-/* 官网 .Header_button：高 3rem，图标 1.75rem，色 #7c7c7c → hover #424242 */
-.Header_pcHeaderContainer__Sy_8l .Header_button__b0gdu {
+/* 行：官网 .Header_button 高 3rem；这里两行各 4.5u，正好撑满胶囊 */
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu {
   position: relative;
-  width: 100%;
-  height: calc(3 * var(--efu));
   display: flex;
   align-items: center;
+  height: calc(4.5 * var(--efu));
+  padding-left: calc(1.375 * var(--efu));
   color: inherit;
   text-decoration: none;
 }
-.Header_pcHeaderContainer__Sy_8l .Header_button__b0gdu .Header_icon__3iDIG {
+/* 两行之间的细线（官网 .Header_divider：#ccc、1px、宽 1.25rem、压在图标中线） */
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu
+  + .Header_button__b0gdu::before {
+  content: "";
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate3d(-50%, -50%, 0);
-  width: auto;
-  height: calc(1.75 * var(--efu));
-  color: #7c7c7c;
-  transition: color 0.2s;
+  top: 0;
+  left: calc(1.375 * var(--efu));
+  width: calc(1.25 * var(--efu));
+  height: 1px;
+  background-color: #ccc;
+}
+
+/* 图标 1.75u 方框：收起时靠 1.375u 内边距居中（4.5 - 2 × 1.375 = 1.75） */
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu
+  .Header_icon__3iDIG {
+  flex: 0 0 auto;
   display: block;
+  width: calc(1.75 * var(--efu));
+  height: calc(1.75 * var(--efu));
+  color: #191919;
+  transition: color 0.2s;
 }
-.Header_pcHeaderContainer__Sy_8l .Header_button__b0gdu:hover .Header_icon__3iDIG {
-  color: #424242;
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu:hover
+  .Header_icon__3iDIG {
+  color: #000;
 }
-/* 展开时按钮也出文字。按钮左边缘在 1.875rem（3.75rem 的胶囊居中），
-   6.9375 - 1.875 = 5.0625，与导航项的文字左边缘落在同一条竖线上。 */
-.Header_pcHeaderContainer__Sy_8l .Header_button__b0gdu .Header_textWrapper__o9aHt {
-  position: absolute;
-  left: calc(5.0625 * var(--efu));
-  top: 50%;
-  transform: translate3d(-1rem, -50%, 0);
-  opacity: 0;
+
+/* 文字：展开时从图标右侧淡入，左缘落在 6.9375u（与导航项文字同一条竖线） */
+.Header_pcHeaderContainer__Sy_8l
+  .Header_buttonFrameContainer__Uvshp
+  .Header_button__b0gdu
+  .Header_textWrapper__o9aHt {
+  margin-left: calc(2.3125 * var(--efu));
   white-space: nowrap;
   pointer-events: none;
   font-family: SansMedium, system-ui, sans-serif;
   font-size: calc(1.125 * var(--efu));
   line-height: 1.25;
   color: #191919;
+  opacity: 0;
+  transform: translate3d(calc(-0.75 * var(--efu)), 0, 0);
   transition: opacity 0.2s, transform 0.3s;
 }
 .Header_pcHeaderContainer__Sy_8l:hover
+  .Header_buttonFrameContainer__Uvshp
   .Header_button__b0gdu
   .Header_textWrapper__o9aHt,
 .Header_pcHeaderContainer__Sy_8l:focus-within
+  .Header_buttonFrameContainer__Uvshp
   .Header_button__b0gdu
   .Header_textWrapper__o9aHt {
   opacity: 1;
-  transform: translate3d(0, -50%, 0);
+  transform: translate3d(0, 0, 0);
 }
 
-/* 官网 .Header_buttonPreserveBg：黑底 4.5rem × 9.75rem、圆角 4px、竖排文字 */
+/* 官网 .Header_buttonPreserveBg：黑底 4.5rem × 9.75rem、圆角 4px */
 .Header_pcHeaderContainer__Sy_8l .Header_buttonPreserveBg__rEZGT {
   position: relative;
+  display: block;
   width: calc(4.5 * var(--efu));
   height: calc(9.75 * var(--efu));
   border-radius: calc(0.25 * var(--efu));
   overflow: hidden;
   cursor: pointer;
   background-color: #191919;
-  display: block;
   text-decoration: none;
-  transition: width 0.3s, height 0.3s;
-}
-.Header_pcHeaderContainer__Sy_8l .Header_buttonPreserveBg__rEZGT:hover {
-  background-color: #191919;
 }
 /* 官网 hover：整块被 #fffa00 盖住（.Header_bg opacity 0 → 1） */
 .Header_pcHeaderContainer__Sy_8l
@@ -524,6 +521,7 @@ html {
   .Header_bg___kVDv {
   opacity: 1;
 }
+/* 白色三角 logo：压在方块中线上 */
 .Header_pcHeaderContainer__Sy_8l
   .Header_buttonPreserveBg__rEZGT
   .Header_tri__KNP87 {
@@ -541,6 +539,7 @@ html {
   .Header_tri__KNP87 {
   color: #191919;
 }
+/* 一条细分隔线（官网是 2px；用户要求细，收成 1px） */
 .Header_pcHeaderContainer__Sy_8l
   .Header_buttonPreserveBg__rEZGT
   .Header_divider__tUYjO {
@@ -548,9 +547,10 @@ html {
   top: calc(4.125 * var(--efu));
   left: calc(2.25 * var(--efu));
   width: calc(3 * var(--efu));
-  height: 2px;
+  height: 1px;
+  margin: 0;
   background-color: rgba(255, 255, 255, 0.3);
-  transition: background-color 0.3s, opacity 0.2s;
+  transition: background-color 0.3s;
   transform: translate3d(-50%, 0, 0);
   pointer-events: none;
   opacity: 1;
@@ -560,21 +560,25 @@ html {
   .Header_divider__tUYjO {
   background-color: #191919;
 }
+/* 竖排白字「全部文章」：官网竖排变体用 writing-mode:vertical-rl */
 .Header_pcHeaderContainer__Sy_8l
   .Header_buttonPreserveBg__rEZGT
   .Header_text__52fEh {
   position: absolute;
-  top: calc(5.625 * var(--efu));
+  top: calc(4.375 * var(--efu));
   left: calc(2.25 * var(--efu));
-  font-family: SansMedium, system-ui, sans-serif;
-  font-size: calc(1.25 * var(--efu));
-  width: calc(3.0625 * var(--efu));
-  text-align: center;
-  line-height: 1.125;
-  letter-spacing: 0.05em;
-  color: #fff;
-  transition: color 0.3s, opacity 0.2s;
+  /* 4 个字一列：高度按 4 × (1 + 字距) 留足，否则会被挤成两列 */
+  height: calc(5.25 * var(--efu));
   transform: translate3d(-50%, 0, 0);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: SansMedium, system-ui, sans-serif;
+  font-size: calc(1.125 * var(--efu));
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: #fff;
+  transition: color 0.3s;
 }
 .Header_pcHeaderContainer__Sy_8l
   .Header_buttonPreserveBg__rEZGT:hover
@@ -897,9 +901,30 @@ html {
   .ef-rail-bottom .Header_divider__tUYjO {
     display: none;
   }
-  .Header_pcHeaderContainer__Sy_8l .Header_buttonFrameBg__2UVLH,
   .Header_pcHeaderContainer__Sy_8l .Header_buttonFrameContainer__Uvshp {
     width: 2.75rem;
+    height: 7rem;
+    border-radius: 1.375rem;
+  }
+  .Header_pcHeaderContainer__Sy_8l
+    .Header_buttonFrameContainer__Uvshp
+    .Header_button__b0gdu {
+    height: 2.75rem;
+    padding-left: 0.625rem;
+  }
+  .Header_pcHeaderContainer__Sy_8l
+    .Header_buttonFrameContainer__Uvshp
+    .Header_button__b0gdu
+    + .Header_button__b0gdu::before {
+    left: 0.75rem;
+    width: 1.25rem;
+  }
+  .Header_pcHeaderContainer__Sy_8l
+    .Header_buttonFrameContainer__Uvshp
+    .Header_button__b0gdu
+    .Header_icon__3iDIG {
+    width: 1.5rem;
+    height: 1.5rem;
   }
   .Header_pcHeaderContainer__Sy_8l .Header_buttonPreserveBg__rEZGT {
     width: 2.75rem;
@@ -924,15 +949,9 @@ html {
     height: auto;
   }
   .ef-rail-bottom {
+    left: 0.375rem;
     bottom: 1.1rem;
     gap: 1rem;
-  }
-  .Header_buttonFrameContainer__Uvshp {
-    gap: 0.35rem;
-    padding-block: 0.6rem;
-  }
-  .Header_pcHeaderContainer__Sy_8l .Header_button__b0gdu {
-    height: 2rem;
   }
   .ef-wrap {
     padding-inline: 1.1rem;
@@ -943,41 +962,26 @@ html {
   }
 }
 
-/* ---------- 9. 首页暗底 / 内页纸底的局部修正 ---------------------------- */
-
-.ef-shell:not(.ef-shell--light) .ef-sec {
-  border-top-color: #35373c;
-}
-.ef-shell:not(.ef-shell--light) .ef-card {
-  background: #232323;
-  border-color: #35373c;
-}
-.ef-shell:not(.ef-shell--light) .ef-card:hover {
-  border-color: #f2f2f2;
-}
-.ef-shell:not(.ef-shell--light) .ef-card-cat {
-  background: #f2f2f2;
-  color: #191919;
-}
+/* ---------- 9. 模板遗留件的浅色统一 ------------------------------------- */
 
 /* 内页里模板遗留的卡片（.card-base）：统一成官网白面 + 4px 圆角，
    普通权重即可，不需要 !important。 */
-.ef-shell--light .card-base {
+.ef-shell .card-base {
   background: #ffffff;
   border: 1px solid #e5e5e5;
   border-radius: 4px;
   box-shadow: none;
   color: #191919;
 }
-.ef-shell--light .card-base h1,
-.ef-shell--light .card-base h2,
-.ef-shell--light .card-base h3,
-.ef-shell--light .card-base a {
+.ef-shell .card-base h1,
+.ef-shell .card-base h2,
+.ef-shell .card-base h3,
+.ef-shell .card-base a {
   color: #191919;
 }
 
-/* 内页正文链接：官网是黑字 + 黄下划线 */
-.ef-shell--light .custom-md a {
+/* 正文链接：官网是黑字 + 黄下划线 */
+.ef-shell .custom-md a {
   color: #191919;
   text-decoration-color: var(--ef-signal);
   text-decoration-thickness: 2px;

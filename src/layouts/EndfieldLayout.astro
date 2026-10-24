@@ -3,7 +3,8 @@
 //   左侧竖排栏：位置/尺寸/配色/交互全部照官网 Header_pcHeaderContainer 搬用
 //   —— fixed 顶天立地、默认收起只见图标、悬停展开出文字（官网同名类名）。
 //   图标 SVG 从官网 index.html 里逐个抠出（data-key 同名），不是自绘。
-//   内容区：官网版心 + SectionTitle 量级；首页暗底、内页奶白纸张。
+//   内容区：官网版心 + SectionTitle 量级；全站浅色（纸 #f2f2f2 / 墨 #191919），
+//   唯一的暗色是加载屏 BootScreen（官网上屏就是 #141414）。
 //   站内跳转：main 必须包在 #swup-container 里（astro.config.mjs 的 swup containers
 //   依赖它），否则切换页面会整站重载。
 import BootScreen from "@components/common/BootScreen.astro";
@@ -54,8 +55,6 @@ const {
 const path = Astro.url.pathname.replace(/\/+$/, "") || "/";
 const isHome = path === "/";
 const on = (p: string) => (p === "/" ? isHome : path === p || path.startsWith(p + "/"));
-// 首页暗底、其余内页奶白纸张（ef-light 挂在 main 上，随 swup 切页自动更新）
-const isLight = !isHome;
 
 // 官网 index.html 里 Header_icon__3iDIG 的 path（data-key 同名），原样照抄。
 const icons: Record<string, { vb: string; d: string }> = {
@@ -137,7 +136,7 @@ const year = new Date().getFullYear();
 	hasWallpaper={hasWallpaper}
 >
 	<slot slot="head" name="head" />
-	<div class:list={["ef-shell", { "ef-shell--light": isLight }]} data-ef-shell>
+	<div class="ef-shell" data-ef-shell>
 		<BootScreen />
 
 		<!-- 官网左侧竖排栏：位置/尺寸/配色/交互照 Header_pcHeaderContainer 搬用 -->
@@ -181,11 +180,11 @@ const year = new Date().getFullYear();
 				</nav>
 
 				<div class="ef-rail-bottom">
+					<!-- 浅灰大圆角胶囊：留言 / 订阅。收起只露图标，悬停展开时加宽并浮出文字 -->
 					<div class="Header_buttonFrameContainer__Uvshp">
-						<div class="Header_buttonFrameBg__2UVLH" aria-hidden="true"></div>
 						{
 							railFoot.map((item) => (
-								<a class="Header_button__b0gdu" href={item.href}>
+								<a class="Header_button__b0gdu" href={item.href} aria-label={item.label}>
 									<svg
 										class="Header_icon__3iDIG"
 										viewBox={item.vb}
@@ -200,8 +199,8 @@ const year = new Date().getFullYear();
 						}
 					</div>
 
-					<!-- 官网黑 CTA（Header_buttonPreserveBg）：站内入口 -->
-					<a class="Header_buttonPreserveBg__rEZGT" href="/archive/">
+					<!-- 官网黑 CTA（Header_buttonPreserveBg）：三角 logo + 细分隔线 + 竖排「全部文章」 -->
+					<a class="Header_buttonPreserveBg__rEZGT" href="/archive/" aria-label="全部文章">
 						<span class="Header_bg___kVDv" />
 						<svg
 							class="Header_tri__KNP87"
@@ -218,13 +217,9 @@ const year = new Date().getFullYear();
 			</div>
 		</aside>
 
-		<!-- swup 容器：必须存在且包住 main（ef-light 跟着切页变） -->
+		<!-- swup 容器：必须存在且包住 main，否则站内跳转会整站重载 -->
 		<div id="swup-container">
-			<main
-				id="ef-main"
-				class:list={["ef-shell-main", { "ef-light": isLight }]}
-				data-ef-tone={isLight ? "light" : "dark"}
-			>
+			<main id="ef-main" class="ef-shell-main">
 				<slot />
 
 				<footer class="ef-foot">
@@ -247,7 +242,7 @@ const year = new Date().getFullYear();
 </Layout>
 
 <script is:inline>
-	// 竖排栏在 swup 容器之外、切页不会重建：手动同步「当前页」与页面基调。
+	// 竖排栏在 swup 容器之外、切页不会重建：手动同步「当前页」高亮。
 	(function () {
 		function sync() {
 			var path = location.pathname.replace(/\/+$/, "") || "/";
@@ -260,10 +255,6 @@ const year = new Date().getFullYear();
 				if (hit) links[i].setAttribute("aria-current", "page");
 				else links[i].removeAttribute("aria-current");
 			}
-			var main = document.getElementById("ef-main");
-			var light = !!(main && main.classList.contains("ef-light"));
-			var shell = document.querySelector("[data-ef-shell]");
-			if (shell) shell.classList.toggle("ef-shell--light", light);
 		}
 		sync();
 		document.addEventListener("swup:page:view", function () {
