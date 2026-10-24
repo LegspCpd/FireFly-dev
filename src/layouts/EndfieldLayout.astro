@@ -310,7 +310,7 @@ const year = new Date().getFullYear();
 							>
 								<path fill-rule="evenodd" fill="currentColor" d={jumpPath} />
 							</svg>
-						</button>
+						</a>
 						<div class="ef-rail-social-list">
 							{
 								railSocial.map((item) => (
@@ -328,7 +328,7 @@ const year = new Date().getFullYear();
 										>
 											<path fill-rule="evenodd" fill="currentColor" d={item.d} />
 										</svg>
-									</button>
+									</a>
 								))
 							}
 						</div>
@@ -382,19 +382,6 @@ const year = new Date().getFullYear();
 </Layout>
 
 <script is:inline>
-      /* 竖排栏里的图标是 button 不是 <a>：不弹浏览器链接提示，但仍可点击。 */
-      (function () {
-        if (window.__efRailJump) return;
-        window.__efRailJump = 1;
-        document.addEventListener("click", function (e) {
-          var t = e.target && e.target.closest && e.target.closest("[data-href]");
-          if (!t) return;
-          var href = t.getAttribute("data-href");
-          if (!href) return;
-          if (t.getAttribute("data-ext") === "1") window.open(href, "_blank", "noopener");
-          else location.href = href;
-        });
-      })();
 	// 竖排栏在 swup 容器之外、切页不会重建：手动同步「当前页」高亮。
 	(function () {
 		function sync() {
