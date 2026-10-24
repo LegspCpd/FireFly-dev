@@ -151,6 +151,13 @@ const year = new Date().getFullYear();
 		</script>
 	</Fragment>
 	<div class="ef-shell" data-ef-shell>
+		<!-- astro.config.mjs 里 swup 声明了四个 containers，其中 banner / TOC 三个属于
+		     主题网格布局；本站外壳没有它们，swup 会报 "Container mismatch, aborting"
+		     并退回整站重载。留三只空壳对位（在本站永远是空的），换取站内跳转不刷新。 -->
+		<div id="banner-overlay-container"></div>
+		<div id="banner-dim-container"></div>
+		<div id="floating-toc-wrapper"></div>
+
 		<BootScreen />
 
 		<!-- 官网左侧竖排栏：位置/尺寸/配色/交互照 Header_pcHeaderContainer 搬用 -->
