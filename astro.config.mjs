@@ -66,24 +66,38 @@ if (process.env.NODE_ENV === "development") {
 // 多平台部署：按 DEPLOY_TARGET 切换 adapter（本地定制；同时兼容上游的 CF_WORKERS 开关）
 // 可选值：vercel（默认）| cloudflare | static / edgeone
 // - vercel          -> @astrojs/vercel（serverless，保留全部动态接口）
-// - cloudflare      -> @astrojs/cloudflare（CF Pages Functions，动态接口自动转 Function）
-// - static/edgeone  -> 无 adapter，纯静态输出（EdgeOne Pages / 任意静态托管）
+// - cloudflare      -> @astrojs/cloudflare，供 Cloudflare **Pages** 使用。
+//                      注意：该 adapter 自 v12 起只面向 Cloudflare Workers，
+//                      **不再生成 Pages 版 _worker.js / _routes.json**，产物为
+//                      dist/client（静态站，Pages 直接托管它）+ dist/server（Workers 包，Pages 用不到）。
+//                      所以 CF Pages 后台的 Build output directory 必须是 dist/client，
+//                      仓库根 wrangler.jsonc 的 pages_build_output_dir 已同步指向它。详见 docs/DEPLOY.md。
+// - static/edgeone  -> 无 adapter，纯静态输出到 dist 根（EdgeOne Pages / 任意静态托管）
 const DEPLOY_TARGET = (
 	process.env.DEPLOY_TARGET || (process.env.CF_WORKERS ? "cloudflare" : "vercel")
 ).toLowerCase();
 
 let adapter;
+let outputHint;
 if (DEPLOY_TARGET === "cloudflare") {
 	adapter = cloudflare({
 		// workerd 预渲染环境没有 node:fs / node:path，而 gallery / OG 图等构建期逻辑需要它们
 		prerenderEnvironment: "node",
 	});
+	outputHint = "dist/client（CF Pages 的 Build output directory 请填 dist/client）";
 } else if (DEPLOY_TARGET === "static" || DEPLOY_TARGET === "edgeone") {
 	adapter = undefined;
+	outputHint = "dist（纯静态，dist 根目录下直接有 index.html）";
 } else {
 	const { default: vercel } = await import("@astrojs/vercel");
 	adapter = vercel();
+	outputHint = ".vercel/output（Vercel 自动识别）";
 }
+
+// 自证日志：部署异常时先看构建日志里选中的 adapter 与产物目录，是否和平台后台填的一致
+console.log(
+	`[deploy] DEPLOY_TARGET=${DEPLOY_TARGET} → adapter=${adapter?.name ?? "none"}；产物目录：${outputHint}`,
+);
 
 // ========== SEO: 构建文章 URL -> lastmod 映射（用于 sitemap 新鲜度信号，本地定制） ==========
 const postLastmodMap = new Map();

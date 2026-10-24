@@ -1,8 +1,19 @@
 {
+	// Cloudflare Pages 项目配置。
+	//
+	// 为什么必须是这种形状：
+	//  1) Pages 只托管「静态产物目录」。Astro + @astrojs/cloudflare 会把静态站输出到
+	//     dist/client（adapter 设了 preserveBuildClientDir），所以这里必须写 ./dist/client。
+	//     写成 ./dist 会得到一个只有 client/ 子目录、根目录没有 index.html 的部署 → 全站 404。
+	//  2) Pages 配置里不能出现 Workers 专属字段（main / assets）。一旦出现，缺少
+	//     pages_build_output_dir 时会触发 CF 构建日志：
+	//       "... does not appear to be valid ... contains the `pages_build_output_dir` property. Skipping file and continuing."
+	//     于是本文件被跳过、回落到后台面板的 Build output directory（误填 dist 就再次全站 404）。
+	//  3) 只部署 Cloudflare Workers（wrangler deploy / Workers Builds）时才需要 main + assets，
+	//     请在 Workers 项目里单独配置，见 docs/DEPLOY.md。
+	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "firefly",
+	"pages_build_output_dir": "./dist/client",
 	"compatibility_date": "2025-01-01",
-	"compatibility_flags": ["nodejs_compat"],
-	"assets": {
-		"directory": "./dist"
-	}
+	"compatibility_flags": ["nodejs_compat"]
 }
