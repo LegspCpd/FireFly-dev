@@ -87,6 +87,25 @@ export function normalizeApiBase(raw: unknown): string {
 	return raw.trim().replace(/\/+$/, "");
 }
 
+/**
+ * 线程键归一化 —— **全站唯一实现**，评论组件与各调用点都不再各写一份。
+ *
+ * 为什么必须归一化：留言板 / 友链 / 打赏 / 动态这些调用点写的是带尾斜杠的
+ * `/guestbook/`，而文章页写的是 `/posts/<slug>`（不带）。后端把 path 当纯字符串
+ * 比对，于是 /guestbook 与 /guestbook/ 会变成两条互不相通的线程。
+ *
+ * 规则只有三条：去掉首尾空白、保证以 / 开头、去掉尾部斜杠。
+ * 大小写、`.html`、查询串一律不动 —— 归一化不是重写，不能把两条本就不同的
+ * 线程合并成一条。
+ */
+export function normalizeThreadPath(raw: unknown): string {
+	if (typeof raw !== "string") return "/";
+	const trimmed = raw.trim();
+	if (!trimmed) return "/";
+	const leaded = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+	return leaded.replace(/\/+$/, "") || "/";
+}
+
 function readEnvValue(name: string): string {
 	try {
 		const env = import.meta.env as Record<string, unknown> | undefined;
@@ -450,9 +469,11 @@ export async function fetchComments(
 ): Promise<CommentListResult> {
 	const base = normalizeApiBase(thread.base);
 	if (!base) return { ok: false, error: makeError("invalid", 0, "no api base") };
+	// 读和写走同一个归一化，尾斜杠才拆不开线程（见 normalizeThreadPath）
+	const path = normalizeThreadPath(thread.path);
 	const url = isDataApiBase(base)
-		? buildDataApiListUrl(base, thread.path)
-		: `${base}/comments?path=${encodeURIComponent(thread.path)}`;
+		? buildDataApiListUrl(base, path)
+		: `${base}/comments?path=${encodeURIComponent(path)}`;
 	const init: RequestInit = {
 		method: "GET",
 		headers: { Accept: "application/json" },
@@ -491,14 +512,15 @@ export async function postComment(
 ): Promise<CommentPostResult> {
 	const base = normalizeApiBase(thread.base);
 	if (!base) return { ok: false, error: makeError("invalid", 0, "no api base") };
+	const path = normalizeThreadPath(thread.path);
 	const author = draft.author.trim();
 	const content = draft.content.trim();
 	if (!content) return { ok: false, error: makeError("invalid", 0, "empty content") };
 	// 两种方言的行字段名不同：通用契约用 author，Data API 用 nickname。
 	const dataApi = isDataApiBase(base);
 	const body: Record<string, string> = dataApi
-		? { path: thread.path, nickname: author, content, status: "visible" }
-		: { path: thread.path, content };
+		? { path, nickname: author, content, status: "visible" }
+		: { path, content };
 	if (!dataApi && author) body.author = author;
 	const headers: Record<string, string> = {
 		"Content-Type": "application/json",
