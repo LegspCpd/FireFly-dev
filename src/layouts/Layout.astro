@@ -229,7 +229,25 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
     {/* endfield-ui 套件：部件类名与 --ef-* 变量（见 public/endfield-ui/） */}
     <link rel="stylesheet" href="/endfield-ui/endfield.css" />
     <script is:inline src="/endfield-ui/variant.js"></script>
-    <script is:inline src="/endfield-ui/fx.js"></script>
+    {/* 套件的 fx.js 是 ES module（整份只有 export，没有副作用），
+        以 classic script 加载会在 fx.js:34 抛 SyntaxError（Unexpected token 'export'），
+        而且它本来也不会自己跑 —— 必须有人在 module 里 import 后调用。
+        所以这一处要做两件事：① 用 type="module" 加载，语法才成立；
+        ② 紧接着的引导脚本 import 进来并接线（只加 type 只是「不报错」，不是「有效果」）。
+        只接「读数落定」：data-fx-load / data-fx-host 是套件 fx.js 顶注里写明的
+        自动接线入口，站点没有这些标记时零副作用。
+        wireTheme 不接 —— 主题由本站自己的主题脚本管，接了就是两个 owner；
+        wireDialogs 不接 —— 它按 [data-open] 找对话框，而系列页 / SeriesNav
+        已经把这个属性当布尔状态用（[data-open="true"]），语义会打架。 */}
+    <script is:inline type="module" src="/endfield-ui/fx.js"></script>
+    <script is:inline type="module">
+      import { wireReadouts } from "/endfield-ui/fx.js";
+      function boot() { wireReadouts(document); }
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+      else boot();
+      // 站内跳转（swup）后新挂载的内容也要接线；与下面入场动效用同一个事件
+      document.addEventListener("swup:page:view", boot);
+    </script>
     <!-- 入场动效运行时。动画类一律来自套件预设（不受这里影响）：
            ef-in-power / ef-in-come / ef-in-drive / ef-in-sweep ...
          这里只补套件没有的两件事：
