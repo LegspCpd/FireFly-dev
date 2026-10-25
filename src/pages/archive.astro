@@ -1,7 +1,7 @@
 ---
 // 归档页 —— 官网二级页骨架（官网没有「归档」这一页，搬的是它二级页的通用语汇）：
 //   .SubpageHeader_subpageHeader  黄渐变带 + 黑方块图标 + 白色标题板（SansBold 4.5rem）
-//   .SubpageTab_subpageTab        年份页签（4px 圆角、hover #f3f3f3、active #e5e5e5 + 圆形箭头）
+//   .SubpageTab_subpageTab        年份页签 / 筛选条（4px 圆角、hover #f3f3f3、active #e5e5e5 + 圆形箭头）
 //   .SectionTitle_sectionTitle    每年的区块标题（灰块 + Gilroy-Medium 英文 + SansBold 中文）
 //   .ef-grid                      首页已验收的官网卡片网格
 // 页面没有任何自造视觉：色值/字号/间距全部来自上面三个官网组件。
@@ -11,6 +11,7 @@ import EfSubpageTabs from "@components/common/EfSubpageTabs.astro";
 import EndfieldPostGrid from "@components/layout/EndfieldPostGrid.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getSortedPosts } from "@/utils/content-utils";
+import { url } from "@/utils/url-utils";
 
 const posts = await getSortedPosts();
 
@@ -30,19 +31,32 @@ const tabs = groups.map((group, i) => ({
 	href: "#y" + group.year,
 	active: i === 0,
 }));
+
+// 筛选条（默认隐藏，页内脚本按 URL 命中后填标签再显示）。
+// 用的是同一个 EfSubpageTabs —— 官网的 SubpageTab 本来就是它的筛选条，
+// 不新造组件：第 1 项 = 当前筛选（active 态 = #e5e5e5 + 文字 -1.5u，官网原值），
+// 第 2 项 = 清除筛选，回全量归档。标签文字由脚本写入（见页尾脚本的 buildLabel）。
+const filterTabs = [
+	{ label: "", href: "#", active: true },
+	{ label: "清除筛选", href: url("/archive/"), active: false },
+];
 ---
 
 <EndfieldLayout title="归档" description="全部文章，按年份归档">
 	<EfSubpageHeader title="归档" titleEn="Archive" icon="navLore" />
 
-	<div class="ef-wrap">
-		<div class="ef-archive-tabs">
+	<div class="ef-wrap" data-ef-archive>
+		<div class="ef-archive-tabs" data-ef-archive-tabs>
 			<EfSubpageTabs items={tabs} label="按年份筛选" />
+		</div>
+
+		<div class="ef-archive-filterbar" data-ef-filterbar hidden>
+			<EfSubpageTabs items={filterTabs} label="当前筛选" />
 		</div>
 
 		{
 			groups.map((group) => (
-				<section class="ef-archive-year" id={"y" + group.year}>
+				<section class="ef-archive-year" id={"y" + group.year} data-ef-year={group.year}>
 					<EfSectionTitle en={group.posts.length + " Posts"} cn={group.year + " 年"} />
 					<div class="ef-archive-grid">
 						<EndfieldPostGrid posts={group.posts} columns={3} />
@@ -51,14 +65,20 @@ const tabs = groups.map((group, i) => ({
 			))
 		}
 
+		<p class="ef-empty ef-field" data-ef-filter-empty hidden>
+			没有匹配的文章。
+		</p>
+
 		{posts.length === 0 && <p class="ef-empty ef-field">还没有文章。</p>}
 	</div>
 </EndfieldLayout>
 
 <style>
 	/* 页签与第一个年份之间的呼吸：官网页签顶 352、标题带底 284.625，差 67.5px = 7.5rem；
-	   这里取同一量级 2.5u（年份区块本身不带内距，间距全部由这一处给出）。 */
-	.ef-archive-tabs {
+	   这里取同一量级 2.5u（年份区块本身不带内距，间距全部由这一处给出）。
+	   筛选条与年份页签互斥显示（有筛选时藏页签、显示筛选条），所以共用同一份内距。 */
+	.ef-archive-tabs,
+	.ef-archive-filterbar {
 		padding-top: calc(2.5 * var(--efu));
 		padding-bottom: calc(2.5 * var(--efu));
 	}
@@ -69,27 +89,11 @@ const tabs = groups.map((group, i) => ({
 	.ef-archive-grid {
 		margin-top: calc(1.5 * var(--efu));
 	}
+	/* 客户端筛选的落点：命中的卡片去掉 data-ef-out，没命中的藏起来。
+	   必须写在本页（作用域选择器 + :global 下钻），
+	   因为 .ef-card 自己是 display:flex —— 单靠 hidden 属性挡不住它。 */
+	.ef-archive-grid :global(.ef-card[data-ef-out]) {
+		display: none;
+	}
 </style>
 
-<script is:inline>
-	// 页签选中态跟随 URL hash（点「2026」高亮挪到 2026，滚回顶部也一样）。
-	// 没有 hash 时保留服务端渲染的默认选中（最新年份）。
-	(function () {
-		function sync() {
-			var hash = location.hash;
-			if (!hash) return;
-			var tabs = document.querySelectorAll(".SubpageTab_tab__qSWqv");
-			for (var i = 0; i < tabs.length; i++) {
-				var hit = tabs[i].getAttribute("href") === hash;
-				tabs[i].classList.toggle("SubpageTab_active__fHDLL", hit);
-				if (hit) tabs[i].setAttribute("aria-current", "page");
-				else tabs[i].removeAttribute("aria-current");
-			}
-		}
-		sync();
-		window.addEventListener("hashchange", sync);
-		document.addEventListener("swup:page:view", function () {
-			setTimeout(sync, 60);
-		});
-	})();
-</script>

@@ -400,6 +400,13 @@ const year = new Date().getFullYear();
 	</div>
 </Layout>
 
+<script>
+	// 归档页的两个客户端行为（查询串筛选 + 年份页签 hash 同步），
+	// 顶注解释了为什么它们必须在布局里而不是归档页里：swup 换页插入的
+	// <script> 不执行，「/tags/ 点标签 → /archive/?tag=x」就没有任何脚本会跑。
+	import { initArchiveFilter } from "@/utils/ef-archive-filter";
+	initArchiveFilter();
+</script>
 <script is:inline>
 	// 竖排栏在 swup 容器之外、切页不会重建：手动同步「当前页」高亮。
 	(function () {

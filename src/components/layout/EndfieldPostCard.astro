@@ -18,7 +18,14 @@ const dateStr = d
 	: "";
 ---
 
-<article class="ef-card">
+<!-- data-post-* 只给归档页的客户端筛选（/archive/?tag= / ?category= / ?uncategorized=）用：
+     卡片上只显示前 3 个标签，判定必须拿完整标签列表，所以原始数据挂在 data-* 上。
+     纯数据属性，不参与任何样式（首页 / 文章页同样渲染这几个属性，无副作用）。 -->
+<article
+	class="ef-card"
+	data-post-tags={JSON.stringify(tags.map((t) => t.trim()))}
+	data-post-category={category ?? ""}
+>
 	<p class="ef-card-meta">
 		{dateStr && <span class="ef-card-date">{dateStr}</span>}
 		{category && <span class="ef-card-cat">{category}</span>}
