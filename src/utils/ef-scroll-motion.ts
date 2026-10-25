@@ -48,6 +48,13 @@
        + rAF + 缓存的容器/元素几何），位置等价于官网的 useInView / useScroll。
        视差强度仍是本站原有的 data-ef-parallax 系数，只写 --ef-py（0.5px 量化，
        值不变就不写 DOM），位移由 CSS 独立 translate 属性合成。
+     · deco 带：官网 chunk 226 的 aM 组件（endfieldPre）那两条式子
+       "-(300*p)%120%" 与 "120-300*p%120%" 照抄，由**页级** progress 驱动；
+       脚本只写 --ef-bx（1px 量化），宽度只在 init / resize 读一次。
+     · clipPath 擦除：官网 chunk 8858 的四次缓出
+       1 - Math.pow(1 - 0.01*progress, 4)（progress 0→100），滚动驱动、一次性；
+       擦除窗口固定 0.5 屏（元素上边从视口 75% 处走到 25% 处），与块自身高度无关。
+       脚本只写 --ef-wipe（0.1% 量化）。
 
    官网竖屏会换成另一套 H5 版式（chunk 90286 的 M() 钩子：
    window.innerWidth >= window.innerHeight ? "landscape" : "portrait"），
@@ -334,6 +341,7 @@ function markInView(): void {
 		const r = el.getBoundingClientRect();
 		if (r.top < vh && r.bottom > 0) el.classList.add(IN_CLASS);
 	}
+	finishSeenWipes();
 }
 
 /* ---- 视差 ---------------------------------------------------------------- */
@@ -396,6 +404,233 @@ function startParallax(): void {
 	}
 }
 
+/* ---- 官网 deco 带（chunk 226 的 aM / endfieldPre） -------------------------
+   官网原文（逐字）：
+     let e = useRef(window.document.documentElement);
+     const {scrollYProgress: t} = useScroll({container: e});
+     const a = useTransform(t, e => `${-(300*e)%120}%`);
+     const n = useTransform(t, e => `${120-300*e%120}%`);
+     return "landscape" === M() ? (
+       <div className={styles.endfieldPre}>
+         <div className={styles.icon} style={{translateX: a}}><Logo/></div>
+         <div className={styles.icon} style={{translateX: n}}><Logo/></div>
+       </div>
+     ) : <Logo className={styles.h5Icon}/>;
+   —— **同一份内容渲染两份**，各自按上面一条式子平移。两条式子相差正好 120%
+   （= 自己宽度的 1.2 倍），所以两份实际拼成一条无缝跑带；p 从 0 到 1 各跑满
+   2.5 个周期。竖屏整块换成静态 h5Icon，不跑 —— 本站同样只在 landscape 建观察器。
+
+   本站落地的两处细节（都是为了「量化 + 不每帧重排」）：
+     · % 是相对元素**自身宽度**的，所以先按缓存的宽度换成 px 再 1px 量化；
+       宽度只在 init / resize 读一次，滚动路径上一格布局都不量。
+     · 带内图案的周期做成宽度的 40%：1.2 倍宽度 = 3 个周期，接缝正好落在
+       一段图案的起点上，位移重置（-120% → 0）时看不出跳。 */
+
+const BAND_ATTR = "data-ef-band";
+const BAND_STEP = 1; // 1px 量化
+
+type BandItem = {
+	el: HTMLElement;
+	kind: string;
+	width: number;
+	last: number;
+};
+
+let bandItems: BandItem[] = [];
+let bandObserver: ScrollObserver | null = null;
+
+/* 官网两条映射逐字照抄。JS 的 % 取余跟着被除数走，所以
+   a 落在 (-120, 0]，b = a + 120 落在 (0, 120] —— 两者是同一条锯齿。 */
+function bandShift(kind: string, p: number): number {
+	const t = (300 * p) % 120;
+	return kind === "b" ? 120 - t : -t;
+}
+
+function paintBands(p: number): void {
+	for (let i = 0; i < bandItems.length; i++) {
+		const item = bandItems[i];
+		const px =
+			Math.round(((bandShift(item.kind, p) / 100) * item.width) / BAND_STEP) *
+			BAND_STEP;
+		if (px === item.last) continue; // 没变化就不写 DOM
+		item.last = px;
+		/* 只写无单位的位移量，落到 CSS 的独立 translate 上 —— 不碰 transform */
+		item.el.style.setProperty("--ef-bx", px + "px");
+	}
+}
+
+function stopBands(): void {
+	if (bandObserver) {
+		bandObserver.revert();
+		bandObserver = null;
+	}
+	for (const item of bandItems) item.el.style.removeProperty("--ef-bx");
+	bandItems = [];
+}
+
+function startBands(): void {
+	stopBands();
+	/* 官网竖屏换成静态 h5Icon：整块不跑 */
+	if (!isLandscape()) return;
+	const nodes = document.querySelectorAll<HTMLElement>("[" + BAND_ATTR + "]");
+	if (nodes.length === 0) return;
+	/* 页面本身不滚动的短页：没有进度可读，两份重合停在自然位就是一条静止的带 */
+	if (document.documentElement.scrollHeight - window.innerHeight < 8) return;
+	for (let i = 0; i < nodes.length; i++) {
+		const el = nodes[i];
+		const width = el.getBoundingClientRect().width; // 只在这里量一次
+		if (width === 0) continue;
+		bandItems.push({
+			el,
+			kind: el.getAttribute(BAND_ATTR) || "a",
+			width,
+			last: Number.NaN,
+		});
+	}
+	if (bandItems.length === 0) return;
+	/* 页级进度，等价于官网的 useScroll({container: documentElement})：
+     enter "start start" / leave "end end" → progress = scrollY / (docH - vh)。
+     一条观察器驱动全部带子，滚动时只读它算好的 progress。 */
+	bandObserver = onScroll({
+		target: document.body,
+		enter: "start start",
+		leave: "end end",
+		onUpdate: (obs) => paintBands(obs.progress),
+	});
+	paintBands(bandObserver.progress);
+}
+
+/* ---- clipPath 擦除（官网 chunk 8858 的 C helper） --------------------------
+   官网那条缓动逐字为 1 - Math.pow(1 - 0.01 * progress, 4)，progress 走 0→100，
+   即四次缓出（开头快、尾巴收）。官网把它挂在 clip-path 上，随滚动进度擦除。
+   本站：滚入时从左到右擦出来，一次性（擦完就摘观察器，回头滚动不再重播）。
+
+   擦除窗口固定 0.5 屏：
+     enter "75% top"   元素上边走到视口 75% 处 = progress 0（刚进来一屏的四分之一）
+     leave "25% top"   元素上边走到视口 25% 处 = progress 1（已经露出四分之三屏）
+   两点相距 0.5 屏，与块自身高度无关 —— 长文页那种几千 px 的大块也不会出现
+   「滚了半天右半屏还是空的」；反过来起始点不能太早（贴视口下沿就开始），
+   否则擦除都发生在还没进视口的那半块上，屏幕上什么也看不到。 */
+
+const WIPE_ATTR = "data-ef-wipe";
+const WIPE_DONE = "ef-wiped";
+/* 擦除窗口：元素上边从视口的 75% 处（刚进来四分之一屏）走到 25% 处（已经露出
+   四分之三屏）—— 固定 0.5 屏的滚动量，跟块自身高度无关；两块位置要和下面
+   onScroll 的 enter / leave 一字对应。 */
+const WIPE_ENTER = 0.75;
+const WIPE_LEAVE = 0.25;
+const WIPE_STEP = 1000; // --ef-wipe 保留一位小数（0.1% ≈ 1px），量化后再看要不要写
+
+/* 会被擦除的块：区块与文章面板（都是「大块内容」）。
+   .ef-sec 在首页/列表页，.ef-sheet-wrap 在（长页）文章页。 */
+const WIPE_TARGETS: string[] = [".ef-sec", ".ef-sheet-wrap"];
+
+type WipeItem = { el: HTMLElement; obs: ScrollObserver | null; last: number };
+
+let wipeItems: WipeItem[] = [];
+
+/* 官网缓动：官网 progress 用 0→100 写法（0.01*progress 即 0→1） */
+function wipeEase(p: number): number {
+	return 1 - Math.pow(1 - p, 4);
+}
+
+function wipeValue(p: number): number {
+	return Math.round((1 - wipeEase(p)) * WIPE_STEP) / 10;
+}
+
+/* 擦完（或要求直接可见）：挂着 .ef-wiped 让 CSS 把 clip-path 收回 none，
+   同时把观察器摘掉。revert 走微任务 —— 不能在 onUpdate 里同步 revert，
+   那会改到 anime 正在遍历的观察器表。 */
+function finishWipe(el: HTMLElement): void {
+	el.classList.add(WIPE_DONE);
+	el.style.removeProperty("--ef-wipe");
+	for (let i = wipeItems.length - 1; i >= 0; i--) {
+		if (wipeItems[i].el !== el) continue;
+		const obs = wipeItems[i].obs;
+		wipeItems.splice(i, 1);
+		if (obs) queueMicrotask(() => obs.revert());
+	}
+}
+
+function paintWipe(item: WipeItem): void {
+	if (!item.obs) return;
+	const v = wipeValue(item.obs.progress);
+	if (v !== item.last) {
+		item.last = v;
+		item.el.style.setProperty("--ef-wipe", String(v));
+	}
+	if (v > 0) return;
+	finishWipe(item.el);
+}
+
+function stopWipes(): void {
+	for (const item of wipeItems) {
+		if (item.obs) item.obs.revert();
+		item.el.removeAttribute(WIPE_ATTR);
+		item.el.style.removeProperty("--ef-wipe");
+	}
+	wipeItems = [];
+}
+
+function startWipes(): void {
+	stopWipes();
+	const vh = window.innerHeight || 1;
+	for (let t = 0; t < WIPE_TARGETS.length; t++) {
+		const nodes = document.querySelectorAll<HTMLElement>(WIPE_TARGETS[t]);
+		for (let i = 0; i < nodes.length; i++) {
+			const el = nodes[i];
+			/* 已经擦完的（.ef-wiped）永不重播；正在擦的不重复建观察器 */
+			if (el.classList.contains(WIPE_DONE)) continue;
+			if (el.hasAttribute(WIPE_ATTR)) continue;
+			wipeOne(el, vh);
+		}
+	}
+}
+
+function wipeOne(el: HTMLElement, vh: number): void {
+	const rect = el.getBoundingClientRect();
+	if (rect.width === 0 || rect.height === 0) return;
+	/* 起始就在上半屏（首屏里、或锚点直接落在块中）：不做擦除，直接可见 ——
+	   否则首屏会被裁掉一截，得等用户滚动才露出来。 */
+	if (rect.top < vh * WIPE_LEAVE * 2) {
+		el.classList.add(WIPE_DONE);
+		return;
+	}
+	/* 起始进度按同一个窗口自己算一次，和属性在同一个任务里落下 ——
+	   避免「先按 100% 裁掉一帧、再跳到真实值」。 */
+	const p = Math.min(
+		1,
+		Math.max(
+			0,
+			(WIPE_ENTER * vh - rect.top) / ((WIPE_ENTER - WIPE_LEAVE) * vh),
+		),
+	);
+	const item: WipeItem = { el, last: Number.NaN, obs: null };
+	if (p > 0) el.style.setProperty("--ef-wipe", String(wipeValue(p)));
+	el.setAttribute(WIPE_ATTR, "run");
+	item.obs = onScroll({
+		target: el,
+		enter: "75% top",
+		leave: "25% top",
+		onUpdate: () => paintWipe(item),
+		onResize: () => paintWipe(item),
+	});
+	wipeItems.push(item);
+}
+
+/* 兜底：后台标签页不投递滚动事件，切回前台把已经越过擦除窗口的块直接定格 */
+function finishSeenWipes(): void {
+	const vh = window.innerHeight || 1;
+	const nodes = document.querySelectorAll<HTMLElement>(
+		"[" + WIPE_ATTR + "]:not(." + WIPE_DONE + ")",
+	);
+	for (let i = 0; i < nodes.length; i++) {
+		const el = nodes[i];
+		if (el.getBoundingClientRect().top >= vh * 0.5) continue;
+		finishWipe(el);
+	}
+}
+
 /* ---- 生命周期 ------------------------------------------------------------ */
 
 function boot(): void {
@@ -407,6 +642,8 @@ function boot(): void {
 	// Layout 的首次 replay 已经跑过（它的内联脚本先执行），这里按视口修正一遍
 	tameOffscreenReplay();
 	startParallax();
+	startBands();
+	startWipes();
 	bindOnce();
 }
 
@@ -418,6 +655,8 @@ function refresh(): void {
 	tagAuto(document);
 	startReveal();
 	startParallax();
+	startBands();
+	startWipes();
 	markInView();
 }
 
@@ -431,7 +670,11 @@ function bindOnce(): void {
 		() => {
 			if (!started || prefersReducedMotion()) return;
 			window.clearTimeout(resizeTimer);
-			resizeTimer = window.setTimeout(startParallax, 200);
+			resizeTimer = window.setTimeout(() => {
+				startParallax();
+				startBands(); // 跑带的 % 换算要重读宽度；视口高变了擦除窗口也要重算
+				startWipes();
+			}, 200);
 		},
 		{ passive: true },
 	);
@@ -440,7 +683,11 @@ function bindOnce(): void {
 	window.addEventListener(
 		"load",
 		() => {
-			if (started && !prefersReducedMotion()) startParallax();
+			if (started && !prefersReducedMotion()) {
+				startParallax();
+				startBands();
+				startWipes();
+			}
 			tameOffscreenReplay();
 		},
 		{ once: true },
@@ -458,6 +705,8 @@ function bindOnce(): void {
 			document.documentElement.classList.add(MOTION_CLASS);
 			stopReveal();
 			stopParallax();
+			stopBands();
+			stopWipes();
 			tagAuto(document);
 			tameOffscreenReplay();
 			startReveal();
@@ -488,6 +737,8 @@ function bindOnce(): void {
 function teardown(): void {
 	stopReveal();
 	stopParallax();
+	stopBands();
+	stopWipes();
 	if (resizeTimer) {
 		window.clearTimeout(resizeTimer);
 		resizeTimer = 0;
@@ -499,6 +750,10 @@ function teardown(): void {
 		el.classList.add(IN_CLASS);
 		el.style.removeProperty("opacity");
 		el.style.removeProperty("--ef-rp");
+	}
+	// 擦除中的块：立刻定格成「完全可见」（clip-path 归零，位移量清掉）
+	for (const el of document.querySelectorAll<HTMLElement>("[" + WIPE_ATTR + "]")) {
+		finishWipe(el);
 	}
 	started = false;
 }

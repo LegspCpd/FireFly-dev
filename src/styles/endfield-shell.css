@@ -1189,6 +1189,137 @@ html.ef-motion [data-ef-reveal="up"][data-ef-parallax] {
     translate: none;
     animation: none;
   }
+  /* 擦除：reduce 时不做擦除，直接完全可见（§7.6） */
+  html.ef-motion [data-ef-wipe] {
+    clip-path: none;
+    --ef-wipe: 0;
+  }
+  /* 跑带：reduce 时停在自然位，不随滚动位移 */
+  html.ef-motion .ef-band-copy {
+    translate: none;
+  }
+}
+
+/* ---------- 7.6 官网 deco 带 / clipPath 擦除（chunk 226 / 8858） ----------
+   两个动效都来自官网线上 chunk，参数照抄，触发交给 anime.js v4 的 onScroll()：
+
+   ① deco 带（chunk 226 的 aM / endfieldPre）
+        a = useTransform(scrollYProgress, p => `${-(300*p)%120}%`)
+        n = useTransform(scrollYProgress, p => `${120-300*p%120}%`)
+      同一份内容渲染两份、各自平移 —— 两条式子相差正好 120%（= 自己宽度的 1.2 倍），
+      所以两份拼成一条无缝跑带。脚本只写 --ef-bx（1px 量化，宽度只在 init / resize
+      读一次），位移落在独立 translate 属性上，不碰元素自己的 transform。
+
+   ② clipPath 擦除（chunk 8858 的 C helper）
+        1 - Math.pow(1 - 0.01 * progress, 4)      // progress 0→100，四次缓出
+      脚本按这个缓动写 --ef-wipe（剩余百分比，0.1% 量化 ≈ 1px），
+      clip-path 的 owner 仍然是 CSS；擦完挂 .ef-wiped，规则不再命中 → clip-path: none。
+      擦除窗口 = 元素上边从视口 75% 处走到 25% 处（0.5 屏，参数在 ef-scroll-motion.ts），
+      与块自身高度无关。
+
+   颜色只用站内既有的三档：#fffa00（信号黄）/ #191919（墨）/ #e5e5e5（细线），
+   形态也全部是站内现成做法（眉标的大写拉丁 + 黄方块、.ef-hatch 的斜纹语汇、
+   尺规一样的细刻度）—— 没有引入新的素材。 */
+
+/* 脚本写的两个量：@property 关掉继承（inherits:false），改一次只让元素自己重算，
+   不会把整棵子树拖进样式重算（擦除块可以很大）。 */
+@property --ef-bx {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --ef-wipe {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 100;
+}
+
+/* —— ① deco 带：首屏底边那条 1px 细线上方的两条细带 —— */
+.ef-hero-bands {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(1.6 * var(--efu));
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: calc(1.2 * var(--efu));
+  pointer-events: none;
+  user-select: none;
+}
+.ef-band {
+  position: relative;
+  height: calc(1.2 * var(--efu));
+  overflow: hidden;
+}
+/* b 带放进镜像坐标系再跑：官网 b 式（120-300p%120）本身与 a 式同向（两条正好差一个
+   整周期，官网是用它们把两份内容拼成一条无缝跑带）；镜像之后，屏幕上才是上下两条
+   反向的跑带 —— 两条式子一字未改。 */
+.ef-band--tape {
+  transform: scaleX(-1);
+  opacity: 0.75;
+}
+.ef-band-copy {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  font-style: normal; /* 两份都用 <i> 承载（官网是 div），别继承斜体 */
+}
+html.ef-motion .ef-band-copy {
+  translate: var(--ef-bx, 0px) 0;
+}
+/* a 带：眉标那套大写拉丁（.ef-hero-eyebrow 的字距/字体），前面的黄方块同样照抄 */
+.ef-band--mark .ef-band-copy {
+  white-space: nowrap;
+  font-family: SansMedium, sans-serif;
+  font-size: calc(1.05 * var(--efu));
+  line-height: calc(1.2 * var(--efu));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #191919;
+  opacity: 0.42;
+}
+.ef-band--mark .ef-band-copy::before {
+  content: "";
+  display: inline-block;
+  width: calc(0.6 * var(--efu));
+  height: calc(0.6 * var(--efu));
+  margin-right: calc(1.2 * var(--efu));
+  background: #fffa00;
+  vertical-align: 0.05em;
+}
+/* b 带：尺规一样的细刻度。周期 = 自己宽度的 40% —— 1.2 倍宽度正好 3 个周期，
+   位移重置（-120% → 0）时接缝落在刻度段起点上，看不出跳。 */
+.ef-band--tape .ef-band-copy {
+  background-image: repeating-linear-gradient(
+    90deg,
+    #fffa00 0 0.4%,
+    transparent 0.4% 1.5%,
+    #191919 1.5% 1.8%,
+    transparent 1.8% 3%,
+    #191919 3% 3.3%,
+    transparent 3.3% 4.5%,
+    #191919 4.5% 4.8%,
+    transparent 4.8% 6.6%,
+    #e5e5e5 6.6% 7.2%,
+    transparent 7.2% 40%
+  );
+}
+/* 窄屏 H5：官网竖屏把整块换成静态 h5Icon，这里直接不显示（与 HeroCanvas 的
+   860px 断点一致） */
+@media (max-width: 860px) {
+  .ef-hero-bands {
+    display: none;
+  }
+}
+
+/* —— ② clipPath 擦除：还没擦完时怎么裁（--ef-wipe 是剩余百分比，100 → 0）
+   滚动窗口在 ef-scroll-motion.ts：元素上边 75% → 25% 视口高，共 0.5 屏 —— */
+html.ef-motion [data-ef-wipe]:not(.ef-wiped) {
+  clip-path: inset(0 calc(var(--ef-wipe, 100) * 1%) 0 0);
 }
 
 /* ---------- 8. 窄屏 H5 ----------------------------------------------------

@@ -43,6 +43,22 @@ const latestLabel = latest
 		<p class="ef-hero-side-mark">LEGSPCPD</p>
 		<p class="ef-hero-side-scroll">SCROLL<span>↓</span></p>
 	</div>
+
+	<!-- 官网 deco 带（线上 chunk 226 的 endfieldPre）：同一份内容渲染两份，各自按官网
+	     那两条映射平移（"-(300*p)%120%" 与 "120-300*p%120%"）—— 两条相差正好一个
+	     整周期，两份因此拼成一条无缝跑带。位移由 ef-scroll-motion.ts 写 --ef-bx
+	     （1px 量化），这里只有静态视觉（颜色/形态全部取站内现成做法，见
+	     endfield-shell.css §7.6）。窄屏与竖屏整块不显示。 -->
+	<div class="ef-hero-bands" aria-hidden="true">
+		<div class="ef-band ef-band--mark">
+			<i class="ef-band-copy" data-ef-band="a">LEGSPCPD // CONFIG · PITFALL · TRADEOFF · SELF-HOSTED · CLOUDFLARE · EDGEONE · </i>
+			<i class="ef-band-copy" data-ef-band="b">LEGSPCPD // CONFIG · PITFALL · TRADEOFF · SELF-HOSTED · CLOUDFLARE · EDGEONE · </i>
+		</div>
+		<div class="ef-band ef-band--tape">
+			<i class="ef-band-copy" data-ef-band="a"></i>
+			<i class="ef-band-copy" data-ef-band="b"></i>
+		</div>
+	</div>
 </section>
 
 <style>
