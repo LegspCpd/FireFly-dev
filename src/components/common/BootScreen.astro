@@ -99,34 +99,30 @@
 
     /* 2) 官网那个数组装的是「逐张预加载页面图片」（226 chunk 里的 aJ：
            () => preload(require("...png").src) × 30 余张）。本站照同一套语义 ——
-           数文档里已经出现的 <img>，一张一项，落在 12 张。**不等 window load**：
-           那会把 AdSense / Pagefind 这些跟首屏无关的东西也算进去，站主看到的就是
-           一次几秒钟的黑屏，与官网的「等图」不是一回事。 */
-
-    // 2) swup 就位（本站站内跳转依赖它，首页那几个容器没挂上就会整站重载）
-    tasks.push(
-      new Promise(function (res) {
-        if (window.swup) return res();
-        var t = setInterval(function () {
-          if (window.swup) { clearInterval(t); res(); }
-        }, 80);
-        setTimeout(function () { clearInterval(t); res(); }, 3000);
-      })
-    );
-
-    // 3) 文档里已经出现的 <img>（官网是预加载图，本站是首屏配图 / 头像）
-    var imgs = [].slice.call(document.images || []).slice(0, 12);
+           数文档里的 <img>，一张一项。三条硬约束，都是为了不把整屏拖长：
+             · 跳过 loading="lazy"（不在视口里的图永远不会发 load/error）
+             · 跳过没有 src 的占位图
+             · 单张 2.5s 上限（网络卡住的图不许拖住整屏）
+           **不等 window load**，也不等 swup 就位：前者会连 AdSense / Pagefind 一起算，
+           后者在线上冷启动要 3s（swup 没就位时点站内链接只是退回普通整页跳转，
+           不影响正确性），两者都会让站主看到一次远长于官网的黑屏。 */
+    var imgs = [].slice.call(document.images || []).filter(function (img) {
+      return img.loading !== "lazy" && (img.getAttribute("src") || img.currentSrc);
+    }).slice(0, 12);
     imgs.forEach(function (img) {
       tasks.push(
         new Promise(function (res) {
-          if (img.complete) return res();
-          img.addEventListener("load", function () { res(); }, { once: true });
-          img.addEventListener("error", function () { res(); }, { once: true });
+          var done = false;
+          var fin = function () { if (!done) { done = true; res(); } };
+          if (img.complete) return fin();
+          img.addEventListener("load", fin, { once: true });
+          img.addEventListener("error", fin, { once: true });
+          setTimeout(fin, 2500);
         })
       );
     });
 
-    // 4) 最短可见时长。官网靠游戏资源天然拖到 1.5s 以上；本站是静态站，不补这一档
+    // 3) 最短可见时长。官网靠游戏资源天然拖到 1.5s 以上；本站是静态站，不补这一档
     //    的话 0% → 100% 会在两帧里跳完，那四个相位就看不见了。
     //    从**文档起点**算 700ms（不是从这行脚本算）：HTML 到得晚时自动缩短等待，
     //    leaving 永远落在导航后 ~0.7s，黄条扫过 ≈1.2s、整屏黄 ≈1.7s 就都对得上。
