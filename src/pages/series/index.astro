@@ -3,6 +3,8 @@ import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 // 页名图标来源：系列：官网无「系列」，取 navOperator（竖排栏 /series/ 同 key）。
 import EfIcon from "@components/common/EfIcon.astro";
+import EfSectionTitle from "@components/common/EfSectionTitle.astro";
+import EfSubpageHeader from "@components/common/EfSubpageHeader.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getSeriesList } from "@/utils/content-utils";
 import { getPostUrlBySlug } from "@/utils/url-utils";
@@ -12,14 +14,15 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
 ---
 
 <EndfieldLayout title={i18n(I18nKey.series)} description={i18n(I18nKey.allSeries)}>
-    <!-- 官网骨架：眉标 + 页名 + 副字段（与 categories / tags / friends / about 逐字同一套） -->
-    <div class="card-base px-8 py-6 mb-4">
-        <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// SERIES</p>
-        <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1"><EfIcon name="navOperator" inline />{i18n(I18nKey.series)}</h1>
-        <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">
-            {i18n(I18nKey.allSeries)} · {totalPosts} {i18n(I18nKey.postsCount)}
+    <!-- 页名用官网二级页页头 .SubpageHeader_subpageHeader，小节标题用 .SectionTitle_sectionTitle -->
+    <EfSubpageHeader title={i18n(I18nKey.series)} titleEn="Series" icon="navOperator" />
+
+    <div class="ef-wrap">
+      <div class="ef-series-body">
+        <EfSectionTitle en="All Series" cn={i18n(I18nKey.allSeries)} />
+        <p class="ef-field ef-series-count" data-replay="ef-in-power" style="--i: 0">
+            {seriesList.length} · {totalPosts} {i18n(I18nKey.postsCount)}
         </p>
-    </div>
 
     <!-- 系列列表：手风琴卡片（默认收起） -->
     {
@@ -93,6 +96,8 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
             </div>
         )
     }
+      </div>
+    </div>
 
     <script is:inline>
         function onSeriesAccordion(e) {
@@ -131,6 +136,19 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
         }
     </script>
 </EndfieldLayout>
+
+<style>
+    /* 页头带底到内容的上边距：官网 .__10-NoticeList_items__ 的 margin-top:2.625rem；
+       EfSectionTitle 高 5.5u（中文标题正好压到 5.5u），所以计数行只能往**下**排：
+       上留 1u、下留 1.5u 再接手风琴卡片（与标签页「小节标题 → 内容」同一档间距）。
+       原来的 -1u 负边距会把计数行顶进标题里，形成压字。 */
+    .ef-series-body {
+        padding-block: calc(2.625 * var(--efu)) calc(6 * var(--efu));
+    }
+    .ef-series-count {
+        margin: calc(1 * var(--efu)) 0 calc(1.5 * var(--efu));
+    }
+</style>
 
 <style>
     /* 官网 arrowSmall 是「右指箭头」；折叠态要「下指」，基准转 90°，展开态由下方规则再转 180° */

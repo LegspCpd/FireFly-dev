@@ -81,13 +81,31 @@ CREATE POLICY comments_insert_visible ON public.comments
   );
 
 -- 没有 UPDATE / DELETE 策略 + 不给 UPDATE / DELETE 权限 = 匿名端改不了、删不掉
-GRANT USAGE ON SCHEMA public TO public;
-GRANT SELECT, INSERT ON public.comments TO public;
-GRANT USAGE, SELECT ON SEQUENCE public.comments_id_seq TO public;
+--
+-- 授权只给 anonymous（启用 Data API 时才存在的角色），**PUBLIC 上一条都没有**：
+-- 表级只有 SELECT（所以 select=* 能读到 ip_hash 列，见 comment-backend-limits.md §0）；
+-- INSERT 是**列级**的，匿名端只能写这 7 列，多写一列（或写没授的列）直接报权限错。
+-- 注：ip_hash 不在上面的 CREATE TABLE 里，由 comment-backend-limits.md §7-A 的
+-- ALTER TABLE … ADD COLUMN 添加；先跑那份的 §7，再跑这里的 GRANT（都幂等，可重跑）。
+REVOKE ALL ON public.comments FROM public;
+REVOKE ALL ON SEQUENCE public.comments_id_seq FROM public;
+
+GRANT SELECT ON public.comments TO anonymous;
+GRANT INSERT (path, nickname, website, content, status, parent_id, ip_hash)
+  ON public.comments TO anonymous;
+GRANT USAGE, SELECT ON SEQUENCE public.comments_id_seq TO anonymous;
 ```
 
-> 授权写给伪角色 `public`，是为了「先建表、后启用 Data API」也不需要补跑 SQL
-> （`anonymous` 角色是启用时才创建的）。要收紧成只给 `anonymous`，见 §6 末尾。
+> **授权**只授给 `anonymous`，不给伪角色 `public`：`anonymous` 是启用 Data API 时
+> 才创建的角色，所以建表与授权要在同一批 SQL 里跑完（Neon 控制台
+> **Postgres database → Data API** 会创建它，先建表后启用的话，回到 SQL Editor 补跑上面那几句）。
+> §1 的 INSERT 策略写的是 `TO public`（伪角色），对 `anonymous` 同样生效，不用重建。
+> schema 级 `USAGE` 不用手写 GRANT：Neon 的 *Grant public schema access*（§3 第 1 步）已经给了。
+>
+> **限流键走请求头 `x-client-key`**（`comments.ip_hash` 列只是兜底 + 审计）：
+> 触发器 `comment_client_key()` 按「请求头 `x-client-key` → 请求体 `ip_hash` 字段 → `~unkeyed`」
+> 取值，所以**前端必须传加盐哈希**（稳定的不透明字符串，≤64 字符），
+> 绝不能传原始标识（明文 IP / 邮箱 / 设备 id）。细节见 [comment-backend-limits.md](./comment-backend-limits.md) §0。
 
 ---
 
@@ -199,16 +217,23 @@ curl -sS -o /dev/null -w '%{http_code}\n' -X DELETE "$API/comments?path=eq.%2Fgu
 
 公网侧：上面的 curl 与浏览器 e2e 都复现了同一组结果（§0、§5）。
 
-想收紧成「只给 anonymous 角色」，在 SQL Editor 补：
+**库上现状**就是收紧后的形态：`public`（伪角色）上一条授权都没有，
+`anonymous` 拿到表级 `SELECT` + 列级 `INSERT`（语句见 §1）。
+收窄到 `anonymous` 是启用 Data API 时一并做的，不是可选项：
 
 ```sql
 REVOKE ALL ON public.comments FROM public;
 REVOKE ALL ON SEQUENCE public.comments_id_seq FROM public;
-GRANT SELECT, INSERT ON public.comments TO anonymous;
+GRANT SELECT ON public.comments TO anonymous;
+GRANT INSERT (path, nickname, website, content, status, parent_id, ip_hash)
+  ON public.comments TO anonymous;
 GRANT USAGE, SELECT ON SEQUENCE public.comments_id_seq TO anonymous;
 ```
 
 > 策略本身写的是 `TO public`（伪角色），对 `anonymous` 同样生效，不用重建。
+> INSERT 之所以是列级：匿名端写不了没授的列；而表级 SELECT 是**故意**留的
+> —— 拆成列级会让 `select=*` 直接 403（实测），代价是匿名端能读到 `ip_hash`，
+> 所以那列必须是加盐哈希（见 §1 末尾）。
 
 ---
 

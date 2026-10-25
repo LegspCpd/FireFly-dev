@@ -121,9 +121,14 @@ if (title) {
 
 const favicons: Favicon[] =
 	siteConfig.favicon.length > 0 ? siteConfig.favicon : defaultFavicons;
-// apple-touch-icon：优先取 favicon 中的 png，否则取第一个
+// apple-touch-icon：iOS 添加到主屏要 180×180。原来取的是「favicon 里第一个 png」，
+// 而 siteConfig.favicon 的第一个 png 是 /favicon-32.png（32px），标签因此指向了 32px 图。
+// 现在按「名字 → 尺寸 → 任意 png」三级挑，挑不到才退回第一个条目。
 const appleTouchIcon =
-	favicons.find((f) => f.src.toLowerCase().endsWith(".png")) ?? favicons[0];
+	favicons.find((f) => f.src.toLowerCase().includes("apple-touch-icon")) ??
+	favicons.find((f) => f.src.toLowerCase().endsWith(".png") && f.sizes === "180x180") ??
+	favicons.find((f) => f.src.toLowerCase().endsWith(".png")) ??
+	favicons[0];
 
 // const siteLang = siteConfig.lang.replace('_', '-')
 if (!lang) {
