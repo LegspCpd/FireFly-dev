@@ -37,10 +37,8 @@ export type EfCommentConfig = {
 
 export const efCommentConfig: EfCommentConfig = {
 	enabled: true,
-	// 接 Neon Data API 时把下一行换成公开地址（不含密码；**启用 Data API 之后**再填，
-	// 否则评论区会变成错误条，而不是「未配置」的演示态）：
-	//   "https://ep-mute-term-a1vyn73h.apirest.ap-southeast-1.aws.neon.tech/neondb/rest/v1"
-	apiBase: "",
+	// Neon Data API 的公开地址（不含密码；Data API 已启用，匿名 token 由客户端自取）。
+	apiBase: "https://ep-mute-term-a1vyn73h.apirest.ap-southeast-1.aws.neon.tech/neondb/rest/v1",
 	pathPrefix: "",
 	maxLength: 1000,
 };

@@ -1,37 +1,44 @@
 # 自建评论系统：Neon Data API 后端
 
-> 目标形态：**三个平台共用同一份静态产物**，浏览器**直接 fetch** Neon 的 Data API
-> （PostgREST 风格 REST），没有任何自建服务端、没有平台绑定、前端不含任何密钥。
+> 形态：**三个平台共用同一份静态产物**，浏览器**直接 fetch** Neon 的 Data API
+> （PostgREST 风格 REST）——没有自建服务端、没有平台绑定、前端不含任何密钥。
 >
-> 和 [comment-api.md](./comment-api.md) 的关系：那份文档定的是一份**通用端点契约**
-> （`{base}/comments?path=…`）；本文件是它的一个具体落地——后端换成 Neon Data API，
-> 客户端 `src/utils/comment-api.ts` 按地址自动识别方言，组件与契约都不变。
+> 与 [comment-api.md](./comment-api.md) 的关系：那份文档定的是通用端点契约
+> （`{base}/comments?path=…`）；本文件是它的一个具体落地，客户端
+> `src/utils/comment-api.ts` 按地址自动识别方言，组件与契约都不变。
 
 ---
 
-## 0. 现状（写这份文档时的实测）
+## 0. 现状（2026-10-25 实测，全部为公网真实调用）
 
 | 项 | 状态 |
 | --- | --- |
-| 数据库 | `neondb`，PostgreSQL 18.6，endpoint `ep-mute-term-a1vyn73h`（region `ap-southeast-1`） |
-| 表 `public.comments` | ✅ 已建好（含索引、RLS、授权，见 §1） |
-| RLS 行为 | ✅ 已用临时角色实测（见 §6） |
-| **Data API** | ❌ **还没启用** —— 启用前网关对所有请求返回下面这条，属预期 |
-| 前端配置 | 故意留空 → 评论区保持**演示态**（不白屏、不报错刷屏），启用后填 URL 即可 |
+| 数据库 | `neondb` / PostgreSQL 18.6 / endpoint `ep-mute-term-a1vyn73h`（`ap-southeast-1`） |
+| 表 `public.comments` | ✅ 已建（索引 + RLS + 授权，见 §1） |
+| RLS 行为 | ✅ 用临时角色实测通过（见 §6） |
+| **Neon Data API** | ✅ **已启用**，`POST /rest/v1/comments` 返回 201，`GET` 返回 200 |
+| **Neon Auth 匿名 token** | ✅ `GET {auth}/token/anonymous` 返回 `{token, expires_at}`（role=`anonymous`，约 1 小时） |
+| 前端接线 | ✅ `src/config/commentConfig.ts` 的 `apiBase` 已填本文件 §2 的公开地址 |
+| CORS | ✅ 数据端预检允许 `authorization,content-type,prefer`；Auth 端回显任意 Origin（见 §6） |
 
-启用前打 Data API 会看到：
+⚠️ **一处与 Neon 文档不同的实测结论**：文档说「没有 `Authorization` 的请求会用数据库的
+`anonymous` 角色」，但本 endpoint 实测是**先拒**：
 
 ```json
 { "message": "missing authentication credentials: required authorization bearer token in JWT format" }
 ```
 
+必须先去 Neon Auth 换一张**匿名 JWT**（`POST`/`GET` 时带上 `Authorization: Bearer …`），
+数据库侧依然是 `anonymous` 角色。客户端已经把这步做进去了（§4），**不要**因为
+「反正是公开数据」就跳过 token——跳过只会拿到 400。
+
 ---
 
-## 1. 表结构（已经在库上执行过，可重复执行）
+## 1. 表结构（已在库上执行，可重复执行）
 
 字段：`id / path / parent_id / nickname / website / content / created_at / status`。
-`content` 与前端 `efCommentConfig.maxLength`（1000）对齐；`status` 为审核位，
-默认 `visible`，以后要人工审核就把默认值改成 `pending`。
+`content` 上限与前端 `efCommentConfig.maxLength`（1000）对齐；`status` 是审核位，
+默认 `visible`，以后要人工先审就把默认值改成 `pending`。
 
 ```sql
 CREATE TABLE IF NOT EXISTS public.comments (
@@ -79,116 +86,96 @@ GRANT SELECT, INSERT ON public.comments TO public;
 GRANT USAGE, SELECT ON SEQUENCE public.comments_id_seq TO public;
 ```
 
-> 为什么授权写给 `public`（伪角色）：Data API 会按请求切到 `anonymous` 角色，
-> 而这两个角色是**启用 Data API 时**才被创建出来的。写给 `public` 可以做到
-> 「先建表、后启用」也不需要再补一次 SQL；等启用后想收紧成
-> `GRANT … TO anonymous` 也可以，见 §6 末尾。
+> 授权写给伪角色 `public`，是为了「先建表、后启用 Data API」也不需要补跑 SQL
+> （`anonymous` 角色是启用时才创建的）。要收紧成只给 `anonymous`，见 §6 末尾。
 
 ---
 
-## 2. 公开 URL（**前端唯一需要的东西**，不含密码）
+## 2. 地址（**公开**，前端唯一需要的东西，不含密码）
 
 ```text
-https://ep-mute-term-a1vyn73h.apirest.ap-southeast-1.aws.neon.tech/neondb/rest/v1
+Data API : https://ep-mute-term-a1vyn73h.apirest.ap-southeast-1.aws.neon.tech/neondb/rest/v1
+Auth     : https://ep-mute-term-a1vyn73h.neonauth.ap-southeast-1.aws.neon.tech/neondb/auth
 ```
 
-规律：`https://<endpoint-id>.apirest.<region>.aws.neon.tech/<database>/rest/v1`
-（控制台 **Data API** 页面上的 **API URL** 就是它）。
+规律：`https://<endpoint-id>.{apirest|neonauth}.<region>.aws.neon.tech/<database>/{rest/v1|auth}`，
+两个主机名只差 `.apirest.` / `.neonauth.`，客户端自己推导（`deriveAuthBase()`）。
 
-- ✅ 这段是**公开**的，写进仓库、写进前端 bundle 都没问题；
-- ❌ 连接串（含 `npg_…` 密码）只在建表时用过，**不进仓库、不进前端、不写文档、不打印**。
-
----
-
-## 3. Neon 控制台要点的步骤（一次性，约 1 分钟）
-
-> 这一步必须在**账号所有者**登录的浏览器里做：Data API 的开关是项目级控制面功能，
-> 用数据库密码（DSN）改不到，Neon API / CLI / MCP 也都需要用户级凭据。
-
-1. Neon Console → 选中本项目 → **Postgres database → Data API**。
-2. 表单里：
-   - **Grant public schema access**：勾上（只影响 `authenticated` 角色，我们的策略自己管）；
-   - **Authentication**：公开评论**不需要**配（无 `Authorization` 的请求会落到数据库的
-     `anonymous` 角色，这正是我们要的）；以后要做登录态评论再配 Managed Better Auth。
-   - 点 **Enable Data API**。
-3. 启用后在该页 **Settings → Advanced settings** 核对：
-   - **Anonymous role** = `anonymous`（默认值，别改）；
-   - **CORS allowed origins**：留空 = 允许所有来源（够用）；想收紧就填
-     `https://dev.legspcpd.top,https://legspcpd.top`；
-   - **Maximum rows per request**：留空（客户端已经 `limit=200`）。
-4. 回到 **API** 标签，点一次 **Refresh schema cache**（表是启用前建的，不刷新可能报
-   `relation "public.comments" does not exist` / `Could not find the table`）。
-5. 把页面上的 **API URL** 和 §2 那条对一下。
+- ✅ 这两段是**公开**的：写进仓库、进前端 bundle 都没问题；
+- ❌ 连接串（含 `npg_…` 密码）只在建表时用过：**不进仓库、不进前端、不写文档、不打印**。
 
 ---
 
-## 4. 前端怎么接线
+## 3. 控制台步骤（已完成，新项目照做）
 
-地址解析优先级（`src/utils/comment-api.ts` 里实现，**越靠前越优先**）：
+1. Neon Console → 项目 → **Postgres database → Data API** → 勾 *Grant public schema access* →
+   Authentication 选 **Neon Auth（Managed Better Auth）** 并打开 **Allow anonymous** →
+   **Enable Data API**。
+2. 该页 **Settings → Advanced settings**：*Anonymous role* = `anonymous`（默认）；
+   *CORS allowed origins* 留空 = 允许所有来源（够用），也可填 `https://dev.legspcpd.top,https://legspcpd.top`。
+3. 建表之后点一次 **Refresh schema cache**，否则报
+   `Could not find the table 'public.comments'`。
+4. 把该页的 **API URL** 与 §2 对照。
+
+---
+
+## 4. 前端怎么接线（已经接好）
+
+地址解析优先级（`src/utils/comment-api.ts`，越靠前越优先；现在第 4 条已填）：
 
 | 顺序 | 来源 | 用在哪 |
 | --- | --- | --- |
 | 1 | `window.__COMMENT_API_BASE__` | 运行时临时切换 / 灰度，不用重新构建 |
 | 2 | `COMMENT_API_BASE` | 构建期环境变量（不会进客户端 bundle） |
-| 3 | `PUBLIC_COMMENT_API_BASE` | 构建期 + 运行时都能用（会被内联进客户端 JS） |
-| 4 | `efCommentConfig.apiBase`（`src/config/commentConfig.ts`） | 兜底，写死进仓库 |
+| 3 | `PUBLIC_COMMENT_API_BASE` | 构建期 + 运行时都能用 |
+| 4 | `efCommentConfig.apiBase`（`src/config/commentConfig.ts`） | 兜底，已填 §2 的公开地址 |
 
-三种落地方式，选一个即可：
+**没配时**：地址为空 → 组件进演示态（可输入、可预览、不落库、提示未配置），不发请求。
 
-```ts
-// A. 写进配置（三平台共用，不需要动平台环境变量）
-//    src/config/commentConfig.ts
-export const efCommentConfig: EfCommentConfig = {
-  enabled: true,
-  apiBase: "https://ep-mute-term-a1vyn73h.apirest.ap-southeast-1.aws.neon.tech/neondb/rest/v1",
-  // …
-};
-```
-
-```bash
-# B. 构建期环境变量（Cloudflare Pages / Vercel / EdgeOne 的项目设置里配，改完要重新构建）
-PUBLIC_COMMENT_API_BASE=https://ep-mute-term-a1vyn73h.apirest.ap-southeast-1.aws.neon.tech/neondb/rest/v1
-```
-
-```html
-<!-- C. 运行时覆盖 -->
-<script>window.__COMMENT_API_BASE__ = "https://ep-mute-term-a1vyn73h.apirest.ap-southeast-1.aws.neon.tech/neondb/rest/v1"</script>
-```
-
-**没配时**：地址为空 → 组件进演示态（可输入、可预览、提示「评论服务未配置」、不发请求），
-这条行为没有变。
-
-地址以 `/rest/v1` 结尾时，客户端自动切到 Data API 方言（不用改组件、不用加开关）：
+地址以 `/rest/v1` 结尾时自动切到 Data API 方言（组件不用改、没有开关）：
 
 | 动作 | 通用契约 | Neon Data API（本站当前） |
 | --- | --- | --- |
+| 鉴权 | 无 | `GET {auth}/token/anonymous` 换匿名 JWT，内存缓存（提前 60s 续期），JWT 失效时自动重取并**重试一次** |
 | 列表 | `GET {base}/comments?path=…` | `GET {base}/comments?select=…&path=eq.…&status=eq.visible&order=created_at.desc&limit=200` |
 | 提交 | `POST {base}/comments` `{path,author,content}` | `POST {base}/comments?select=…` `{path,nickname,content,status:"visible"}` + `Prefer: return=representation` |
-| 鉴权 | 无 | 无（网关把无 Authorization 的请求切到 `anonymous` 角色） |
-| 响应归一化 | `[…]` / `{comments:[]}` / `{data:[]}` | `[…]`（PostgREST 直接返回数组，同一条归一化路径） |
+| 响应归一化 | `[…]` / `{comments:[]}` / `{data:[]}` | `[…]`（PostgREST 直接给数组，走同一条归一化路径） |
+| 失败 | 收敛成 `invalid/network/timeout/http/parse` 错误对象，组件显示内联错误条 | 同左 |
 
 ---
 
-## 5. 端点形状（curl 验证用，不带任何密码）
+## 5. 端点形状与 curl 验证
 
 ```bash
-BASE="https://<endpoint-id>.apirest.<region>.aws.neon.tech/<database>/rest/v1"
+API="https://ep-mute-term-a1vyn73h.apirest.ap-southeast-1.aws.neon.tech/neondb/rest/v1"
+AUTH="https://ep-mute-term-a1vyn73h.neonauth.ap-southeast-1.aws.neon.tech/neondb/auth"
+TOKEN=$(curl -sS "$AUTH/token/anonymous" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
 
-# 列
-curl -s "$BASE/comments?select=id,nickname,content,created_at&path=eq./guestbook/&order=created_at.desc&limit=5"
+# 读（200 + 数组）
+curl -sS -H "Authorization: Bearer $TOKEN" \
+  "$API/comments?select=id,nickname,content,created_at&path=eq.%2Fguestbook%2F&order=created_at.desc&limit=5"
 
-# 插（Prefer 才会回填整行）
-curl -s -X POST "$BASE/comments?select=id,nickname,content,created_at" \
-  -H 'Content-Type: application/json' \
+# 写（201 + 回填整行，靠 Prefer）
+curl -sS -X POST "$API/comments?select=id,nickname,content,created_at" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
   -H 'Prefer: return=representation' \
-  -d '{"path":"/guestbook/","nickname":"curl","content":"from curl","status":"visible"}'
+  -d '{"path":"/guestbook/","nickname":"curl","content":"来自 curl","status":"visible"}'
 
-# 删（**只用于验证**：Data API 端点是公开的，所以生产库上不要给 delete 权限；
-#     下面这条会 401/403 —— 这正是预期，删除只能在控制台 SQL Editor 或带 JWT 的服务端做）
-curl -s -o /dev/null -w '%{http_code}\n' -X DELETE "$BASE/comments?id=eq.<id>"
+# 越权改状态（403 RLS）
+curl -sS -o /dev/null -w '%{http_code}\n' -X POST "$API/comments" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"path":"/guestbook/","nickname":"x","content":"sneaky","status":"hidden"}'
+
+# 删（403 permission denied —— 匿名端**删不掉**，删除只在 SQL Editor 里做）
+curl -sS -o /dev/null -w '%{http_code}\n' -X DELETE "$API/comments?path=eq.%2Fguestbook%2F" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
-前端只会用 GET 列表与 POST 插入；`status` 的流转（`pending`/`hidden`/`spam`）走 SQL Editor。
+2026-10-25 实测输出（同一会儿跑的）：`GET` → `200 []`；`POST` → `201` 带 `id/created_at`；
+`POST status=hidden` → `403 {"code":"42501","message":"new row violates row-level security policy…"}`；
+`DELETE` → `403 {"code":"42501","message":"permission denied for table comments"}`。
+
+前端只用 `GET` 列表与 `POST` 插入；`status` 流转（`pending`/`hidden`/`spam`）走 SQL Editor。
 
 ---
 
@@ -196,23 +183,23 @@ curl -s -o /dev/null -w '%{http_code}\n' -X DELETE "$BASE/comments?id=eq.<id>"
 
 访问控制全在数据库里（Data API 自己没有权限层）：
 
-- 无 `Authorization` 头 → 网关切到 `anonymous` 角色 → 受 §1 的 GRANT + RLS 约束；
+- 浏览器端只有一张短命匿名 JWT（role=`anonymous`），**没有任何长期密钥**；
 - 匿名**只能**：读 `status='visible'`、插入 `status='visible'` 且长度合法的行；
 - 匿名**不能**：读隐藏行、`UPDATE`、`DELETE`、把自己插成 `hidden`。
 
-2026-10-25 用一个临时角色（`ef_probe_anon`，模拟匿名角色，测完已删除）实测：
+数据库侧（用一个临时角色 `ef_probe_anon` 模拟匿名角色，测完已删除）：
 
 | 用例 | 结果 |
 | --- | --- |
-| `SELECT count(*) FROM comments`（库里有 1 条 visible + 1 条 hidden） | 只看到 **1** 条 ✅ |
-| `SELECT … WHERE status='hidden'` / 按昵称探测隐藏行 | **0** 条 ✅ |
-| `INSERT (path,nickname,content)` | 成功，`RETURNING` 拿到 id/created_at ✅ |
-| `INSERT … status='hidden'` | `new row violates row-level security policy` ✅ |
-| `INSERT … content=''` | 同上（CHECK 兜在策略里） ✅ |
-| `UPDATE comments …` | `permission denied for table comments` ✅ |
-| `DELETE FROM comments` | `permission denied for table comments` ✅ |
+| `SELECT count(*)`（库里 1 条 visible + 1 条 hidden） | 只看到 **1** 条 ✅ |
+| 探测隐藏行 | **0** 条 ✅ |
+| `INSERT` 正常行 | 成功，`RETURNING` 拿到 id/created_at ✅ |
+| `INSERT … status='hidden'` / `content=''` | RLS 拒绝 ✅ |
+| `UPDATE` / `DELETE` | `permission denied for table comments` ✅ |
 
-启用 Data API 之后如果想收紧成「只给 anonymous 角色」，在 SQL Editor 里补：
+公网侧：上面的 curl 与浏览器 e2e 都复现了同一组结果（§0、§5）。
+
+想收紧成「只给 anonymous 角色」，在 SQL Editor 补：
 
 ```sql
 REVOKE ALL ON public.comments FROM public;
@@ -229,25 +216,24 @@ GRANT USAGE, SELECT ON SEQUENCE public.comments_id_seq TO anonymous;
 
 | 现象 | 原因 / 处理 |
 | --- | --- |
-| `400 missing authentication credentials: required authorization bearer token in JWT format` | **Data API 还没启用**（或该分支没开）。去 §3 第 2 步。 |
-| `401 Unauthorized` | 配了认证提供方且要求 JWT。公开评论不需要，去 Settings 确认 `Anonymous role` 仍是 `anonymous`。 |
-| `Could not find the table 'public.comments'` / `relation does not exist` | Data API 的 schema 缓存旧了 → **Refresh schema cache**。 |
-| `new row violates row-level security policy` | 插入的 `status` 不是 `visible`，或长度超限（content>1000 / nickname>40）。 |
-| `permission denied for table comments` | GRANT 丢了 → 重跑 §1 的 GRANT 三行。 |
-| 浏览器 `CORS` 报错 | Settings → `CORS allowed origins` 里加上站点域名（或留空）。 |
-| 评论区显示「评论服务暂时不可用」 | 前端拿到的是非 2xx；按上面条目定位，界面本身不会白屏（错误已收敛）。 |
+| `400 missing authentication credentials: required authorization bearer token in JWT format` | 请求没带 JWT。Data API **不看**数据库 anonymous 角色，必须先 `GET {auth}/token/anonymous` 再带 `Authorization: Bearer …`（客户端已内置）。若连 token 端点都 404 → Data API/Neon Auth 没启用 |
+| `400 Provided authentication token is not a valid JWT encoding` | token 过期或被吊销。客户端会自动重取重试一次；一直不行就查 Auth 配置 |
+| `401 Unauthorized` | 配了认证提供方且要求登录态；公开评论请打开 *Allow anonymous* |
+| `Could not find the table 'public.comments'` | Data API 的 schema 缓存旧了 → **Refresh schema cache** |
+| `403 new row violates row-level security policy` | 插入的 `status` 不是 `visible`，或长度超限（content>1000 / nickname>40 / path>200） |
+| `403 permission denied for table comments` | 动了 UPDATE/DELETE（匿名端本就该被拒），或 GRANT 丢了 → 重跑 §1 的 GRANT |
+| 浏览器 CORS 报错 | 数据端预检允许 `authorization,content-type,prefer`（默认 OK）；收紧过 `CORS allowed origins` 的话把站点域名加回去 |
+| 评论区显示「评论服务暂时不可用」 | 前端拿到非 2xx；按上面条目定位。界面不会白屏（错误已收敛成一行提示 + 重试） |
 
 ---
 
 ## 8. 回滚
 
 ```sql
--- 只关评论表
 DROP POLICY IF EXISTS comments_read_visible ON public.comments;
 DROP POLICY IF EXISTS comments_insert_visible ON public.comments;
 ALTER TABLE public.comments DISABLE ROW LEVEL SECURITY;
--- 彻底删
 DROP TABLE IF EXISTS public.comments;
 ```
 
-前端回滚：把 `apiBase` / `PUBLIC_COMMENT_API_BASE` 清空 → 立刻回到演示态（不需要改代码）。
+前端回滚：把 `apiBase` / `PUBLIC_COMMENT_API_BASE` 清空 → 立刻回到演示态（不改代码）。

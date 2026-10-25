@@ -381,8 +381,8 @@ Deno.serve(async (req) => {
 
 Neon 托管的 PostgREST 风格 REST 端点，**同样不需要自建服务端**：静态站直接 fetch
 `https://<endpoint-id>.apirest.<region>.aws.neon.tech/<database>/rest/v1`。
-没有 `Authorization` 头的请求会被网关切到数据库里的 `anonymous` 角色，
-能不能读、能写什么，全由 `GRANT` + RLS 决定（前端零密钥）。
+请求要带一张从 Neon Auth `/token/anonymous` 换来的**短命匿名 JWT**（实测没有它一律 400），
+数据库侧落到 `anonymous` 角色：能不能读、能写什么全由 `GRANT` + RLS 决定（前端仍无长期密钥）。
 
 - 建表 SQL、控制台开启步骤、公开 URL、排查表：见 [neon-data-api.md](./neon-data-api.md)
 - 客户端不用改：`src/utils/comment-api.ts` 发现地址以 `/rest/v1` 结尾会自动切到

@@ -16,11 +16,12 @@
  *
  * 后端有两种方言，同一份代码按地址自动识别（组件不用改）：
  *   - 通用契约：{base}/comments?path=…（自建 Worker / Supabase Edge Function 等）；
- *   - Neon Data API（PostgREST / PostgREST 风格）：base 形如
+ *   - Neon Data API（PostgREST 风格）：base 形如
  *     https://<endpoint>.apirest.<region>.aws.neon.tech/<db>/rest/v1，
  *     走 {base}/comments?select=…&path=eq.…（见 docs/neon-data-api.md）。
- *     Data API 的**无 Authorization 请求**由网关切到数据库的 anonymous 角色，
- *     所以浏览器里不需要、也不允许出现任何密钥。
+ *     **请求必须带 JWT**：网关对没有 Authorization 的请求一律 400，所以客户端先去
+ *     Neon Auth 的 /token/anonymous 换一张短命匿名 JWT（role=anonymous），
+ *     缓存到内存、过期/被吊销时自动重取重试一次。浏览器里不需要、也没有任何密钥。
  */
 
 /** 一条评论（已归一化）。 */
@@ -174,6 +175,133 @@ function buildDataApiListUrl(base: string, path: string): string {
 	return `${base}/comments?${params.toString()}`;
 }
 
+/**
+ * Data API 的匿名 token 端点。Neon 的 Data API 网关对**没有 JWT** 的请求一律回
+ * `400 missing authentication credentials …`，所以即使只是「匿名读公开数据」，
+ * 也要先去 Neon Auth 换一张短命 JWT（其 role claim = anonymous，落库仍是 anonymous 角色）。
+ * 端点地址可从 Data API 地址推出来：主机名 `.apirest.` → `.neonauth.`，路径 `/rest/v1` → `/auth`。
+ */
+export function deriveAuthBase(dataApiBase: string): string {
+	const normalized = normalizeApiBase(dataApiBase);
+	if (!isDataApiBase(normalized)) return "";
+	return normalized.replace(/\/rest\/v1$/i, "/auth").replace(".apirest.", ".neonauth.");
+}
+
+const ANON_TOKEN_PATH = "/token/anonymous";
+/** token 有效期约 1 小时；提前 60s 换新的，免得请求正好压在过期点上。 */
+const TOKEN_SKEW_MS = 60_000;
+/** 拿不到 expires_at 时的兜底寿命。 */
+const TOKEN_FALLBACK_MS = 5 * 60_000;
+/** 只存内存：短命匿名 token 没必要落盘，多标签页各拿一张即可。 */
+let anonToken: { token: string; expiresAt: number } | null = null;
+
+/** 终末地把任意抛出物翻译成组件认识的错误对象。 */
+function toResultError(error: unknown): CommentApiError {
+	if (isRecord(error) && typeof (error as { kind?: unknown }).kind === "string") {
+		return error as unknown as CommentApiError;
+	}
+	return toNetworkError(error);
+}
+
+async function getAnonymousToken(
+	authBase: string,
+	timeoutMs: number,
+): Promise<string> {
+	if (!authBase) throw makeError("invalid", 0, "no auth base");
+	if (anonToken && anonToken.expiresAt - TOKEN_SKEW_MS > Date.now()) {
+		return anonToken.token;
+	}
+	let response: Response;
+	try {
+		response = await requestWithTimeout(
+			`${authBase}${ANON_TOKEN_PATH}`,
+			{
+				method: "GET",
+				headers: { Accept: "application/json" },
+				credentials: "omit",
+				cache: "no-store",
+			},
+			timeoutMs,
+		);
+	} catch (error) {
+		throw toNetworkError(error);
+	}
+	if (!response.ok) {
+		throw makeError(
+			"http",
+			response.status,
+			`anonymous token: ${await readDetail(response)}`,
+		);
+	}
+	let payload: unknown;
+	try {
+		payload = await response.json();
+	} catch (error) {
+		throw makeError(
+			"parse",
+			response.status,
+			error instanceof Error ? error.message : String(error),
+		);
+	}
+	const token =
+		isRecord(payload) && typeof payload.token === "string" ? payload.token : "";
+	if (!token) throw makeError("parse", response.status, "anonymous token missing");
+	const expires =
+		isRecord(payload) && typeof payload.expires_at === "number"
+			? payload.expires_at * 1000
+			: Date.now() + TOKEN_FALLBACK_MS;
+	anonToken = { token, expiresAt: expires };
+	return token;
+}
+
+function sendWithToken(
+	url: string,
+	init: RequestInit,
+	token: string,
+	timeoutMs: number,
+): Promise<Response> {
+	const headers: Record<string, string> = {
+		...(init.headers as Record<string, string> | undefined),
+		Authorization: `Bearer ${token}`,
+	};
+	return requestWithTimeout(url, { ...init, headers }, timeoutMs);
+}
+
+/**
+ * 判断这次失败是不是「token 不认」——Neon 网关对**任何** JWT 问题都回 400，
+ * 文案是 "missing authentication credentials…" / "Provided authentication token is not a
+ * valid JWT encoding"；换别家实现可能回 401。RLS 的 403（row-level security /
+ * permission denied）不在此列，不会被误当成鉴权失败。
+ */
+async function isAuthFailure(response: Response): Promise<boolean> {
+	if (response.status === 401) return true;
+	if (response.status !== 400 && response.status !== 403) return false;
+	try {
+		const detail = await response.clone().text();
+		return /missing authentication credentials|not a valid jwt|jwt|expired/i.test(detail);
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Data API 专用请求：先换匿名 token，再带 Authorization 发出；token 过期/被吊销时
+ * 丢掉缓存重拿一张再试一次（只重试一次，避免无限循环）。
+ */
+async function dataApiRequest(
+	url: string,
+	init: RequestInit,
+	authBase: string,
+	timeoutMs: number,
+): Promise<Response> {
+	const token = await getAnonymousToken(authBase, timeoutMs);
+	const response = await sendWithToken(url, init, token, timeoutMs);
+	if (!(await isAuthFailure(response))) return response;
+	anonToken = null;
+	const fresh = await getAnonymousToken(authBase, timeoutMs);
+	return sendWithToken(url, init, fresh, timeoutMs);
+}
+
 function makeError(
 	kind: CommentApiErrorKind,
 	status: number,
@@ -325,20 +453,20 @@ export async function fetchComments(
 	const url = isDataApiBase(base)
 		? buildDataApiListUrl(base, thread.path)
 		: `${base}/comments?path=${encodeURIComponent(thread.path)}`;
+	const init: RequestInit = {
+		method: "GET",
+		headers: { Accept: "application/json" },
+		credentials: "omit",
+		cache: "no-store",
+	};
+	const timeoutMs = thread.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 	let response: Response;
 	try {
-		response = await requestWithTimeout(
-			url,
-			{
-				method: "GET",
-				headers: { Accept: "application/json" },
-				credentials: "omit",
-				cache: "no-store",
-			},
-			thread.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-		);
+		response = isDataApiBase(base)
+			? await dataApiRequest(url, init, deriveAuthBase(base), timeoutMs)
+			: await requestWithTimeout(url, init, timeoutMs);
 	} catch (error) {
-		return { ok: false, error: toNetworkError(error) };
+		return { ok: false, error: toResultError(error) };
 	}
 	if (!response.ok) {
 		return {
@@ -378,22 +506,23 @@ export async function postComment(
 	};
 	// Data API：要求回填插入后的整行（默认 201 空体），这样服务端 id / 时间能落到界面。
 	if (dataApi) headers.Prefer = "return=representation";
+	const url = dataApi
+		? `${base}/comments?select=${DATA_API_COLUMNS}`
+		: `${base}/comments`;
+	const init: RequestInit = {
+		method: "POST",
+		headers,
+		credentials: "omit",
+		body: JSON.stringify(body),
+	};
+	const timeoutMs = thread.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 	let response: Response;
 	try {
-		response = await requestWithTimeout(
-			dataApi
-				? `${base}/comments?select=${DATA_API_COLUMNS}`
-				: `${base}/comments`,
-			{
-				method: "POST",
-				headers,
-				credentials: "omit",
-				body: JSON.stringify(body),
-			},
-			thread.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-		);
+		response = dataApi
+			? await dataApiRequest(url, init, deriveAuthBase(base), timeoutMs)
+			: await requestWithTimeout(url, init, timeoutMs);
 	} catch (error) {
-		return { ok: false, error: toNetworkError(error) };
+		return { ok: false, error: toResultError(error) };
 	}
 	if (!response.ok) {
 		return {
