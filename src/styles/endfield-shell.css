@@ -1091,14 +1091,21 @@ body.ef-contours {
 }
 
 /* ---------- 7.5 滚动进场 / 视差（参数照官网） ---------------------------
-   官网首页的进场是「信号灯式闪三下」：
+   官网的进场参数来自 anime.js（chunk 226 / 8858），原值两处：
+     animate({targets:[…], opacity:[0,1], translateY:["2rem",0], duration:600,
+              delay: stagger(100,{start:600}), easing:"easeOutQuad"})
+   闪入档是官网自己的 CSS 关键帧：
      @keyframes __04-finalpage_flashing__w5gJk{0%{opacity:0}10%{opacity:.5}
        11%{opacity:0}20%{opacity:.5}21%{opacity:0}40%{opacity:.5}41%{opacity:0}
        to{opacity:1}}
      .sectionContainer .decoLeft.active{animation: … 1s ease-out forwards}
-   触发靠 framer-motion 的 whileInView({once:true})，视差靠 useScroll/useTransform。
-   本站把「参数」与「触发」拆开：参数在这个文件，触发在
-   src/utils/ef-scroll-motion.ts（IntersectionObserver + passive scroll + rAF）。
+   触发靠 framer-motion 的 useInView({once:true})，视差靠 useScroll/useTransform。
+   本站把「参数」与「触发」拆开：参数在这个文件，触发与补间在
+   src/utils/ef-scroll-motion.ts（anime.js v4：onScroll 触发 + animate 补间）。
+
+   位移量：官网写 translateY:["2rem",0]，而本站 --efu 就是官网的 1rem
+   （min(.625vw,1.111111vh)），所以这里写 calc(var(--ef-rp) * 2 * var(--efu))，
+   与官网像素完全一致。脚本只把无单位的 --ef-rp 从 1 动到 0。
 
    为什么位移用 translate（独立属性）而不是 transform：
    本站不少元素自带 transform（.ef-hero-side 的 translateY(-50%)、套件预设
@@ -1135,36 +1142,27 @@ body.ef-contours {
   }
 }
 
-html.ef-motion [data-ef-reveal] {
-  transition:
-    opacity 0.7s cubic-bezier(0.2, 0, 0, 1) var(--ef-d, 0ms),
-    translate 0.7s cubic-bezier(0.2, 0, 0, 1) var(--ef-d, 0ms);
-}
-
-/* 上浮：2.5u 是官网 1rem 档的位移量级（1920 下 30px），窄屏按 u 自动收 */
+/* 上浮：官网 translateY:["2rem",0]，位移量在 CSS 里按 --efu 换算；
+   起始值由脚本同步写成行内 --ef-rp:1（见 ef-scroll-motion.ts），
+   这里只负责在没有脚本时把元素留在不可见状态。 */
 html.ef-motion [data-ef-reveal="up"] {
-  translate: 0 calc(var(--ef-py, 0px) + var(--ef-ry, 0px));
+  translate: 0 calc(var(--ef-py, 0px) + var(--ef-rp, 0) * 2 * var(--efu));
 }
 html.ef-motion [data-ef-reveal="up"]:not(.ef-in) {
-  --ef-ry: calc(2.5 * var(--efu));
+  --ef-rp: 1;
   opacity: 0;
-}
-html.ef-motion [data-ef-reveal="up"].ef-in {
-  --ef-ry: 0px;
-  opacity: 1;
 }
 
 /* 只淡入：元素自己带 transform 时用这一档，别和它的 transform 抢 */
 html.ef-motion [data-ef-reveal="fade"] {
   translate: 0 var(--ef-py, 0px);
+}
+html.ef-motion [data-ef-reveal="fade"]:not(.ef-in) {
   opacity: 0;
 }
-html.ef-motion [data-ef-reveal="fade"].ef-in {
-  opacity: 1;
-}
 
-/* 官网原版曲线：闪三下再定格 */
-html.ef-motion [data-ef-reveal="flash"] {
+/* 官网原版曲线：闪三下再定格（1s / ease-out / forwards 都是官网原值） */
+html.ef-motion [data-ef-reveal="flash"]:not(.ef-in) {
   opacity: 0;
 }
 html.ef-motion [data-ef-reveal="flash"].ef-in {
@@ -1179,16 +1177,16 @@ html.ef-motion [data-ef-parallax] {
 /* 同时要进场又要视差的元素：两个位移在同一个 translate 里相加（必须排在后面，
    与上面两条同特异度，靠顺序取胜） */
 html.ef-motion [data-ef-reveal="up"][data-ef-parallax] {
-  translate: 0 calc(var(--ef-py, 0px) + var(--ef-ry, 0px));
+  translate: 0 calc(var(--ef-py, 0px) + var(--ef-rp, 0) * 2 * var(--efu));
 }
 
 /* 系统要求减少动态：全部停在自然状态，一条动画都不跑 */
 @media (prefers-reduced-motion: reduce) {
   html.ef-motion [data-ef-reveal],
   html.ef-motion [data-ef-parallax] {
+    --ef-rp: 0;
     opacity: 1;
     translate: none;
-    transition: none;
     animation: none;
   }
 }
