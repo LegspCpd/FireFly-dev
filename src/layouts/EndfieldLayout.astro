@@ -222,7 +222,9 @@ const year = new Date().getFullYear();
 			aria-label="站点导航"
 		>
 			<div class="Header_innerContainer__cW_Dv">
-				<!-- 字标：官网 logo 槽位（top 1.5u、宽 5.1875u、居中）—— LC 方标 + LC + 英文 -->
+				<!-- 字标：官网 logo 槽位（top 1.5u、宽 5.1875u、居中）。
+				     两态（规则在 endfield-shell.css 的 @media(min-width:861px)）：
+				       收起 = 只方标；悬停/聚焦展开 = 横版锁排（方标在左，LC + BLOG 在右） -->
 				<a class="Header_logo__s3lE_" href="/" aria-label="LC 首页">
 					<img
 						class="ef-rail-brandmark"

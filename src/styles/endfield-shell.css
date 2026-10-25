@@ -2444,6 +2444,34 @@ button.ef-rail-social-item, button.ef-rail-jump {
   .Header_h5HeaderContainer__ctquk {
     display: none;
   }
+
+  /* --- 竖排栏字标两态（站主硬约束）---------------------------------------
+     收起（栏宽 7.5u）= 只有方标，不带任何文字；
+     悬停 / 键盘聚焦展开（22.5u）= 横版锁排：方标在左，LC + BLOG 在右。
+     只在宽屏档生效：≤860px 那套 H5 竖排栏是另一份已验证的版式（图标 + LC 竖排），
+     不在这条规则的作用范围内。空白由 gap 出，两态共用同一个 <a>，不新增文案。 */
+  .Header_pcHeaderContainer__Sy_8l .Header_logo__s3lE_ .ef-rail-wordmark,
+  .Header_pcHeaderContainer__Sy_8l .Header_logo__s3lE_ .ef-rail-wordmark-en {
+    display: none;
+  }
+  .Header_pcHeaderContainer__Sy_8l:hover .Header_logo__s3lE_,
+  .Header_pcHeaderContainer__Sy_8l:focus-within .Header_logo__s3lE_ {
+    left: calc(1.5 * var(--efu));
+    transform: none;
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: calc(0.75 * var(--efu));
+  }
+  .Header_pcHeaderContainer__Sy_8l:hover .Header_logo__s3lE_ .ef-rail-wordmark,
+  .Header_pcHeaderContainer__Sy_8l:hover .Header_logo__s3lE_ .ef-rail-wordmark-en,
+  .Header_pcHeaderContainer__Sy_8l:focus-within .Header_logo__s3lE_ .ef-rail-wordmark,
+  .Header_pcHeaderContainer__Sy_8l:focus-within
+    .Header_logo__s3lE_
+    .ef-rail-wordmark-en {
+    display: block;
+  }
 }
 
 

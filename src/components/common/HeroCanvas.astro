@@ -1,8 +1,9 @@
 ---
 import { getSortedPosts, getTagList } from "@/utils/content-utils";
 
-// 首页第 01 屏 —— 照官网首屏的骨相重做：左侧版心巨字 + 空心斜纹小字 + 一句说明 +
-// 数值行 + 官网同款按钮；右侧竖排标记。纯几何与文字，不含任何图片（站主要求先去图）。
+// 首页第 01 屏 —— 照官网首屏的骨相重做：左侧版心巨字 + 数值行 + 官网同款按钮；
+// 右侧竖排标记。纯几何与文字，不含任何图片（站主要求先去图）。
+// 站主 2026-10：大标题定稿 LEGSPCPD BLOG，标题下的空心英文与中文简介两行整段删除。
 const [allPosts, allTags] = await Promise.all([getSortedPosts(), getTagList()]);
 const postTotal = allPosts.length;
 const tagTotal = allTags.length;
@@ -17,12 +18,7 @@ const latestLabel = latest
 	<div class="ef-hero-inner" data-ef-parallax="-0.035">
 		<p class="ef-hero-eyebrow" data-ef-reveal="flash"><i aria-hidden="true"></i>// 01 HOME</p>
 
-		<h1 class="ef-hero-title" data-ef-reveal="up" style="--ef-d: 60ms">自建服务记录</h1>
-		<p class="ef-hero-hollow" aria-hidden="true" data-ef-reveal="up" style="--ef-d: 120ms">CONFIG · PITFALL · TRADEOFF</p>
-
-		<p class="ef-hero-lede" data-ef-reveal="up" style="--ef-d: 160ms">
-			Cloudflare / EdgeOne / 自建服务 —— 记录配置、踩坑与取舍。
-		</p>
+		<h1 class="ef-hero-title" data-ef-reveal="up" style="--ef-d: 60ms">LEGSPCPD BLOG</h1>
 
 		<ul class="ef-hero-facts" data-ef-reveal="up" style="--ef-d: 200ms">
 			<li><b>{postTotal}</b><span>篇文章</span></li>
