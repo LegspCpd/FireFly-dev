@@ -241,14 +241,17 @@ body.ef-contours {
   height: 100%;
 }
 
-/* 字标：官网 logo 槽位（top 1.5u、宽 5.1875u、水平居中；实测 62.3 × 67.8px）。
-   官网那里是「终末地」图形 logo，这里按站主给的排版放站名字标：
-   小字 + 大字标 + 英文，三段居中等宽，不含任何 <img>。 */
+/* 字标：官网 logo 槽位 .Header_logo__s3lE_
+   （top:1.5rem; left:50%; translate3d(-50%,0,0); width:5.1875rem）。
+   站主 2026-10-26：「图标是在最左上角的，不要居中留空」—— 水平从官网的
+   left:50% + translateX(-50%) 改成 left:1.5u（与官网展开态、与导航图标左侧
+   留白同一个起点），竖直仍是官网的 top:1.5u；方标宽度取官网槽位原值 5.1875u
+   （= 官网 logo 在 7.5u 栏里占的宽度，实测 62.3px @ 1920×1080），
+   于是它在收起态是一条与导航图标列对齐的独立方标，不带任何文字。 */
 .Header_logo__s3lE_ {
   position: absolute;
   top: calc(1.5 * var(--efu));
-  left: 50%;
-  transform: translate3d(-50%, 0, 0);
+  left: calc(1.5 * var(--efu));
   width: calc(5.1875 * var(--efu));
   display: flex;
   flex-direction: column;
@@ -258,10 +261,11 @@ body.ef-contours {
   text-decoration: none;
   white-space: nowrap;
 }
-/* 站主的 LC 方标（public/icon-192.png，自带近白圆角方底 + 深色 LC + 黄斜条）。 */
+/* 站主的 LC 方标（public/icon-192.png，自带近白圆角方底 + 深色 LC + 黄斜条）。
+   宽度 = 官网 logo 槽位宽度 5.1875u。 */
 .ef-rail-brandmark {
   display: block;
-  width: calc(3.6 * var(--efu));
+  width: calc(5.1875 * var(--efu));
   height: auto;
   border-radius: calc(0.5 * var(--efu));
 }
@@ -1427,12 +1431,15 @@ html.ef-motion [data-ef-reveal="up"][data-ef-parallax] {
 /* ---------- 7.6 官网 deco 带 / clipPath 擦除（chunk 226 / 8858） ----------
    两个动效都来自官网线上 chunk，参数照抄，触发交给 anime.js v4 的 onScroll()：
 
-   ① deco 带（chunk 226 的 aM / endfieldPre）
+   ① //ENDFIELD 跑带（chunk 226 的 aM / endfieldPre）
         a = useTransform(scrollYProgress, p => `${-(300*p)%120}%`)
         n = useTransform(scrollYProgress, p => `${120-300*p%120}%`)
-      同一份内容渲染两份、各自平移 —— 两条式子相差正好 120%（= 自己宽度的 1.2 倍），
-      所以两份拼成一条无缝跑带。脚本只写 --ef-bx（1px 量化，宽度只在 init / resize
+      同一份字标渲染两份、各自平移 —— 两条式子相差正好 120%（= 字标自己宽度的 1.2 倍），
+      两份因此拼成一条无缝跑带。脚本只写 --ef-bx（1px 量化，宽度只在 init / resize
       读一次），位移落在独立 translate 属性上，不碰元素自己的 transform。
+      字标本身用官网那枚 viewBox="0 0 1902 253" 的 //ENDFIELD path（EF_ICONS.endfieldWord），
+      几何三条（容器 15.625rem 高 / .icon 100% 高 width:auto / .ef 同）逐值照抄；
+      官网把它放在 Gameplay 区块内 top:8.125rem，本站按站主「hero 之后」放在首屏下方。
 
    ② clipPath 擦除（chunk 8858 的 C helper）
         1 - Math.pow(1 - 0.01 * progress, 4)      // progress 0→100，四次缓出
@@ -1458,85 +1465,61 @@ html.ef-motion [data-ef-reveal="up"][data-ef-parallax] {
   initial-value: 100;
 }
 
-/* —— ① deco 带：首屏底边那条 1px 细线上方的两条细带 —— */
-.ef-hero-bands {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(1.6 * var(--efu));
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: calc(1.2 * var(--efu));
+/* —— ① //ENDFIELD 跑带：官网 .__05-Gameplay_endfieldPre（chunk 226 的 aM 组件）——
+   官网三条几何逐值照抄（1rem ≡ var(--efu)）：
+     容器 height:15.625rem; width:100%; overflow:hidden
+     图标 .icon { position:absolute; height:100%; width:auto }   ← 就是下面 .ef-band-copy
+     字标 .ef   { position:relative; height:100%; width:auto }   ← 下面 .ef-endfield-word
+   ⚠ 两条 <i> 的位移是**相对自身宽度**的百分比，所以每份必须收缩到字标本身的宽度
+   （width:auto），不能撑满容器 —— 否则 120% 这个周期对应的就不是官网那个字标宽度，
+   两条之间的间距会跟官网对不上。 */
+.ef-endfield-band {
+  position: relative;
+  height: calc(15.625 * var(--efu));
+  width: 100%;
+  overflow: hidden;
+  background: #f2f2f2; /* 纸：官网该区块同为浅底 */
+  color: #191919; /* 字标走 currentColor，官网是同款墨色 */
+  border-top: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
   pointer-events: none;
   user-select: none;
-}
-.ef-band {
-  position: relative;
-  height: calc(1.2 * var(--efu));
-  overflow: hidden;
-}
-/* b 带放进镜像坐标系再跑：官网 b 式（120-300p%120）本身与 a 式同向（两条正好差一个
-   整周期，官网是用它们把两份内容拼成一条无缝跑带）；镜像之后，屏幕上才是上下两条
-   反向的跑带 —— 两条式子一字未改。 */
-.ef-band--tape {
-  transform: scaleX(-1);
-  opacity: 0.75;
 }
 .ef-band-copy {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
   display: block;
   font-style: normal; /* 两份都用 <i> 承载（官网是 div），别继承斜体 */
+}
+.ef-endfield-band .ef-band-copy {
+  width: auto; /* 收缩到字标宽度（= 官网 .icon 的 width:auto） */
+  height: 100%;
+}
+.ef-endfield-word {
+  display: block;
+  height: 100%;
+  width: auto;
+  color: inherit;
 }
 html.ef-motion .ef-band-copy {
   translate: var(--ef-bx, 0px) 0;
 }
-/* a 带：眉标那套大写拉丁（.ef-hero-eyebrow 的字距/字体），前面的黄方块同样照抄 */
-.ef-band--mark .ef-band-copy {
-  white-space: nowrap;
-  font-family: SansMedium, sans-serif;
-  font-size: calc(1.05 * var(--efu));
-  line-height: calc(1.2 * var(--efu));
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #191919;
-  opacity: 0.42;
-}
-.ef-band--mark .ef-band-copy::before {
-  content: "";
-  display: inline-block;
-  width: calc(0.6 * var(--efu));
-  height: calc(0.6 * var(--efu));
-  margin-right: calc(1.2 * var(--efu));
-  background: #fffa00;
-  vertical-align: 0.05em;
-}
-/* b 带：尺规一样的细刻度。周期 = 自己宽度的 40% —— 1.2 倍宽度正好 3 个周期，
-   位移重置（-120% → 0）时接缝落在刻度段起点上，看不出跳。 */
-.ef-band--tape .ef-band-copy {
-  background-image: repeating-linear-gradient(
-    90deg,
-    #fffa00 0 0.4%,
-    transparent 0.4% 1.5%,
-    #191919 1.5% 1.8%,
-    transparent 1.8% 3%,
-    #191919 3% 3.3%,
-    transparent 3.3% 4.5%,
-    #191919 4.5% 4.8%,
-    transparent 4.8% 6.6%,
-    #e5e5e5 6.6% 7.2%,
-    transparent 7.2% 40%
-  );
-}
-/* 窄屏 H5：官网竖屏把整块换成静态 h5Icon，这里直接不显示（与 HeroCanvas 的
-   860px 断点一致） */
-@media (max-width: 860px) {
-  .ef-hero-bands {
+/* 竖屏：官网这一支不是「跑带停住」而是整块换成静态 h5Icon
+   （landscape ? 跑带 : <Logo className={styles.h5Icon}/>），
+   h5Icon 的几何是 height:7.5rem; width:auto
+   （官网 3036173670b5b1b4.css .__05-Gameplay_h5Icon__CRlhV）。
+   所以竖屏只留一份字标、压到 7.5u 高、在 15.625u 的带里竖直居中：
+   宽度 = 7.5u × 1902/253 ≈ 56.4u ≈ 83.5vw —— 任何视口都完整放得下，
+   不会像按带高铺满那样在右边缘被裁掉半个字（那是半截的竖屏分支）。
+   ef-scroll-motion.ts 的 startBands() 在竖屏直接返回，所以这里不会挂观察器。 */
+@media (orientation: portrait) {
+  .ef-endfield-band .ef-band-copy[data-ef-band="b"] {
     display: none;
+  }
+  .ef-endfield-band .ef-band-copy[data-ef-band="a"] {
+    height: calc(7.5 * var(--efu));
+    top: calc(50% - 3.75 * var(--efu));
   }
 }
 
@@ -2709,10 +2692,10 @@ button.ef-rail-social-item, button.ef-rail-jump {
   .Header_pcHeaderContainer__Sy_8l .Header_logo__s3lE_ .ef-rail-wordmark-en {
     display: none;
   }
+  /* 收起态与展开态同一条左基线（left:1.5u 已写在基样式里），展开只是把
+     竖排改成横排、把两个词标拉出来，方标原地不动。 */
   .Header_pcHeaderContainer__Sy_8l:hover .Header_logo__s3lE_,
   .Header_pcHeaderContainer__Sy_8l:focus-within .Header_logo__s3lE_ {
-    left: calc(1.5 * var(--efu));
-    transform: none;
     width: auto;
     flex-direction: row;
     align-items: center;

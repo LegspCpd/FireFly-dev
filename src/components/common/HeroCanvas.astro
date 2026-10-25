@@ -1,10 +1,13 @@
 ---
+import { EF_ICONS } from "@/constants/efIcons";
 import { getSortedPosts, getTagList } from "@/utils/content-utils";
 
 // 首页第 01 屏 —— 照官网首屏的骨相重做：左侧版心巨字 + 数值行 + 官网同款按钮；
 // 右侧竖排标记。纯几何与文字，不含任何图片（站主要求先去图）。
 // 站主 2026-10：大标题定稿 LEGSPCPD BLOG，标题下的空心英文与中文简介两行整段删除。
 const [allPosts, allTags] = await Promise.all([getSortedPosts(), getTagList()]);
+/* 跑带用的 //ENDFIELD 字标：官网 viewBox="0 0 1902 253" 那枚 path，从 efIcons 取。 */
+const efWord = EF_ICONS.endfieldWord;
 const postTotal = allPosts.length;
 const tagTotal = allTags.length;
 const catTotal = new Set(allPosts.map((p) => p.data.category).filter(Boolean)).size;
@@ -40,22 +43,39 @@ const latestLabel = latest
 		<p class="ef-hero-side-scroll">SCROLL<span>↓</span></p>
 	</div>
 
-	<!-- 官网 deco 带（线上 chunk 226 的 endfieldPre）：同一份内容渲染两份，各自按官网
-	     那两条映射平移（"-(300*p)%120%" 与 "120-300*p%120%"）—— 两条相差正好一个
-	     整周期，两份因此拼成一条无缝跑带。位移由 ef-scroll-motion.ts 写 --ef-bx
-	     （1px 量化），这里只有静态视觉（颜色/形态全部取站内现成做法，见
-	     endfield-shell.css §7.6）。窄屏与竖屏整块不显示。 -->
-	<div class="ef-hero-bands" aria-hidden="true">
-		<div class="ef-band ef-band--mark">
-			<i class="ef-band-copy" data-ef-band="a">LEGSPCPD // CONFIG · PITFALL · TRADEOFF · SELF-HOSTED · CLOUDFLARE · EDGEONE · </i>
-			<i class="ef-band-copy" data-ef-band="b">LEGSPCPD // CONFIG · PITFALL · TRADEOFF · SELF-HOSTED · CLOUDFLARE · EDGEONE · </i>
-		</div>
-		<div class="ef-band ef-band--tape">
-			<i class="ef-band-copy" data-ef-band="a"></i>
-			<i class="ef-band-copy" data-ef-band="b"></i>
-		</div>
-	</div>
 </section>
+
+<!-- // ENDFIELD 跑带 —— 官网 .__05-Gameplay_endfieldPre（线上 chunk 226 的 aM 组件）。
+     官网原文（逐字）：
+       let e = useRef(window.document.documentElement);
+       const {scrollYProgress: t} = useScroll({container: e});
+       const a = useTransform(t, p => `${-(300*p)%120}%`);
+       const n = useTransform(t, p => `${120-300*p%120}%`);
+       return <div className={styles.endfieldPre}>
+                <div className={styles.icon} style={{translateX: a}}><Ef/></div>
+                <div className={styles.icon} style={{translateX: n}}><Ef/></div>
+              </div>;
+     官网那三条几何逐值照抄（1rem ≡ var(--efu)，规则在 endfield-shell.css §7.6）：
+       容器 height 15.625rem / width 100% / overflow:hidden
+       图标 height 100% / width auto（= 官网 .icon 与 .ef 两条）
+     官网把它放在 Gameplay 区块内 top:8.125rem；本站按站主「放在首页 hero 之后」放在
+     首屏这一节的正下方，成为一条整幅贯通的独立跑带。
+     文案固定为 //ENDFIELD（站主明说不要 LC BLOG / LEGSPCPD），用官网那枚
+     viewBox="0 0 1902 253" 的字标 path（EF_ICONS.endfieldWord），逐字照抄。
+     位移由 ef-scroll-motion.ts 写 --ef-bx（1px 量化，宽度只在 init/resize 量一次）：
+     往下滚 p 变大 → 两条都向左；往上滚 p 变小 → 同一条式子给出反向位移，没有额外分支。 -->
+<div class="ef-endfield-band" aria-hidden="true">
+	<i class="ef-band-copy" data-ef-band="a">
+		<svg class="ef-endfield-word" viewBox={efWord.viewBox} xmlns="http://www.w3.org/2000/svg">
+			<path fill-rule="evenodd" fill="currentColor" d={efWord.paths[0]} />
+		</svg>
+	</i>
+	<i class="ef-band-copy" data-ef-band="b">
+		<svg class="ef-endfield-word" viewBox={efWord.viewBox} xmlns="http://www.w3.org/2000/svg">
+			<path fill-rule="evenodd" fill="currentColor" d={efWord.paths[0]} />
+		</svg>
+	</i>
+</div>
 
 <style>
 	/* 首屏基调跟内页一致：纸 #f2f2f2 + 墨 #191919，黄只做点缀（眉标方块 / 按钮 hover）。

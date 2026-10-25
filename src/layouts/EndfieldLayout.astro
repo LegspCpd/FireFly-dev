@@ -74,7 +74,7 @@ const icons: Record<string, { vb: string; d: string }> = {
 	},
 	information: {
 		vb: "0 0 43 46",
-		d: "M42.255,25.263 L34.478,33.034 L40.492,38.772 L35.979,43.279 L0.879,8.211 L5.387,3.708 L14.312,12.626 L15.100,12.614 L15.100,0 L22.100,0 L22.100,12.561 L24.715,12.548 L32.826,4.334 L40.786,12.286 L27.795,25.263 L42.255,25.263 ZM9.208,23.757 L9.208,23.490 L14.401,23.490 L14.401,23.757 C14.401,28.070 17.915,31.578 22.230,31.578 L22.496,31.578 L22.496,36.770 L22.230,36.770 C15.048,36.770 9.208,30.932 9.208,23.757 ZM5.918,23.757 C5.918,32.744 13.235,40.055 22.230,40.055 L22.496,40.055 L22.496,45.245 L22.230,45.245 C10.371,45.245 0.723,35.605 0.723,23.757 L0.723,23.490 L5.918,23.490 L5.918,23.757 Z",
+		d: "M42.255,25.263 L34.478,33.034 L40.492,38.772 L35.979,43.279 L0.879,8.211 L5.387,3.708 L14.312,12.626 L15.1000,12.614 L15.1000,-0.000 L22.1000,-0.000 L22.1000,12.561 L24.715,12.548 L32.826,4.334 L40.786,12.286 L27.795,25.263 L42.255,25.263 ZM9.208,23.757 L9.208,23.490 L14.401,23.490 L14.401,23.757 C14.401,28.070 17.915,31.578 22.230,31.578 L22.496,31.578 L22.496,36.770 L22.230,36.770 C15.048,36.770 9.208,30.932 9.208,23.757 ZM5.918,23.757 C5.918,32.744 13.235,40.055 22.230,40.055 L22.496,40.055 L22.496,45.245 L22.230,45.245 C10.371,45.245 0.723,35.605 0.723,23.757 L0.723,23.490 L5.918,23.490 L5.918,23.757 Z",
 	},
 	calendar: {
 		vb: "0 0 42 40",
@@ -90,13 +90,26 @@ const icons: Record<string, { vb: string; d: string }> = {
 	},
 };
 
-// 导航项：文案是我们的站内结构，图标用官网对应的那一个。
+// 导航项：文案是我们的站内结构，图标与**顺序**都照官网 PC 栏
+// （index.html 里 Header_navItem__c_fLB 那 7 项的 data-key 序列，
+//   每项的内联 translateY 步长 5rem、项高 4.5rem）：
+//   home(12.875rem) → operator(17.875) → lore(22.875) → information(27.875)
+//   → calendar(32.875) → aicGameplay(37.875) → notice(42.875)
+// 站主 2026-10-26：「把文章去掉」—— 官网第 3 槽的 lore（文章）不放进竖排栏，
+// 归档页仍可从栏底那颗「全部文章」黑块（→ /archive/）与页脚进入。
+// 于是本站 6 项与官网 7 槽逐位对齐（官网槽位 → 本站落点）：
+//   1 home        → /           首页
+//   2 operator    → /series/    系列
+//   3 information → /tags/      标签
+//   4 calendar    → /categories/ 分类
+//   5 aicGameplay → /friends/   友链
+//   6 notice      → /about/     关于
+// 图标一律是官网同名 data-key 的那一枚（下面 icons 表），没有任何两项共用图标。
 const rail = [
 	{ key: "home", href: "/", label: "首页" },
-	{ key: "lore", href: "/archive/", label: "文章" },
-	{ key: "calendar", href: "/categories/", label: "分类" },
-	{ key: "information", href: "/tags/", label: "标签" },
 	{ key: "operator", href: "/series/", label: "系列" },
+	{ key: "information", href: "/tags/", label: "标签" },
+	{ key: "calendar", href: "/categories/", label: "分类" },
 	{ key: "aicGameplay", href: "/friends/", label: "友链" },
 	{ key: "notice", href: "/about/", label: "关于" },
 ];
@@ -222,7 +235,10 @@ const year = new Date().getFullYear();
 			aria-label="站点导航"
 		>
 			<div class="Header_innerContainer__cW_Dv">
-				<!-- 字标：官网 logo 槽位（top 1.5u、宽 5.1875u、居中）。
+				<!-- 字标：官网 logo 槽位（.Header_logo__s3lE_：top 1.5rem、宽 5.1875rem，
+				     本站 1rem ≡ var(--efu)）。站主 2026-10-26：「最左上角、不要居中留空」，
+				     所以水平从官网的 left:50% + translateX(-50%) 改成 left:1.5u —— 与官网
+				     展开态、导航图标左侧留白同一个 1.5u 起点，方标与之同一条竖线。
 				     两态（规则在 endfield-shell.css 的 @media(min-width:861px)）：
 				       收起 = 只方标；悬停/聚焦展开 = 横版锁排（方标在左，LC + BLOG 在右） -->
 				<a class="Header_logo__s3lE_" href="/" aria-label="LC 首页">
@@ -387,6 +403,11 @@ const year = new Date().getFullYear();
 								<li><a href="/series/">系列</a></li>
 								<li><a href="/friends/">友链</a></li>
 								<li><a href="/about/">关于</a></li>
+								{/* 站主 2026-10-26：关于页里那两份文件（服务条款 / 隐私政策）也放进页脚。
+								    它们是 src/content/spec/about.md 里的两个二级标题，rehype-slug 生成的
+								    id 就在 /about/ 上（不是独立路由）——所以这里用同页锚点，落点非伪造。 */}
+								<li><a href="/about/#二-服务条款-terms-of-service">服务条款</a></li>
+								<li><a href="/about/#三-隐私政策-privacy-policy">隐私政策</a></li>
 								<li>
 									<a href="https://x.com/legspcpd" target="_blank" rel="noopener noreferrer">X</a>
 								</li>
