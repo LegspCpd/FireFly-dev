@@ -4,6 +4,7 @@ import Comment from "@components/comment/index.astro";
 // 页名图标来源：官网无「友链」，取 navAicGameplay（竖排栏 /friends/ 同 key）；
 // 容器沿用本页既有的 .page-icon 黑块（与 gallery / projects 等页同一个写法）。
 import EfIcon from "@components/common/EfIcon.astro";
+import EfSubpageHeader from "@components/common/EfSubpageHeader.astro";
 import Markdown from "@components/common/Markdown.astro";
 import { Icon } from "astro-icon/components";
 import {
@@ -49,35 +50,27 @@ const description =
 ---
 
 <EndfieldLayout title={title} description={description}>
+  {/* 页名用官网二级页页头 .SubpageHeader_subpageHeader（黄渐变带 + 黑方块图标 +
+      白色标题板）；原来的 .page-heading 图标页头随之撤掉，本页不再自画页名。 */}
+  <EfSubpageHeader title={title} titleEn="Friends" icon="navAicGameplay" />
+
   <div
-    class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32"
+    class="ef-sheet-top flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32"
   >
     <div class="card-base z-10 px-9 py-6 relative w-full ef-sheet">
-      <!-- 页面标题和描述 -->
-      <div class="mb-4">
-        <div class="page-heading">
-          <div class="page-icon" aria-hidden="true">
-            {/* 官网无「友链」，取 navAicGameplay（竖排栏 /friends/ 同 key） */}
-            <EfIcon name="navAicGameplay" />
-          </div>
-          <div>
-            {/* skill：页头 = // 眉标 + 中文标题，标题下三色条 */}
-            <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// FRIENDS</p>
-            <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1">{title}</h1>
-            {description && <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">{description}</p>}
-            <div class="ef-tri mt-3" aria-hidden="true"><i></i><i></i><i></i></div>
-          </div>
-          <button
-            type="button"
-            id="friend-apply-switch"
-            style="font-family: inherit"
-            class="ef-btn small ml-auto shrink-0"
-          >
-            <EfIcon name="jump" class="text-base" />
-            <span class="hidden sm:inline">申请友链</span>
-            <span class="sm:hidden">申请</span>
-          </button>
-        </div>
+      <!-- 页名已上移到 .SubpageHeader；这里只剩描述与「申请友链」入口 -->
+      <div class="ef-friend-head">
+        {description && <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 0">{description}</p>}
+        <button
+          type="button"
+          id="friend-apply-switch"
+          style="font-family: inherit"
+          class="ef-btn small ml-auto shrink-0"
+        >
+          <EfIcon name="jump" class="text-base" />
+          <span class="hidden sm:inline">申请友链</span>
+          <span class="sm:hidden">申请</span>
+        </button>
       </div>
 
       <!-- 搜索框 -->
@@ -842,6 +835,21 @@ const description =
       document.addEventListener("swup:page:view", setup);
     })();
   </script>
-
-
 </EndfieldLayout>
+
+<style>
+  /* 描述与「申请友链」一行两端对齐；描述自带的 1.6rem 下边距在这一行里不要。 */
+  .ef-friend-head {
+    display: flex;
+    align-items: center;
+    gap: calc(1.5 * var(--efu));
+    margin-bottom: calc(1.5 * var(--efu));
+  }
+  .ef-friend-head :global(.ef-page-sub) {
+    margin: 0;
+  }
+  /* 页头带底到内容的上边距：官网 .__10-NoticeList_items__ 的 margin-top:2.625rem */
+  .ef-sheet-top {
+    margin-top: calc(2.625 * var(--efu));
+  }
+</style>
