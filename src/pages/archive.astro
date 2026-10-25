@@ -1,23 +1,95 @@
 ---
-// 页名图标来源：归档：官网无「归档」，取 navLore（资料/文档形，竖排栏 /archive/ 同 key）。
-import EfIcon from "@components/common/EfIcon.astro";
+// 归档页 —— 官网二级页骨架（官网没有「归档」这一页，搬的是它二级页的通用语汇）：
+//   .SubpageHeader_subpageHeader  黄渐变带 + 黑方块图标 + 白色标题板（SansBold 4.5rem）
+//   .SubpageTab_subpageTab        年份页签（4px 圆角、hover #f3f3f3、active #e5e5e5 + 圆形箭头）
+//   .SectionTitle_sectionTitle    每年的区块标题（灰块 + Gilroy-Medium 英文 + SansBold 中文）
+//   .ef-grid                      首页已验收的官网卡片网格
+// 页面没有任何自造视觉：色值/字号/间距全部来自上面三个官网组件。
+import EfSectionTitle from "@components/common/EfSectionTitle.astro";
+import EfSubpageHeader from "@components/common/EfSubpageHeader.astro";
+import EfSubpageTabs from "@components/common/EfSubpageTabs.astro";
 import EndfieldPostGrid from "@components/layout/EndfieldPostGrid.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getSortedPosts } from "@/utils/content-utils";
 
-// 新架构：整页由 EndfieldLayout + 官网式区块构成，不再经过 MainGridLayout / PostPage / 侧边栏。
 const posts = await getSortedPosts();
+
+// 按发布年份分组，保持 getSortedPosts 的倒序（不重排任何一篇）
+const byYear = new Map<string, typeof posts>();
+for (const post of posts) {
+	const year = String(post.data.published.getFullYear());
+	const bucket = byYear.get(year) ?? [];
+	bucket.push(post);
+	byYear.set(year, bucket);
+}
+const groups = [...byYear.entries()].map(([year, list]) => ({ year, posts: list }));
+
+// 页签：每年一个，锚到当年的区块；最新年份默认选中（其余由页内脚本按 hash 接管）
+const tabs = groups.map((group, i) => ({
+	label: group.year,
+	href: "#y" + group.year,
+	active: i === 0,
+}));
 ---
 
-<EndfieldLayout title="归档" description="全部文章，按时间倒序">
+<EndfieldLayout title="归档" description="全部文章，按年份归档">
+	<EfSubpageHeader title="归档" titleEn="Archive" icon="navLore" />
+
 	<div class="ef-wrap">
-		<section class="ef-sec">
-			<div class="ef-sec-head">
-				<p class="ef-eyebrow" data-replay="ef-in-power">// ARCHIVE</p>
-				<h1 class="ef-sec-title" data-replay="ef-in-power" style="--i: 1"><EfIcon name="navLore" inline />归档</h1>
-				<p class="ef-sec-count ef-field" data-replay="ef-in-power" style="--i: 2">{posts.length} 篇文章</p>
-			</div>
-			<EndfieldPostGrid posts={posts} columns={3} />
-		</section>
+		<div class="ef-archive-tabs">
+			<EfSubpageTabs items={tabs} label="按年份筛选" />
+		</div>
+
+		{
+			groups.map((group) => (
+				<section class="ef-archive-year" id={"y" + group.year}>
+					<EfSectionTitle en={group.posts.length + " Posts"} cn={group.year + " 年"} />
+					<div class="ef-archive-grid">
+						<EndfieldPostGrid posts={group.posts} columns={3} />
+					</div>
+				</section>
+			))
+		}
+
+		{posts.length === 0 && <p class="ef-empty ef-field">还没有文章。</p>}
 	</div>
 </EndfieldLayout>
+
+<style>
+	/* 页签与第一个年份之间的呼吸：官网页签顶 352、标题带底 284.625，差 67.5px = 7.5rem；
+	   这里取同一量级 2.5u（年份区块本身不带内距，间距全部由这一处给出）。 */
+	.ef-archive-tabs {
+		padding-top: calc(2.5 * var(--efu));
+		padding-bottom: calc(2.5 * var(--efu));
+	}
+	.ef-archive-year {
+		scroll-margin-top: calc(2 * var(--efu));
+		margin-bottom: calc(4 * var(--efu));
+	}
+	.ef-archive-grid {
+		margin-top: calc(1.5 * var(--efu));
+	}
+</style>
+
+<script is:inline>
+	// 页签选中态跟随 URL hash（点「2026」高亮挪到 2026，滚回顶部也一样）。
+	// 没有 hash 时保留服务端渲染的默认选中（最新年份）。
+	(function () {
+		function sync() {
+			var hash = location.hash;
+			if (!hash) return;
+			var tabs = document.querySelectorAll(".SubpageTab_tab__qSWqv");
+			for (var i = 0; i < tabs.length; i++) {
+				var hit = tabs[i].getAttribute("href") === hash;
+				tabs[i].classList.toggle("SubpageTab_active__fHDLL", hit);
+				if (hit) tabs[i].setAttribute("aria-current", "page");
+				else tabs[i].removeAttribute("aria-current");
+			}
+		}
+		sync();
+		window.addEventListener("hashchange", sync);
+		document.addEventListener("swup:page:view", function () {
+			setTimeout(sync, 60);
+		});
+	})();
+</script>

@@ -1,0 +1,239 @@
+---
+// 内页头 = 官网 .SubpageHeader_subpageHeader（公告 / 干员 / 资料这些二级页共用）
+// 源规则（F:/web/endfield-official/css/c1b6a925ef3d04ee.css 原值；官网 1rem ≡ 本站 1 * var(--efu)）：
+//   .SubpageHeader_subpageHeader   position:relative; height:31.625rem; width:100%;
+//                                  border-bottom:1rem solid #c6c6c6; box-sizing:border-box;
+//                                  background-image:linear-gradient(180deg,#fff 15.5625rem,#fffa00 0,#fffa00)
+//   .decoHeader                    position:absolute; top:13.5625rem
+//   .icon                          position:absolute; left:0; top:0; width:4.375rem;
+//                                  height:4.375rem; background-color:#191919;
+//                                  display:flex; align-items:center; justify-content:center;
+//                                  color:#fffa00
+//   .colonSvg                      position:absolute; left:4.75rem; top:2.9375rem;
+//                                  width:auto; height:.875rem; color:#191919
+//   .decoHeader:before             content:"ARKNIGHTS:"; left:6.125rem; top:1.3125rem;
+//                                  font-size:1.5rem; font-family:Gilroy-Medium;
+//                                  transform:scale(.5); transform-origin:left top; line-height:1
+//   .titleEn                       left:19rem; top:3.25rem; font-size:1.25rem;
+//                                  font-family:Gilroy-Medium; background-color:#fffa00;
+//                                  transform:scale(.8); transform-origin:left top;
+//                                  line-height:1; text-transform:uppercase
+//   .title                         position:absolute; left:…; top:19.0625rem; width:95.75rem;
+//                                  height:5.125rem; box-sizing:border-box; padding-top:.05em;
+//                                  padding-left:.625rem; font-family:SansBold; font-size:4.5rem;
+//                                  line-height:5.125rem; color:#191919; background-color:#fff
+//   .title .colonSvg               position:relative; left:.5rem; top:.25rem;
+//                                  width:auto; height:1.75rem
+//   H5（官网 竖屏）                 height:19.375rem;
+//                                  background-image:linear-gradient(180deg,#fff 6.3125rem,#fffa00 0,#fffa00)
+//                                  .decoHeader top:4.625rem; .icon 3.8125rem;
+//                                  .colonSvg left:4.125rem; top:2.5rem; height:.8125rem;
+//                                  .title left:calc(50% - 27.125rem); top:9.25rem;
+//                                  width:calc(100% - (50% - 27.125rem)); font-size:3.625rem;
+//                                  height:4.1875rem; line-height:4.1875rem;
+//                                  padding-top:.07em; padding-left:.5rem
+//
+// 本站的三处取舍（都是「官网原值搬到本站结构里」，不是自造样式）：
+//   1) 水平锚点：官网的 left 是 calc(50% - 80rem + …)，那是它 160rem 定宽画布；
+//      本站内容列是 .ef-wrap（96u，居中）。这里把 deco 与标题都钉在 .ef-wrap 的内边缘，
+//      即官网那串偏移里表示「内容区左缘 + 3.75rem」的那一段，其余合并进 wrap。
+//   2) .efSvg（官网 ENDFIELD 字标 354×57 的 path）与 .decoSvg（112×55 线稿）
+//      是官网品牌/装饰图形，本地没有对应物，不搬；
+//      .titleEn 因此从官网的 left:19rem 挪到字标槽位的左缘 6.125rem（垂直值照官网）。
+//   3) decoHeader:before 文案换成站名缩写 LC:（官网是 ARKNIGHTS:），字号/缩放/位置照官网。
+import EfIcon from "@components/common/EfIcon.astro";
+import type { EfIconKey } from "@/constants/efIcons";
+
+interface Props {
+	/** 页面中文名（官网 .title） */
+	title: string;
+	/** 页面英文名，官网 .titleEn（大写显示） */
+	titleEn: string;
+	/** 左上黑方块里的官网图标（与竖排栏同一套 key） */
+	icon: EfIconKey;
+}
+
+const { title, titleEn, icon } = Astro.props;
+// 官网 .SubpageHeader_colonSvg__yULIW 的原 path（viewBox 0 0 6 14）
+const colonPath =
+	"M0.879,13.765 L0.879,8.934 L5.710,8.934 L5.710,13.765 L0.879,13.765 ZM0.879,0.077 L5.710,0.077 L5.710,4.908 L0.879,4.908 L0.879,0.077 Z";
+---
+
+<header class="SubpageHeader_subpageHeader__eGnaM">
+	<div class="ef-wrap SubpageHeader_wrap">
+		<div class="SubpageHeader_decoHeader__9Vyiq">
+			<div class="SubpageHeader_icon__at3oV">
+				<EfIcon name={icon} class="SubpageHeader_glyph" />
+			</div>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 6 14"
+				class="SubpageHeader_colonSvg__yULIW"
+				aria-hidden="true"
+			>
+				<path fill-rule="evenodd" fill="currentColor" d={colonPath} />
+			</svg>
+			<span class="SubpageHeader_titleEn__lisEh" aria-hidden="true">{titleEn}</span>
+		</div>
+
+		<h1 class="SubpageHeader_title__Rf0BE">
+			{title}<svg
+				xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 6 14"
+				class="SubpageHeader_colonSvg__yULIW"
+				aria-hidden="true"
+			>
+				<path fill-rule="evenodd" fill="currentColor" d={colonPath} />
+			</svg>
+		</h1>
+	</div>
+</header>
+
+<style>
+	.SubpageHeader_subpageHeader__eGnaM {
+		position: relative;
+		height: calc(31.625 * var(--efu));
+		width: 100%;
+		border-bottom: calc(1 * var(--efu)) solid #c6c6c6;
+		box-sizing: border-box;
+		background-image: linear-gradient(
+			180deg,
+			#fff calc(15.5625 * var(--efu)),
+			#fffa00 0,
+			#fffa00
+		);
+	}
+	.SubpageHeader_wrap {
+		position: relative;
+		height: 100%;
+	}
+	.SubpageHeader_decoHeader__9Vyiq {
+		position: absolute;
+		left: calc(4 * var(--efu));
+		top: calc(13.5625 * var(--efu));
+	}
+	.SubpageHeader_decoHeader__9Vyiq::before {
+		content: "LC:";
+		position: absolute;
+		left: calc(6.125 * var(--efu));
+		top: calc(1.3125 * var(--efu));
+		font-size: calc(1.5 * var(--efu));
+		font-family: "Gilroy-Medium", var(--ef-font-cjk);
+		transform: scale(0.5);
+		transform-origin: left top;
+		line-height: 1;
+	}
+	.SubpageHeader_icon__at3oV {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: calc(4.375 * var(--efu));
+		height: calc(4.375 * var(--efu));
+		background-color: #191919;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #fffa00;
+	}
+	.SubpageHeader_icon__at3oV :global(.SubpageHeader_glyph) {
+		width: calc(2.375 * var(--efu));
+		height: auto;
+	}
+	.SubpageHeader_colonSvg__yULIW {
+		position: absolute;
+		left: calc(4.75 * var(--efu));
+		top: calc(2.9375 * var(--efu));
+		width: auto;
+		height: calc(0.875 * var(--efu));
+		color: #191919;
+	}
+	.SubpageHeader_titleEn__lisEh {
+		position: absolute;
+		left: calc(6.125 * var(--efu));
+		top: calc(3.25 * var(--efu));
+		font-size: calc(1.25 * var(--efu));
+		font-family: "Gilroy-Medium", var(--ef-font-cjk);
+		background-color: #fffa00;
+		transform: scale(0.8);
+		transform-origin: left top;
+		line-height: 1;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+	.SubpageHeader_title__Rf0BE {
+		margin: 0;
+		font-weight: inherit;
+		position: absolute;
+		left: calc(4 * var(--efu));
+		top: calc(19.0625 * var(--efu));
+		width: calc(100% - 8 * var(--efu));
+		height: calc(5.125 * var(--efu));
+		box-sizing: border-box;
+		padding-top: 0.05em;
+		padding-left: calc(0.625 * var(--efu));
+		font-family: var(--ef-font-bold);
+		font-size: calc(4.5 * var(--efu));
+		line-height: calc(5.125 * var(--efu));
+		color: #191919;
+		background-color: #fff;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+	.SubpageHeader_title__Rf0BE .SubpageHeader_colonSvg__yULIW {
+		position: relative;
+		left: calc(0.5 * var(--efu));
+		top: calc(0.25 * var(--efu));
+		width: auto;
+		height: calc(1.75 * var(--efu));
+	}
+	/* 官网 H5 竖屏覆盖值（--efu 在 ≤860px 已切到官网 H5 基准，1u 与官网同值） */
+	@media (max-width: 860px) and (orientation: portrait) {
+		.SubpageHeader_subpageHeader__eGnaM {
+			height: calc(19.375 * var(--efu));
+			background-image: linear-gradient(
+				180deg,
+				#fff calc(6.3125 * var(--efu)),
+				#fffa00 0,
+				#fffa00
+			);
+		}
+		.SubpageHeader_decoHeader__9Vyiq {
+			left: calc(0.5 * var(--efu));
+			top: calc(4.625 * var(--efu));
+		}
+		.SubpageHeader_icon__at3oV {
+			width: calc(3.8125 * var(--efu));
+			height: calc(3.8125 * var(--efu));
+		}
+		.SubpageHeader_colonSvg__yULIW {
+			left: calc(4.125 * var(--efu));
+			top: calc(2.5 * var(--efu));
+			height: calc(0.8125 * var(--efu));
+		}
+		.SubpageHeader_decoHeader__9Vyiq::before {
+			left: calc(5.375 * var(--efu));
+			top: calc(1.125 * var(--efu));
+			font-size: calc(1.25 * var(--efu));
+		}
+		.SubpageHeader_titleEn__lisEh {
+			left: calc(5.375 * var(--efu));
+			top: calc(2.875 * var(--efu));
+			font-size: calc(1.5 * var(--efu));
+			transform: scale(0.5);
+		}
+		.SubpageHeader_title__Rf0BE {
+			left: calc(0.5 * var(--efu));
+			top: calc(9.25 * var(--efu));
+			width: calc(100% - 1 * var(--efu));
+			font-size: calc(3.625 * var(--efu));
+			height: calc(4.1875 * var(--efu));
+			line-height: calc(4.1875 * var(--efu));
+			padding-top: 0.07em;
+			padding-left: calc(0.5 * var(--efu));
+		}
+		.SubpageHeader_title__Rf0BE .SubpageHeader_colonSvg__yULIW {
+			height: calc(1.5625 * var(--efu));
+			top: calc(0.125 * var(--efu));
+		}
+	}
+</style>

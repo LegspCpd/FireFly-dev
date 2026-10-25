@@ -1,0 +1,156 @@
+---
+// 二级页页签 = 官网 .SubpageTab_subpageTab（公告 / 干员 / 资料的筛选条）
+// 源规则（F:/web/endfield-official/css/c1b6a925ef3d04ee.css 原值；官网 1rem ≡ 1 * var(--efu)）：
+//   .subpageTab  position:relative; height:3.75rem; display:flex; align-items:center;
+//                width:max-content
+//   .tab         position:relative; padding:0 3rem; height:100%; display:flex;
+//                align-items:center; border-radius:4px;
+//                transition:background-color .2s ease; cursor:pointer
+//   .tab:hover   background-color:#f3f3f3
+//   .tab.active  background-color:#e5e5e5
+//   .tab .text   position:relative; font-size:2rem; font-family:SansMedium;
+//                line-height:1; color:#191919; white-space:nowrap;
+//                transition:transform .2s ease
+//   .tab.active .text        transform:translate3d(-1.5rem,0,0)
+//   .tab .arrow  position:absolute; right:.625rem; width:2.3125rem; height:2.3125rem;
+//                border-radius:50%; opacity:0; background-color:#fafafa;
+//                transition:opacity .2s ease
+//   .tab.active .arrow       opacity:1
+//   .arrowIcon   position:absolute; top:50%; left:50%; height:1.3125rem; width:auto;
+//                transform:translate3d(-50%,-50%,0); color:#999
+//   .divider     position:relative; width:.1875rem; height:2.5rem;
+//                background-color:#d9d9d9; margin:0 .625rem；首尾两块隐藏
+//   H5 覆盖      .subpageTab{height:4rem} .tab{padding:0 2.25rem}
+//                .text{width:max-content;font-size:2rem}
+//                .active .text{transform:translate3d(-1.75rem,0,0)}
+// 本站只把 rem 换成 calc(N * var(--efu))；箭头用站内官网图标表里的 chevronThin
+// （官网 .arrowIcon 也是同一枚细箭头，非自绘）。
+import EfIcon from "@components/common/EfIcon.astro";
+
+interface Item {
+	label: string;
+	href: string;
+	active?: boolean;
+}
+
+interface Props {
+	items: Item[];
+	/** 导航的可读名称（aria-label） */
+	label: string;
+}
+
+const { items, label } = Astro.props;
+---
+
+<nav class="SubpageTab_subpageTab__A3JdU" aria-label={label}>
+	{
+		items.map((item, i) => (
+			<>
+				{i > 0 && <span class="SubpageTab_divider__Mj7nZ" aria-hidden="true" />}
+				<a
+					class:list={[
+						"SubpageTab_tab__qSWqv",
+						{ SubpageTab_active__fHDLL: item.active },
+					]}
+					href={item.href}
+					aria-current={item.active ? "page" : undefined}
+					data-ef-tab
+				>
+					<span class="SubpageTab_text__x2QY7">{item.label}</span>
+					<span class="SubpageTab_arrow__vyyID" aria-hidden="true">
+						<EfIcon name="chevronThin" class="SubpageTab_arrowIcon__9MnL3" />
+					</span>
+				</a>
+			</>
+		))
+	}
+</nav>
+
+<style>
+	.SubpageTab_subpageTab__A3JdU {
+		position: relative;
+		height: calc(3.75 * var(--efu));
+		display: flex;
+		align-items: center;
+		width: max-content;
+		max-width: 100%;
+		overflow-x: auto;
+		overflow-y: hidden;
+	}
+	.SubpageTab_tab__qSWqv {
+		position: relative;
+		padding: 0 calc(3 * var(--efu));
+		height: 100%;
+		display: flex;
+		align-items: center;
+		border-radius: 4px;
+		transition: background-color 0.2s ease;
+		cursor: pointer;
+		text-decoration: none;
+		flex: none;
+	}
+	.SubpageTab_tab__qSWqv:hover {
+		background-color: #f3f3f3;
+	}
+	.SubpageTab_active__fHDLL {
+		background-color: #e5e5e5;
+	}
+	.SubpageTab_text__x2QY7 {
+		position: relative;
+		font-size: calc(2 * var(--efu));
+		font-family: var(--ef-font-sans);
+		line-height: 1;
+		color: #191919;
+		white-space: nowrap;
+		transition: transform 0.2s ease;
+	}
+	.SubpageTab_active__fHDLL .SubpageTab_text__x2QY7 {
+		transform: translate3d(calc(-1.5 * var(--efu)), 0, 0);
+	}
+	.SubpageTab_arrow__vyyID {
+		position: absolute;
+		right: calc(0.625 * var(--efu));
+		width: calc(2.3125 * var(--efu));
+		height: calc(2.3125 * var(--efu));
+		border-radius: 50%;
+		opacity: 0;
+		background-color: #fafafa;
+		transition: opacity 0.2s ease;
+		display: block;
+	}
+	.SubpageTab_active__fHDLL .SubpageTab_arrow__vyyID {
+		opacity: 1;
+	}
+	.SubpageTab_arrow__vyyID :global(.SubpageTab_arrowIcon__9MnL3) {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		height: calc(1.3125 * var(--efu));
+		width: auto;
+		transform: translate3d(-50%, -50%, 0);
+		color: #999;
+	}
+	.SubpageTab_divider__Mj7nZ {
+		position: relative;
+		width: calc(0.1875 * var(--efu));
+		height: calc(2.5 * var(--efu));
+		background-color: #d9d9d9;
+		margin: 0 calc(0.625 * var(--efu));
+		flex: none;
+	}
+	.SubpageTab_divider__Mj7nZ:first-child,
+	.SubpageTab_divider__Mj7nZ:last-child {
+		display: none;
+	}
+	@media (max-width: 860px) and (orientation: portrait) {
+		.SubpageTab_subpageTab__A3JdU {
+			height: calc(4 * var(--efu));
+		}
+		.SubpageTab_tab__qSWqv {
+			padding: 0 calc(2.25 * var(--efu));
+		}
+		.SubpageTab_active__fHDLL .SubpageTab_text__x2QY7 {
+			transform: translate3d(calc(-1.75 * var(--efu)), 0, 0);
+		}
+	}
+</style>
