@@ -960,24 +960,38 @@ body.ef-contours {
   overflow: hidden;
   transition: border-color 0.2s, background-color 0.2s;
 }
-.ef-card:hover {
-  border-color: var(--ef-ink);
-}
-/* 官网 hover 强调：左侧竖条黄块（.Header_bg 同款做法） */
+/* —— 卡片悬停 = 官网 .Button_button 的「黄条 → 箭头」（css/*.css 原值）——
+   官网基础态： :after { width:1.25rem; height:55%; background-color:#fffa00;
+                          clip-path:polygon(0 0,25% 0,25% 100%,0 100%) }
+   官网悬停态： :after { clip-path:polygon(0 20%,100% 50%,0 80%,0 80%) }
+               .Button_light:hover { background-color:#f0f0f0 }
+   即「一条 1.25rem 宽的黄竖条，悬停时收成向右的箭头」，底色取官网浅色按钮的 #f0f0f0。
+   两处按卡片几何落位（官网该件是按钮，不是卡片，位置不能照抄）：
+     · 横向放在卡片左侧那条 0.75u 的空白槽里（卡片 padding 是 2u，槽就是 0.75u~2u），
+       宽度仍是官网的 1.25u —— 官网 left:1rem 会让黄条压到标题第一个字上。
+     · 官网悬停那下 translateX(.875rem) 是给按钮右侧留白用的；卡片右边是正文，
+       右移会压字，所以只保留形状变化，不右移。
+   黄条就是官网按钮唯一的箭头，卡片里原来那个自造的「→」文本已删。 */
 .ef-card::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: calc(0.375 * var(--efu));
+  left: calc(0.75 * var(--efu));
+  top: 50%;
+  width: calc(1.25 * var(--efu));
+  height: 55%;
   background: var(--ef-signal);
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+  clip-path: polygon(0 0, 25% 0, 25% 100%, 0 100%);
+  transform: translateY(-50%);
+  transition: clip-path 0.2s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+.ef-card:hover {
+  border-color: var(--ef-ink);
+  background: #f0f0f0;
 }
 .ef-card:hover::before {
-  transform: scaleY(1);
+  clip-path: polygon(0 20%, 100% 50%, 0 80%, 0 80%);
 }
 /* 标题是唯一的链接，::after 把可点区域铺满整张卡（标签链接再压在它上面） */
 .ef-card-link {
@@ -990,8 +1004,7 @@ body.ef-contours {
   inset: 0;
   z-index: 1;
 }
-.ef-card-tags,
-.ef-card-arrow {
+.ef-card-tags {
   position: relative;
   z-index: 2;
 }
@@ -1006,12 +1019,17 @@ body.ef-contours {
   color: var(--ef-ink-2);
   font-variant-numeric: tabular-nums;
 }
+/* 分类块 = 官网 .__04-Information_infoCurrent .tagAndDate .tag 原值：
+   display:inline-block; padding:2px .5em; background-color:#38383a; color:#fff;
+   border-radius:2px（官网的 margin-right:2rem 由卡片 flex gap 代劳，不重复加）。
+   官网的 .date 是 #fdfd1f 黄字 —— 但它只出现在官网的**深色**新闻面板上；
+   本站卡片是白面（官网没有白色卡片），照搬黄字会读不出来，日期保持深色。 */
 .ef-card-cat {
-  padding: calc(0.15 * var(--efu)) calc(0.6 * var(--efu));
-  background: var(--ef-ink);
-  color: var(--ef-panel);
+  display: inline-block;
+  padding: 2px 0.5em;
+  background-color: #38383a;
+  color: #fff;
   border-radius: 2px;
-  letter-spacing: 0.04em;
 }
 .ef-card-title {
   margin: 0;
@@ -1051,21 +1069,6 @@ body.ef-contours {
 .ef-card-tags a:hover {
   color: var(--ef-ink);
 }
-/* 右下角箭头：官网卡片的指示符 */
-.ef-card-arrow {
-  align-self: flex-end;
-  margin-top: calc(0.5 * var(--efu));
-  font-family: var(--ef-font-sans);
-  font-size: var(--ef-fs-5);
-  line-height: 1;
-  color: var(--ef-ink-2);
-  transition: transform 0.25s, color 0.2s;
-}
-.ef-card:hover .ef-card-arrow {
-  transform: translate3d(calc(0.4 * var(--efu)), 0, 0);
-  color: var(--ef-ink);
-}
-
 /* ---------- 7. 分页与页脚 ------------------------------------------------- */
 
 .ef-pager {
