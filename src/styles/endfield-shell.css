@@ -799,21 +799,78 @@ body.ef-contours {
 
 .ef-sec {
   padding-block: calc(4.5 * var(--efu));
-  border-top: 1px solid var(--ef-rule);
 }
 .ef-sec:first-child {
   border-top: 0;
   padding-top: calc(3.5 * var(--efu));
 }
 
+/* —— 区块标题 = 官网 sectionDivider（黄带 + 小眉标 + 大标题 + 左侧 deco 图）——
+   官网源规则（F:/web/endfield-official/css/*.css 原值，1rem ≡ var(--efu)）：
+     .__03-Lore_sectionDivider / .__02-Operator_sectionDivider
+        height:9.125rem; background-color:#fffa00; line-height:1;
+        padding:2.25rem 0 0 30.625rem; margin-bottom:2rem
+     .__02-Operator_sectionDivider:after（左侧 deco 图槽位，非自绘）
+        left:1.5rem; bottom:0; width:28.25rem; height:14.25rem;
+        background-size:100% 100%; background-position:50%; background-repeat:no-repeat
+     .dividerSubtitle { font-size:1.875rem; font-family:Gilroy-Light; line-height:1 }
+     .dividerTitle    { font-size:3.75rem;  font-family:Gilroy-Medium; line-height:1 }
+   官网 H5 后置覆盖：padding-right:6.75rem; padding-top:2.25rem; text-align:right;
+                     margin-bottom:2.5rem; deco 改 left:57px / 25.425rem × 12.825rem
+   —— 所以桌面左内距 30.625u 不是留白，是官网给 deco 图留的槽位；图按官网同名几何
+   用 ::before 放回去。色块本身就是分隔件，官网没有额外细线（原来那条 1px 边框删掉）。
+   deco 图是官网 UI 里的机械线稿，不是角色插画。 */
 .ef-sec-head {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: calc(9.125 * var(--efu));
+  padding: calc(2.25 * var(--efu)) calc(6.75 * var(--efu)) 0 calc(30.625 * var(--efu));
+  margin: 0 0 calc(2 * var(--efu));
+  background-color: #fffa00;
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: calc(0.75 * var(--efu)) calc(1.5 * var(--efu));
-  padding-bottom: calc(1.25 * var(--efu));
-  margin-bottom: calc(2.5 * var(--efu));
-  border-bottom: 1px solid var(--ef-rule);
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(1.5 * var(--efu));
+  /* deco 图按官网 bottom:0 溢出带外，不能裁 */
+  overflow: visible;
+}
+.ef-sec-head::before {
+  content: "";
+  position: absolute;
+  left: calc(1.5 * var(--efu));
+  bottom: 0;
+  width: calc(28.25 * var(--efu));
+  height: calc(14.25 * var(--efu));
+  background-image: url("/endfield-ui/official/deco/section-divider-lore.png");
+  background-repeat: no-repeat;
+  background-position: 50%;
+  background-size: 100% 100%;
+  pointer-events: none;
+}
+/* 眉标 = 官网 .dividerSubtitle：1.875rem Gilroy-Light、行高 1、无字距（官网实测量测值
+   1440×900 下 16.875px / line-height 16.875px / letter-spacing normal） */
+.ef-sec-head .ef-eyebrow {
+  color: #191919;
+  font-family: "Gilroy-Light", var(--ef-font-cjk);
+  font-size: calc(1.875 * var(--efu));
+  line-height: 1;
+  letter-spacing: normal;
+}
+/* 标题 = 官网 .dividerTitle 的 3.75rem / 行高 1（1440×900 实测 33.75px / 33.75px）。
+   中文字面按官网中文族走 —— 官网中文标题一律 SansBold（= HarmonyOS Sans SC Bold）。 */
+.ef-sec-head .ef-sec-title {
+  color: #191919;
+  font-size: calc(3.75 * var(--efu));
+  line-height: 1;
+}
+/* 计数：官网黄带上的字一律黑 #191919。纵向用「带高 - 内距 - 文字块高」剩下的 1.25u
+   把它顶到与标题同底，这个 1.25u 是官网几何算出来的余量，不是另定的数。 */
+.ef-sec-head .ef-sec-count {
+  margin-inline-start: auto;
+  align-self: flex-end;
+  margin-bottom: calc(1.25 * var(--efu));
+  color: #191919;
 }
 /* 官网页面标题 = NoticeDetail_title 的 3rem / 行高 1 / SansBold。
    字距：官网中文元素实测 letter-spacing:normal，负字距只加在拉丁大标题上，
@@ -1520,10 +1577,20 @@ html.ef-motion [data-ef-wipe]:not(.ef-wiped) {
   .ef-sec:first-child {
     padding-top: calc(4.5 * var(--efu));
   }
+  /* 官网 H5 的 sectionDivider（同文件后置覆盖的原值）：padding-top 2.25rem、
+     padding-right 6.75rem、margin-bottom 2.5rem。官网在 H5 会整块隐藏 deco
+     （同类做法见官网 .downloader_decoText{left:1rem;bottom:1rem;display:none}），
+     所以这里也隐藏 deco，并把左内距对称成官网那同一个 6.75rem，
+     免得留下 deco 的空槽 —— 不另定数值。 */
   .ef-sec-head {
-    gap: calc(0.5 * var(--efu)) calc(1 * var(--efu));
-    padding-bottom: calc(1.75 * var(--efu));
-    margin-bottom: calc(3 * var(--efu));
+    gap: calc(0.5 * var(--efu));
+    padding-left: calc(6.75 * var(--efu));
+    padding-right: calc(6.75 * var(--efu));
+    margin-bottom: calc(2.5 * var(--efu));
+    align-items: flex-end;
+  }
+  .ef-sec-head::before {
+    display: none;
   }
   /* 区块标题 / 页名 = 官网 H5 的 3u（390 上 17.3px），行高收到 1.15 */
   .ef-sec-title,
@@ -1582,9 +1649,6 @@ html.ef-motion [data-ef-wipe]:not(.ef-wiped) {
   }
   .ef-wrap {
     padding-inline: calc(3 * var(--efu));
-  }
-  .ef-sec-head {
-    align-items: flex-start;
   }
   /* 长 URL / 长英文单词 / 长数字不允许把版心顶破 */
   .ef-shell-main,

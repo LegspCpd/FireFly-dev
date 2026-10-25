@@ -1,7 +1,5 @@
 ---
 import type { GetStaticPaths } from "astro";
-// 页名图标来源：最新文章（首页）：官网无「最新文章」，取 navHome（竖排栏 / 同 key）。
-import EfIcon from "@components/common/EfIcon.astro";
 import HeroCanvas from "@components/common/HeroCanvas.astro";
 import EndfieldPostGrid from "@components/layout/EndfieldPostGrid.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
@@ -22,32 +20,36 @@ const isHome = page.currentPage === 1;
 		isHome ? (
 			<>
 				<HeroCanvas />
-				<div class="ef-wrap">
-					<section class="ef-sec">
-						<div class="ef-sec-head">
-							<div>
-								<p class="ef-eyebrow">// LATEST</p>
-								<h2 class="ef-sec-title"><EfIcon name="navHome" inline />最新文章</h2>
-							</div>
-							<p class="ef-sec-count">{page.data.length} 篇文章</p>
-						</div>
-						<EndfieldPostGrid posts={page.data.slice(0, 6)} columns={3} />
-					</section>
-				</div>
-			</>
-		) : (
-			<div class="ef-wrap">
+				{/* 区块标题 = 官网 sectionDivider 的黄带，必须整幅贯通内容区
+				    （官网实测 1440×900：x 67.5 / w 1372.5 = 整条内容宽），
+				    所以它挂在 .ef-sec 下，不再套 .ef-wrap；只有下面的文章网格套版心。
+				    官网该带没有内联图标，标题里的 EfIcon 一并去掉。 */}
 				<section class="ef-sec">
 					<div class="ef-sec-head">
-						<div>
-							<p class="ef-eyebrow">// ARCHIVE</p>
-							<h1 class="ef-sec-title"><EfIcon name="navHome" inline />第 {page.currentPage} 页</h1>
+						<div class="ef-sec-head-text">
+							<p class="ef-eyebrow">// LATEST</p>
+							<h2 class="ef-sec-title">最新文章</h2>
 						</div>
 						<p class="ef-sec-count">{page.data.length} 篇文章</p>
 					</div>
-					<EndfieldPostGrid posts={page.data} columns={3} />
+					<div class="ef-wrap">
+						<EndfieldPostGrid posts={page.data.slice(0, 6)} columns={3} />
+					</div>
 				</section>
-			</div>
+			</>
+		) : (
+			<section class="ef-sec">
+				<div class="ef-sec-head">
+					<div class="ef-sec-head-text">
+						<p class="ef-eyebrow">// ARCHIVE</p>
+						<h1 class="ef-sec-title">第 {page.currentPage} 页</h1>
+					</div>
+					<p class="ef-sec-count">{page.data.length} 篇文章</p>
+				</div>
+				<div class="ef-wrap">
+					<EndfieldPostGrid posts={page.data} columns={3} />
+				</div>
+			</section>
 		)
 	}
 	{
