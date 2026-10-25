@@ -27,8 +27,11 @@ import utc from "dayjs/plugin/utc";
 import CoverImage from "@/components/common/CoverImage.astro";
 import PostMetadata from "@/components/layout/PostMeta.astro";
 import EfArticle from "@components/common/EfArticle.astro";
+import EfHomeButton from "@components/common/EfHomeButton.astro";
+import EfSectionTitle from "@components/common/EfSectionTitle.astro";
 import EfToc from "@components/common/EfToc.astro";
-import { jumpPath, triPath } from "@/constants/efIcons";
+import EndfieldPostGrid from "@components/layout/EndfieldPostGrid.astro";
+import { jumpPath } from "@/constants/efIcons";
 import RecommendedPost from "@/components/misc/RecommendedPost.astro";
 import SeriesNav from "@/components/misc/SeriesNav.astro";
 import SharePoster from "@/components/misc/SharePoster.svelte";
@@ -523,52 +526,51 @@ const tocHeadings = efTocHeadings(headings);
     }
   </script>
 
+  {/* 翻页 = 官网 .HomeButton_button 的黄块按钮（左侧 .75u #fff500 竖条 +
+      7.125u 处的白色细分隔线 + 左端大箭头 + 2.25u SansMedium 文字 + 尾箭头）。
+      原来主题的 .btn-card 双卡与白三角换成这一对按钮；
+      上一篇走镜像箭头（同一枚官网 arrowLarge，scaleX(-1)），不另画图标。 */}
   {
     siteConfig.post.postNavigation && (
-      <div
-        class="flex flex-col md:flex-row justify-between mb-4 gap-4 overflow-hidden w-full"
-      >
-    <a
-      href={entry.data.nextSlug ? getPostUrlBySlug(entry.data.nextSlug) : url("/")}
-      class="w-full font-bold overflow-hidden active:scale-95"
-    >
-      <div class="btn-card rounded-2xl w-full h-15 max-w-full px-4 flex items-center justify-start! gap-4">
-        {/* 上一篇：官网 .Header_tri__KNP87 的白三角，转 90° 指向左 */}
-        <svg class="ef-page-arrow" viewBox="0 0 31 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path fill-rule="evenodd" fill="currentColor" d={triPath} />
-        </svg>
-        <div class="overflow-hidden transition text-ellipsis whitespace-nowrap max-w-[calc(100%-3rem)] text-black/75 dark:text-white/75">
-          {entry.data.nextTitle || i18n(I18nKey.home)}
-        </div>
-      </div>
-    </a>
-
-    <a
-      href={entry.data.prevSlug ? getPostUrlBySlug(entry.data.prevSlug) : url("/")}
-      class="w-full font-bold overflow-hidden active:scale-95"
-    >
-      <div class="btn-card rounded-2xl w-full h-15 max-w-full px-4 flex items-center justify-end! gap-4">
-        <div class="overflow-hidden transition text-ellipsis whitespace-nowrap max-w-[calc(100%-3rem)] text-black/75 dark:text-white/75">
-          {entry.data.prevTitle || i18n(I18nKey.home)}
-        </div>
-        {/* 下一篇：同一枚三角，转 90° 指向右 */}
-        <svg class="ef-page-arrow ef-page-arrow-next" viewBox="0 0 31 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path fill-rule="evenodd" fill="currentColor" d={triPath} />
-        </svg>
-      </div>
-    </a>
-      </div>
+      <nav class="ef-postnav" aria-label="上一篇 / 下一篇">
+        <EfHomeButton
+          class="ef-hb-fill"
+          href={entry.data.nextSlug ? getPostUrlBySlug(entry.data.nextSlug) : url("/")}
+          label={entry.data.nextTitle || i18n(I18nKey.home)}
+          dir="prev"
+        />
+        <EfHomeButton
+          class="ef-hb-fill"
+          href={entry.data.prevSlug ? getPostUrlBySlug(entry.data.prevSlug) : url("/")}
+          label={entry.data.prevTitle || i18n(I18nKey.home)}
+          dir="next"
+        />
+      </nav>
     )
   }
 
+  {/* 延伸阅读：官网没有博客页面，这里用它的通用区块语汇 ——
+      .SectionTitle_sectionTitle 做区块标题（灰块滑出 + Gilroy-Medium 英文小标 +
+      SansBold 中文主标），下面接首页已验收的 .ef-grid 官方卡片网格。
+      randomPosts 打开时仍走主题的 RecommendedPost（它带一段客户端随机拉取），
+      那条分支不在本次改造范围内。 */}
   {
     (siteConfig.post.relatedPosts || siteConfig.post.randomPosts) && (
-      <RecommendedPost
-        relatedPosts={relatedPosts}
-        currentPostId={entry.id}
-        showRelatedPosts={siteConfig.post.relatedPosts}
-        showRandomPosts={siteConfig.post.randomPosts}
-      />
+      siteConfig.post.randomPosts ? (
+        <RecommendedPost
+          relatedPosts={relatedPosts}
+          currentPostId={entry.id}
+          showRelatedPosts={siteConfig.post.relatedPosts}
+          showRandomPosts={siteConfig.post.randomPosts}
+        />
+      ) : (
+        siteConfig.post.relatedPosts && relatedPosts.length > 0 && (
+          <section class="ef-related">
+            <EfSectionTitle en="Related" cn="延伸阅读" />
+            <EndfieldPostGrid posts={relatedPosts} columns={3} />
+          </section>
+        )
+      )
     )
   }
 
@@ -576,3 +578,24 @@ const tocHeadings = efTocHeadings(headings);
   {entry.data.comment && !entry.data.password && <Comment post={entry} />}
   </div>
 </EndfieldLayout>
+
+<style>
+	/* 官网的 .HomeButton / .SectionTitle 是绝对定位在定高舞台上的；
+	   本站是文档流，这里只补「两块之间留多少」，几何仍是 1u = --efu。
+	   1440×900 下 1u = 9px：gap 9px、下边距 18px，与官网同一量级。 */
+	.ef-postnav {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: stretch;
+		gap: calc(1 * var(--efu));
+		margin-bottom: calc(2 * var(--efu));
+	}
+	/* 两块平分行宽：官网按钮的最小宽 26.4375u 是下界，行内余量均分给两块，
+	   长标题才有位置（按钮几何本身仍是官网 .HomeButton_button）。 */
+	.ef-postnav :global(.ef-hb-fill) {
+		flex: 1 1 auto;
+	}
+	.ef-related {
+		margin-bottom: calc(2 * var(--efu));
+	}
+</style>

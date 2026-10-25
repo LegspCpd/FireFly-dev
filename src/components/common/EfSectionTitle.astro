@@ -1,0 +1,113 @@
+---
+// 区块标题 = 官网 .SectionTitle_sectionTitle（内页通用）
+// 源规则（F:/web/endfield-official/css/*.css 原值，官网 1rem ≡ 本站 1 * var(--efu)）：
+//   .SectionTitle_sectionTitle   position:relative
+//   .SectionTitle_arrowBlock     left:0 top:0 w:6.5rem h:2rem
+//                                clip-path:polygon(0 0,1000% 0,1000% 100%,0 100%)
+//   .SectionTitle_inner          left:0 top:0 w:100% h:100% bg:#d9d9d9
+//                                transform:translateX(-100%)（active 时归零）
+//   .SectionTitle_arrow          right:.375rem h:1.4375rem color:#231815
+//                                rotate(-45deg)（active 时 0）
+//   .SectionTitle_titleEn        left:6.5rem top:0 h:2rem padding-left:.5rem
+//                                Gilroy-Medium 2.25rem/2rem #141414
+//   .SectionTitle_titleCn        left:0 top:2.5rem SansBold 3rem/1 #141414
+// 本站只改两处机械动作：
+//   1) rem → calc(N * var(--efu))；
+//   2) 官网用 active 类 + 祖先观察器触发，这里交给站内统一的 data-replay
+//      动效运行时（Layout.astro，IntersectionObserver + swup 重播）：
+//      滑出用套件预设 ef-in-drive（clip-path 自左擦出），文字用 ef-in-power。
+//   官网 DOM 里那块 6.5rem 的灰底是「沿右边缘一直可画」的（1000% 裁切），
+//   英文标题因此能超出灰块本身 —— 这里照做，灰块宽度不放大。
+import EfIcon from "@components/common/EfIcon.astro";
+
+interface Props {
+	/** 英文小标（官网 className titleEn，例如 NEWS / OPERATOR） */
+	en: string;
+	/** 中文主标（官网 className titleCn） */
+	cn: string;
+	/** 标题级别，默认 h2 */
+	as?: "h1" | "h2" | "h3";
+}
+
+const { en, cn, as: Heading = "h2" } = Astro.props;
+---
+
+<div class="SectionTitle_sectionTitle__tAFPG">
+	<div class="SectionTitle_arrowBlock__6yIDQ">
+		<div class="SectionTitle_inner__gfAIX ef-in-drive">
+			<EfIcon name="chevronThin" class="SectionTitle_arrow__qXHl7" />
+		</div>
+		<span class="SectionTitle_titleEn__dE__j" data-replay="ef-in-power">{en}</span>
+	</div>
+	<Heading class="SectionTitle_titleCn__J1sPh" data-replay="ef-in-power" style="--i: 1">{cn}</Heading>
+</div>
+
+<style>
+	.SectionTitle_sectionTitle__tAFPG {
+		position: relative;
+		/* 官网没有写高度（子元素全 absolute，由页面自己站位）；
+		   本站是文档流排版，这里按 titleCn 的 top 2.5u + 3u 行高给出 5.5u，
+		   不添加任何官网之外的视觉属性。 */
+		height: calc(5.5 * var(--efu));
+	}
+	.SectionTitle_arrowBlock__6yIDQ {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: calc(6.5 * var(--efu));
+		height: calc(2 * var(--efu));
+		clip-path: polygon(0 0, 1000% 0, 1000% 100%, 0 100%);
+	}
+	.SectionTitle_inner__gfAIX {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		background-color: #d9d9d9;
+		display: flex;
+		align-items: center;
+	}
+	/* 箭头是 EfIcon 渲染的（图标只从 @/constants/efIcons 出），
+	   子组件的根元素拿不到本组件的 scope 标记，因此这一条走 :global。 */
+	.SectionTitle_inner__gfAIX :global(.SectionTitle_arrow__qXHl7) {
+		position: absolute;
+		right: calc(0.375 * var(--efu));
+		width: auto;
+		height: calc(1.4375 * var(--efu));
+		color: #231815;
+		transform: rotate(-45deg);
+		transition: transform 0.2s ease-out 0.3s;
+	}
+	/* 官网 .SectionTitle_active 时箭头转正；这里用套件动效类到达同一时刻 */
+	.SectionTitle_inner__gfAIX.ef-in-drive :global(.SectionTitle_arrow__qXHl7) {
+		transform: rotate(0);
+	}
+	.SectionTitle_titleEn__dE__j {
+		position: absolute;
+		padding-left: calc(0.5 * var(--efu));
+		left: calc(6.5 * var(--efu));
+		top: 0;
+		height: calc(2 * var(--efu));
+		display: flex;
+		align-items: center;
+		font-family: "Gilroy-Medium", var(--ef-font-cjk);
+		line-height: calc(2 * var(--efu));
+		font-size: calc(2.25 * var(--efu));
+		color: #141414;
+		white-space: nowrap;
+		text-transform: uppercase;
+	}
+	.SectionTitle_titleCn__J1sPh {
+		margin: 0;
+		font-weight: inherit;
+		position: absolute;
+		left: 0;
+		top: calc(2.5 * var(--efu));
+		font-size: calc(3 * var(--efu));
+		line-height: 1;
+		font-family: var(--ef-font-bold);
+		color: #141414;
+		white-space: nowrap;
+	}
+</style>

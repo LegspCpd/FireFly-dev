@@ -1,0 +1,173 @@
+---
+// 大按钮 = 官网 .HomeButton_button（内页通用：上一篇 / 下一篇 / 主要动作）
+// 源规则（F:/web/endfield-official/css/*.css 原值，官网 1rem ≡ 本站 1 * var(--efu)）：
+//   .HomeButton_button  position:relative; min-width:25rem; width:max-content;
+//                       height:6.25rem; padding-left:8.75rem; padding-right:1.5rem;
+//                       border-radius:.25rem; border-left:.75rem solid #fff500;
+//                       background-color:#fffa00; box-shadow:0 0 .75rem rgba(0,0,0,.4);
+//                       background-image:button-texture.png（纹理，local 未搬）;
+//                       color:#191919; display:flex; align-items:center;
+//                       justify-content:center; transition:border-color .2s,
+//                       background-color .2s
+//   宽屏覆盖        width:26.4375rem; height:6.5625rem; padding-left:9rem;
+//                       padding-right:2rem
+//   :hover          border-color:#efe701（.divider 同步）
+//   :active         border-color:#e6de01
+//   .divider        left:7.125rem; width:.25rem; height:4.375rem; bg #fff500
+//   宽屏 .divider   width:.3125rem; height:5.1875rem
+//   .icon           left:3.5625rem; translateX(-50%); width:2.25rem
+//   宽屏 .icon      width:2.8125rem
+//   .text           2.25rem/1 SansMedium; white-space:nowrap
+//   .arrow          margin-left:.75rem; width:.6875rem; color:#a6a6a6;
+//                       transform:rotate(180deg)（宽屏 .8125rem）
+// 本站的两处取舍：
+//   1) 官网 button-texture.png 是 CDN 上的纸纹贴图，本地没有该文件 ——
+//      只去掉 background-image，其余几何/配色/悬停全部照抄（不另造纹理）。
+//   2) 官网 .points 角标（1.0625rem 的小十字）路径未出现在导出页，未搬。
+import EfIcon from "@components/common/EfIcon.astro";
+
+interface Props {
+	href?: string;
+	/** 按钮文字（官网 .text） */
+	label: string;
+	/** 左端大图标的方向：next 指向右，prev 指向左（镜像官网同一枚箭头） */
+	dir?: "prev" | "next";
+	/** 右侧尾箭头（官网 .text .arrow）；prev 默认不显示 */
+	tail?: boolean;
+	/** 不可用态：官网 disabled 是 cursor:not-allowed + pointer-events:none */
+	disabled?: boolean;
+	class?: string;
+}
+
+const {
+	href,
+	label,
+	dir = "next",
+	tail = dir === "next",
+	disabled = false,
+	class: className = "",
+} = Astro.props;
+const Tag = href && !disabled ? "a" : "span";
+---
+
+<Tag
+	class:list={["HomeButton_button__a_6Gh", dir === "prev" && "ef-hb-prev", disabled && "ef-hb-disabled", className]}
+	href={href && !disabled ? href : undefined}
+	aria-disabled={disabled ? "true" : undefined}
+>
+	<span class="HomeButton_icon__o6Yuj" aria-hidden="true">
+		<EfIcon name="arrowLarge" class="ef-hb-icon" />
+	</span>
+	<span class="HomeButton_divider__HuFEb" aria-hidden="true"></span>
+	<span class="HomeButton_text__Ii9u4">
+		<span class="ef-hb-label">{label}</span>
+		{tail && <EfIcon name="chevronThin" class="HomeButton_arrow__r_2Sj" />}
+	</span>
+</Tag>
+
+<style>
+	.HomeButton_button__a_6Gh {
+		position: relative;
+		min-width: calc(25 * var(--efu));
+		width: max-content;
+		max-width: 100%;
+		height: calc(6.25 * var(--efu));
+		padding-left: calc(8.75 * var(--efu));
+		padding-right: calc(1.5 * var(--efu));
+		box-sizing: border-box;
+		border-radius: calc(0.25 * var(--efu));
+		border-left: calc(0.75 * var(--efu)) solid #fff500;
+		background-color: #fffa00;
+		box-shadow: 0 0 calc(0.75 * var(--efu)) rgba(0, 0, 0, 0.4);
+		cursor: pointer;
+		color: #191919;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-decoration: none;
+		transition: border-color 0.2s ease, background-color 0.2s ease;
+	}
+	.HomeButton_button__a_6Gh:hover {
+		border-color: #efe701;
+	}
+	.HomeButton_button__a_6Gh:hover .HomeButton_divider__HuFEb {
+		background-color: #efe701;
+	}
+	.HomeButton_button__a_6Gh:active {
+		border-color: #e6de01;
+	}
+	.HomeButton_button__a_6Gh:active .HomeButton_divider__HuFEb {
+		background-color: #e6de01;
+	}
+	.HomeButton_divider__HuFEb {
+		position: absolute;
+		left: calc(7.125 * var(--efu));
+		width: calc(0.25 * var(--efu));
+		height: calc(4.375 * var(--efu));
+		background-color: #fff500;
+		transition: background-color 0.2s ease;
+	}
+	.HomeButton_icon__o6Yuj {
+		position: absolute;
+		left: calc(3.5625 * var(--efu));
+		transform: translateX(-50%);
+		width: calc(2.25 * var(--efu));
+		height: auto;
+		color: #191919;
+		display: block;
+	}
+	.HomeButton_icon__o6Yuj :global(.ef-hb-icon) {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+	/* prev 用同一枚官网箭头镜像（不另画箭头） */
+	.ef-hb-prev .HomeButton_icon__o6Yuj :global(.ef-hb-icon) {
+		transform: scaleX(-1);
+	}
+	.HomeButton_text__Ii9u4 {
+		position: relative;
+		font-size: calc(2.25 * var(--efu));
+		line-height: 1;
+		font-family: var(--ef-font-sans);
+		display: flex;
+		align-items: center;
+		white-space: nowrap;
+		min-width: 0;
+	}
+	.ef-hb-label {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.HomeButton_text__Ii9u4 :global(.HomeButton_arrow__r_2Sj) {
+		margin-left: calc(0.75 * var(--efu));
+		width: calc(0.6875 * var(--efu));
+		height: auto;
+		flex: none;
+		color: #a6a6a6;
+		transform: rotate(180deg);
+	}
+	.ef-hb-disabled {
+		cursor: not-allowed;
+		pointer-events: none;
+	}
+	/* 宽屏覆盖（官网同名 media 断点取的是「大屏」那一档，值照抄） */
+	@media (min-width: 1201px) {
+		.HomeButton_button__a_6Gh {
+			width: calc(26.4375 * var(--efu));
+			height: calc(6.5625 * var(--efu));
+			padding-left: calc(9 * var(--efu));
+			padding-right: calc(2 * var(--efu));
+		}
+		.HomeButton_divider__HuFEb {
+			width: calc(0.3125 * var(--efu));
+			height: calc(5.1875 * var(--efu));
+		}
+		.HomeButton_icon__o6Yuj {
+			width: calc(2.8125 * var(--efu));
+		}
+		.HomeButton_text__Ii9u4 :global(.HomeButton_arrow__r_2Sj) {
+			width: calc(0.8125 * var(--efu));
+		}
+	}
+</style>
