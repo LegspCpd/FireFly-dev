@@ -24,7 +24,8 @@ const isHome = page.currentPage === 1;
 				    （官网实测 1440×900：x 67.5 / w 1372.5 = 整条内容宽），
 				    所以它挂在 .ef-sec 下，不再套 .ef-wrap；只有下面的文章网格套版心。
 				    官网该带没有内联图标，标题里的 EfIcon 一并去掉。 */}
-				<section class="ef-sec">
+				{/* data-no-wipe：hero 占高收窄后这块已经在首屏里，别参与滚动擦除 */}
+				<section class="ef-sec" data-no-wipe>
 					<div class="ef-sec-head">
 						<div class="ef-sec-head-text">
 							<p class="ef-eyebrow">// LATEST</p>
@@ -97,3 +98,15 @@ const isHome = page.currentPage === 1;
 		)
 	}
 </EndfieldLayout>
+
+<style>
+	/* 首屏不再吃满一整屏：hero 的纵向占高从 100dvh 收到 58dvh。
+	   站主要求「往下滚一点点就有内容」，所以只压缩占高，标题字号 / 数值行 / 按钮
+	   这些照官网定下的排版尺度一律不动（内部 padding 也不动）。
+	   为什么写在页面这一侧而不是 HeroCanvas.astro：那个文件归外壳那条线在改，
+	   这里不改它的源码。组件内的规则编译成 .ef-hero[data-astro-cid-xxxx]（两段权重），
+	   所以覆盖规则叠一个重复类 + 元素名，权重 0,2,1 > 0,2,0，稳定压住。 */
+	:global(section.ef-hero.ef-hero) {
+		min-height: 58dvh;
+	}
+</style>

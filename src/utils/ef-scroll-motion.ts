@@ -590,6 +590,14 @@ function startWipes(): void {
 function wipeOne(el: HTMLElement, vh: number): void {
 	const rect = el.getBoundingClientRect();
 	if (rect.width === 0 || rect.height === 0) return;
+	/* data-no-wipe：显式声明「这块不参与擦除」。
+	   首页 hero 的占高收到 58dvh 之后，「最新文章」整块顶边落进首屏（≈0.74vh），
+	   按下面的窗口算出来进度只有 3%，一开屏就被裁成左边一条窄缝 ——
+	   区块已经进了首屏，就不该再等滚动才擦出来。 */
+	if (el.hasAttribute("data-no-wipe")) {
+		el.classList.add(WIPE_DONE);
+		return;
+	}
 	/* 起始就在上半屏（首屏里、或锚点直接落在块中）：不做擦除，直接可见 ——
 	   否则首屏会被裁掉一截，得等用户滚动才露出来。 */
 	if (rect.top < vh * WIPE_LEAVE * 2) {
