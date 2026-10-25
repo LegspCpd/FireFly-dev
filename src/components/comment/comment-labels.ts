@@ -17,6 +17,8 @@ export type CommentLabels = {
 	submitting: string;
 	refresh: string;
 	loading: string;
+	/** 加载态的降级说明：长文章底部靠 client:visible，hydrate 之前只剩骨架条。 */
+	pendingHint: string;
 	empty: string;
 	emptyDemo: string;
 	demoFlag: string;
@@ -55,6 +57,8 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		submitting: "提交中……",
 		refresh: "刷新",
 		loading: "加载中……",
+		pendingHint:
+			"评论加载中……长文章要滚到评论区才会加载；若一直停在这里，刷新页面即可。",
 		empty: "还没有评论，来做第一个。",
 		emptyDemo: "演示态里发布的第一条会出现在这里（仅本页预览，刷新即消失）。",
 		demoFlag: "DEMO",
@@ -91,6 +95,8 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		submitting: "送出中……",
 		refresh: "重新整理",
 		loading: "載入中……",
+		pendingHint:
+			"留言載入中……長文章要捲到留言區才會載入；若一直停在這裡，重新整理即可。",
 		empty: "還沒有留言，來當第一個。",
 		emptyDemo: "示範模式送出的第一則會出現在這裡（僅本頁預覽，重新整理就消失）。",
 		demoFlag: "DEMO",
@@ -127,6 +133,8 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		submitting: "Posting…",
 		refresh: "Refresh",
 		loading: "Loading…",
+		pendingHint:
+			"Loading comments… on long posts they only load once you scroll here. If it stays like this, refresh the page.",
 		empty: "No comments yet — be the first.",
 		emptyDemo: "The first comment you post in demo mode shows up here (preview only).",
 		demoFlag: "DEMO",
@@ -163,6 +171,8 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		submitting: "送信中……",
 		refresh: "再読み込み",
 		loading: "読み込み中……",
+		pendingHint:
+			"コメントを読み込み中……長い記事ではここまでスクロールすると読み込まれます。変わらない場合は再読み込みしてください。",
 		empty: "まだコメントはありません。最初の一件をどうぞ。",
 		emptyDemo: "デモモードで投稿した一件がここに表示されます（このページ内のプレビューのみ）。",
 		demoFlag: "DEMO",
@@ -199,6 +209,8 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		submitting: "등록 중……",
 		refresh: "새로 고침",
 		loading: "불러오는 중……",
+		pendingHint:
+			"댓글을 불러오는 중…… 긴 글에서는 여기까지 스크롤해야 불러옵니다. 계속 이대로면 새로 고침하세요.",
 		empty: "아직 댓글이 없습니다. 첫 댓글을 남겨 보세요.",
 		emptyDemo: "데모 모드에서 등록한 첫 댓글이 여기에 표시됩니다(이 페이지에서만 보이는 미리보기).",
 		demoFlag: "DEMO",
@@ -235,6 +247,8 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		submitting: "Отправка…",
 		refresh: "Обновить",
 		loading: "Загрузка…",
+		pendingHint:
+			"Комментарии загружаются… в длинных статьях они подгружаются, когда вы прокрутите сюда. Если так и останется — обновите страницу.",
 		empty: "Комментариев пока нет — будьте первым.",
 		emptyDemo: "Первый комментарий из демо-режима появится здесь (только предпросмотр).",
 		demoFlag: "DEMO",

@@ -9,7 +9,7 @@
  * 降级（重要）：COMMENT_API_BASE 没配时进入「演示态」—— 表单可用、能预览自己的
  * 评论、明确显示「评论服务未配置」，不落库、不白屏、不刷屏报错。
  */
-import { onMount } from "svelte";
+import { onMount, tick } from "svelte";
 import EfIcon from "@/components/common/EfIcon.svelte";
 import {
 	type CommentApiError,
@@ -64,6 +64,12 @@ let listErrorDetail = $state("");
 let formError = $state("");
 let formErrorDetail = $state("");
 let formNotice = $state("");
+/**
+ * 读屏播报用的可见性隔离文案区（.efc-live 是视觉隐藏的）。
+ * 与 formNotice 分开：formNotice 是给看得见的人看的那一行，播报要独立成区，
+ * 才能「先清空、再写入」—— 同一句话重复提交时，读屏靠这个空态才会再念一次。
+ */
+let liveNotice = $state("");
 let author = $state("");
 let content = $state("");
 let submitting = $state(false);
@@ -187,6 +193,7 @@ async function submit(event: SubmitEvent): Promise<void> {
 	];
 	content = "";
 	formNotice = labels.posted;
+	void announce(labels.posted);
 	status = "ready";
 	rememberAuthor(name);
 }
@@ -196,6 +203,16 @@ function handleKeydown(event: KeyboardEvent): void {
 		event.preventDefault();
 		formEl?.requestSubmit();
 	}
+}
+
+/**
+ * 播报一句话。必须先 tick 到空态：读屏只在 live region 的文本**发生变化**时朗读，
+ * 连着两次「已发布。」如果中间没有空态，第二次不会被读出来。
+ */
+async function announce(message: string): Promise<void> {
+	liveNotice = "";
+	await tick();
+	liveNotice = message;
 }
 
 function refresh(): void {
@@ -214,6 +231,9 @@ onMount(() => {
 </script>
 
 <div class="efc">
+	<!-- 键盘 / 读屏用户的发布回执：视觉隐藏，位置在根节点最前，朗读顺序先于列表 -->
+	<p class="efc-live" role="status" aria-live="polite">{liveNotice}</p>
+
 	{#if demo}
 		<p class="ef-notice efc-notice" data-flag={labels.demoFlag}>
 			<span>{labels.demoText}</span>
@@ -284,6 +304,9 @@ onMount(() => {
 			<span class="ef-skeleton line efc-bar-mid"></span>
 			<span class="ef-skeleton line efc-bar-wide"></span>
 		</div>
+		<!-- client:visible 的降级说明：hydrate 之前这里只会停在三根骨架条上，
+		     给一句看得见的解释，免得长文章底部看着像坏了。 -->
+		<p class="efc-pending" aria-hidden="true">{labels.pendingHint}</p>
 		<p class="efc-live" aria-live="polite">{labels.loading}</p>
 	{:else if status === "error"}
 		<p class="ef-notice efc-notice" data-flag={labels.errorFlag} role="alert">
@@ -428,6 +451,12 @@ onMount(() => {
 
 	.efc-bar-mid {
 		width: 56%;
+	}
+
+	.efc-pending {
+		margin: 0;
+		color: var(--ef-ink-2);
+		font-size: var(--ef-fs-2);
 	}
 
 	.efc-live {
