@@ -2,36 +2,48 @@
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 // 页名图标来源：分类：官网无「分类」，取 navCalendar（竖排栏 /categories/ 同 key）。
-import EfIcon from "@components/common/EfIcon.astro";
+import EfSubpageHeader from "@components/common/EfSubpageHeader.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getCategoryList } from "@/utils/content-utils";
 
+// 官网没有「分类」这一页，搬的是它二级页的通用页头 .SubpageHeader_subpageHeader
+// （黄渐变带 + 黑方块图标 + 白色标题板 SansBold 4.5rem）。
+// 列表本身保持现状：官网的条目列表都带封面图（.__10-NoticeList_item__W4sd2 的
+// imageWrapper 20.8125rem 高卡片网格），分类行没有对应物，不套用、也不自造样式。
 const categories = await getCategoryList();
 const totalPosts = categories.reduce((sum, cat) => sum + cat.count, 0);
 const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18nKey.postsCount)}`;
 ---
 
-<EndfieldLayout title={i18n(I18nKey.categories)}>
-    <div class="card-base p-8 md:p-10 mb-4">
-        <!-- 眉标 + 页名 + 计数（官网骨架） -->
-        <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// CATEGORIES</p>
-        <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1"><EfIcon name="navCalendar" inline />{i18n(I18nKey.categories)}</h1>
-        <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">
-            {i18n(I18nKey.allCategories)} · {countLabel(totalPosts)}
-        </p>
+<EndfieldLayout title={i18n(I18nKey.categories)} description={i18n(I18nKey.allCategories)}>
+	<EfSubpageHeader title={i18n(I18nKey.categories)} titleEn="Categories" icon="navCalendar" />
 
-        <!-- 账目表：套件 ef-ledger（ul > li，两端对齐 + 细线） -->
-        {categories.length > 0 ? (
-            <ul class="ef-ledger ef-page-list">
-                {categories.map((category, idx) => (
-                    <li>
-                        <a data-replay="ef-in-come" style={"--i: " + String(idx % 8)} href={category.url}>{category.name}</a>
-                        <span class="ef-field">{countLabel(category.count)}</span>
-                    </li>
-                ))}
-            </ul>
-        ) : (
-            <p class="ef-empty ef-field">{i18n(I18nKey.noData)}</p>
-        )}
-    </div>
+	<div class="ef-wrap">
+		<div class="ef-cat-body">
+			<p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 0">
+				{categories.length} · {countLabel(totalPosts)}
+			</p>
+
+			{categories.length > 0 ? (
+				<ul class="ef-ledger ef-page-list">
+					{categories.map((category, idx) => (
+						<li>
+							<a data-replay="ef-in-come" style={"--i: " + String(idx % 8)} href={category.url}>{category.name}</a>
+							<span class="ef-field">{countLabel(category.count)}</span>
+						</li>
+					))}
+				</ul>
+			) : (
+				<p class="ef-empty ef-field">{i18n(I18nKey.noData)}</p>
+			)}
+		</div>
+	</div>
 </EndfieldLayout>
+
+<style>
+	/* 标题板到列表的上边距取官网 .__10-NoticeList_items__ 的 margin-top:2.625rem
+	   （官网二级页内容区与页签/标题带之间的距离基准）。 */
+	.ef-cat-body {
+		padding-block: calc(2.625 * var(--efu)) calc(6 * var(--efu));
+	}
+</style>
