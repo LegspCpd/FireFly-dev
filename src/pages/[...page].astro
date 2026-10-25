@@ -52,12 +52,47 @@ const isHome = page.currentPage === 1;
 			</section>
 		)
 	}
+	{/* 分页 = 官网 .Pagination_pagination：左箭头圆钮 + 页码 + 右箭头圆钮。
+	    箭头 path 逐字取自官网 index.html 里 .Pagination_arrow 的 SVG（viewBox 0 0 18 27）。
+	    文字版「上一页 / 下一页」换成官网的箭头，可读名称留在 aria-label 上。 */}
 	{
 		page.total > 1 && (
-			<nav class="ef-wrap ef-pager">
-				{page.url.prev ? <a href={page.url.prev}>上一页</a> : null}
-				<span class="ef-sec-count">{page.currentPage} / {page.total}</span>
-				{page.url.next ? <a href={page.url.next}>下一页</a> : null}
+			<nav class="ef-wrap ef-pager" aria-label="分页">
+				{page.url.prev ? (
+					<a class="ef-pager-btn" href={page.url.prev} aria-label="上一页">
+						<span class="ef-pager-border" />
+						<svg class="ef-pager-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 27" aria-hidden="true">
+							<path fill-rule="evenodd" fill="currentColor" d="M14.142,0.127 L17.753,3.737 L7.963,13.527 L17.753,23.318 L14.142,26.928 L0.743,13.527 L14.142,0.127 Z" />
+						</svg>
+					</a>
+				) : (
+					<span class="ef-pager-btn ef-pager-disabled" aria-hidden="true">
+						<span class="ef-pager-border" />
+						<svg class="ef-pager-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 27">
+							<path fill-rule="evenodd" fill="currentColor" d="M14.142,0.127 L17.753,3.737 L7.963,13.527 L17.753,23.318 L14.142,26.928 L0.743,13.527 L14.142,0.127 Z" />
+						</svg>
+					</span>
+				)}
+				<span class="ef-pager-num">
+					<span>{page.currentPage}</span>
+					<span class="ef-pager-divider">/</span>
+					<span>{page.total}</span>
+				</span>
+				{page.url.next ? (
+					<a class="ef-pager-btn" href={page.url.next} aria-label="下一页">
+						<span class="ef-pager-border" />
+						<svg class="ef-pager-arrow ef-pager-right" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 27" aria-hidden="true">
+							<path fill-rule="evenodd" fill="currentColor" d="M14.142,0.127 L17.753,3.737 L7.963,13.527 L17.753,23.318 L14.142,26.928 L0.743,13.527 L14.142,0.127 Z" />
+						</svg>
+					</a>
+				) : (
+					<span class="ef-pager-btn ef-pager-disabled" aria-hidden="true">
+						<span class="ef-pager-border" />
+						<svg class="ef-pager-arrow ef-pager-right" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 27">
+							<path fill-rule="evenodd" fill="currentColor" d="M14.142,0.127 L17.753,3.737 L7.963,13.527 L17.753,23.318 L14.142,26.928 L0.743,13.527 L14.142,0.127 Z" />
+						</svg>
+					</span>
+				)}
 			</nav>
 		)
 	}
