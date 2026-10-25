@@ -1233,51 +1233,84 @@ body.ef-contours {
   color: #191919;
 }
 
+/* —— 页脚 = 官网 .footer_footer（css/*.css 原值，1rem ≡ var(--efu)）——
+   官网该模块从 CSS 里抄得到、首页 DOM 里还没挂上，所以按 CSS 原值落地：
+     .footer       { width:100%; background-color:#101010; overflow:hidden }
+     .topContainer { padding-bottom:4rem; border-bottom:1px solid rgba(81,81,81,.5);
+                     margin-bottom:2.5rem }
+     .label        { width:max-content; margin:3.75rem auto 0; font-size:1.25rem;
+                     font-family:SansMedium; color:#6e6e6e }
+     .links        { margin:5rem auto 0; display:flex; width:max-content }
+     .link span    { text-align:center; font-size:1.25rem; line-height:1;
+                     font-family:SansMedium; color:#f0f0f0 }
+     .link:not(:first-of-type) { margin-left:3rem; padding-left:3rem;
+                                 border-left:1px solid rgba(240,240,240,.3) }
+   官网 H5 覆盖：topContainer padding-bottom 2.25rem；label margin 2rem auto 0；
+                 links margin 2.5rem auto 0；条的间距 1.5rem / 1.5rem。
+   即：一条 #101010 的深色横带，灰字字标居中，链接居中并用竖细线分隔。 */
 .ef-foot {
-  border-top: 1px solid var(--ef-rule);
   margin-top: auto;
-  padding-block: calc(3 * var(--efu));
+  width: 100%;
+  background-color: #101010;
+  overflow: hidden;
 }
-.ef-foot-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: calc(0.75 * var(--efu)) calc(2 * var(--efu));
-  font-size: var(--ef-fs-nav);
-  line-height: var(--ef-lh-ui);
-  color: var(--ef-ink-2);
+/* 官网 .topContainer：上半个深色区，底边一条半透明细线，线下面留 2.5rem */
+.ef-foot-top {
+  padding-bottom: calc(4 * var(--efu));
+  border-bottom: 1px solid rgb(81 81 81 / 0.5);
+  margin-bottom: calc(2.5 * var(--efu));
 }
+/* 字标 = 官网 .label：max-content 居中、SansMedium 1.25rem、#6e6e6e */
 .ef-foot-mark {
-  margin: 0;
-  font-family: var(--ef-font-wide);
-  font-size: var(--ef-fs-small);
-  line-height: var(--ef-lh-tight);
+  width: max-content;
+  margin: calc(3.75 * var(--efu)) auto 0;
+  font-family: var(--ef-font-sans);
+  font-size: calc(1.25 * var(--efu));
+  line-height: 1;
   letter-spacing: 0.06em;
-  color: var(--ef-ink);
+  color: #6e6e6e;
   text-transform: uppercase;
 }
 .ef-foot-mark span {
   margin-inline-start: calc(0.5 * var(--efu));
   color: var(--ef-signal);
 }
+/* 链接 = 官网 .links：整块居中，条目之间一条竖细线（非首个才有） */
 .ef-foot-links {
   display: flex;
-  flex-wrap: wrap;
-  gap: calc(1.5 * var(--efu));
-  margin: 0;
+  width: max-content;
+  margin: calc(5 * var(--efu)) auto 0;
   padding: 0;
   list-style: none;
 }
+.ef-foot-links li + li {
+  margin-left: calc(3 * var(--efu));
+  padding-left: calc(3 * var(--efu));
+  border-left: 1px solid rgb(240 240 240 / 0.3);
+}
 .ef-foot-links a {
-  color: var(--ef-ink-2);
+  display: block;
+  text-align: center;
+  font-family: var(--ef-font-sans);
+  font-size: calc(1.25 * var(--efu));
+  line-height: 1;
+  color: #f0f0f0;
   text-decoration: none;
+  transition: color 0.2s;
 }
 .ef-foot-links a:hover {
-  color: var(--ef-ink);
+  color: var(--ef-signal);
 }
+/* 版权落在 .topContainer 那条细线下面。官网这一栏没有单独的类名，
+   字级照同模块的 .label（SansMedium 1.25rem / #6e6e6e），居中。 */
 .ef-foot-meta {
   margin: 0;
-  margin-inline-start: auto;
+  padding-bottom: calc(4 * var(--efu));
+  text-align: center;
+  font-family: var(--ef-font-sans);
+  font-size: calc(1.25 * var(--efu));
+  line-height: 1;
+  color: #6e6e6e;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1775,12 +1808,23 @@ html.ef-motion [data-ef-wipe]:not(.ef-wiped) {
     padding-inline: calc(2 * var(--efu));
   }
 
-  /* 页脚：窄屏不再靠 margin-inline-start:auto 顶到右端 */
-  .ef-foot-inner {
-    gap: calc(0.75 * var(--efu)) calc(1.5 * var(--efu));
+  /* 页脚 = 官网 .footer 的 H5 覆盖：topContainer 下距 2.25rem、label 上距 2rem、
+     links 上距 2.5rem、条间距 1.5rem / 1.5rem */
+  .ef-foot-top {
+    padding-bottom: calc(2.25 * var(--efu));
+  }
+  .ef-foot-mark {
+    margin: calc(2 * var(--efu)) auto 0;
+  }
+  .ef-foot-links {
+    margin: calc(2.5 * var(--efu)) auto 0;
+  }
+  .ef-foot-links li + li {
+    margin-left: calc(1.5 * var(--efu));
+    padding-left: calc(1.5 * var(--efu));
   }
   .ef-foot-meta {
-    margin-inline-start: 0;
+    padding-bottom: calc(2.5 * var(--efu));
   }
 }
 
@@ -1811,11 +1855,6 @@ html.ef-motion [data-ef-wipe]:not(.ef-wiped) {
   .ef-sec-title,
   .ef-page-name {
     overflow-wrap: anywhere;
-  }
-  .ef-foot-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: calc(1.25 * var(--efu));
   }
 }
 

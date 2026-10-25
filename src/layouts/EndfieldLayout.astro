@@ -373,20 +373,25 @@ const year = new Date().getFullYear();
 			<main id="ef-main" class="ef-shell-main">
 				<slot />
 
+				{/* 页脚 = 官网 .footer_footer：深色横带 + 居中灰字字标 + 居中链接。
+				    官网把上半个深色区叫 .topContainer（底边一条半透明细线、线下留白），
+				    版权落在细线下面，所以这里分成 .ef-foot-top 与 .ef-foot-meta 两段。 */}
 				<footer class="ef-foot">
-					<div class="ef-wrap ef-foot-inner">
-						<p class="ef-foot-mark">LC<span>// BLOG</span></p>
-						<ul class="ef-foot-links">
-							<li><a href="/archive/">文章</a></li>
-							<li><a href="/categories/">分类</a></li>
-							<li><a href="/tags/">标签</a></li>
-							<li><a href="/series/">系列</a></li>
-							<li><a href="/friends/">友链</a></li>
-							<li><a href="/about/">关于</a></li>
-							<li>
-								<a href="https://x.com/legspcpd" target="_blank" rel="noopener noreferrer">X</a>
-							</li>
-						</ul>
+					<div class="ef-wrap">
+						<div class="ef-foot-top">
+							<p class="ef-foot-mark">LC<span>// BLOG</span></p>
+							<ul class="ef-foot-links">
+								<li><a href="/archive/">文章</a></li>
+								<li><a href="/categories/">分类</a></li>
+								<li><a href="/tags/">标签</a></li>
+								<li><a href="/series/">系列</a></li>
+								<li><a href="/friends/">友链</a></li>
+								<li><a href="/about/">关于</a></li>
+								<li>
+									<a href="https://x.com/legspcpd" target="_blank" rel="noopener noreferrer">X</a>
+								</li>
+							</ul>
+						</div>
 						<p class="ef-foot-meta">&copy; {year} LC</p>
 					</div>
 				</footer>
