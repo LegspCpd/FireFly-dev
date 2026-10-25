@@ -3,6 +3,7 @@ import { getEntry, render } from "astro:content";
 import Comment from "@components/comment/index.astro";
 // 页名图标来源：留言：官网无「留言」，取 navBust（人形，竖排栏底部 /guestbook/ 同 key）。
 import EfIcon from "@components/common/EfIcon.astro";
+import EfSubpageHeader from "@components/common/EfSubpageHeader.astro";
 import Markdown from "@components/common/Markdown.astro";
 import { commentConfig, siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
@@ -32,15 +33,16 @@ const description = i18n(I18nKey.guestbookDescription);
 ---
 
 <EndfieldLayout title={title} description={description}>
+  {/* 页名用官网二级页页头 .SubpageHeader_subpageHeader（黄渐变带 + 黑方块图标 +
+      白色标题板），原来那张自画的图标页头撤掉。 */}
+  <EfSubpageHeader title={title} titleEn="Guestbook" icon="navBust" />
+
   <div
-    class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32"
+    class="ef-sheet-top flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32"
   >
     <div class="card-base z-10 px-9 py-6 relative w-full ef-sheet">
-      <!-- 官网骨架：眉标 + 页名 + 副字段（替换主题的图标页头） -->
-      <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// GUESTBOOK</p>
-      <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1"><EfIcon name="navBust" inline />{title}</h1>
-      {description && <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">{description}</p>}
-      
+      {description && <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 0">{description}</p>}
+
       <Markdown class="mt-2">
         <Content />
       </Markdown>
@@ -67,3 +69,10 @@ const description = i18n(I18nKey.guestbookDescription);
     )}
   </div>
 </EndfieldLayout>
+
+<style>
+  /* 页头带底到内容的上边距：官网 .__10-NoticeList_items__ 的 margin-top:2.625rem */
+  .ef-sheet-top {
+    margin-top: calc(2.625 * var(--efu));
+  }
+</style>
