@@ -91,7 +91,10 @@ export type EfIconKey =
 	| "gameplayTitle"
 	| "blocks"
 	| "albumDeco"
-	| "endfieldWord";
+	| "endfieldWord"
+	| "h5SoundOn"
+	| "h5SoundOff"
+	| "h5Close";
 
 /** 官网图标表：key → 几何 / 填充 / 来源。 */
 export const EF_ICONS: Record<EfIconKey, EfIconDef> = {
@@ -435,6 +438,33 @@ export const EF_ICONS: Record<EfIconKey, EfIconDef> = {
 		],
 		fillRule: "evenodd",
 		source: "__08-AIC_h5Icon__adHvF「//ENDFIELD」字标（index.html 内联 svg #102）",
+	},
+	/* —— 以下 3 个只是 H5 顶栏 / 全屏菜单用到的形状，桌面 index.html 的内联 svg 里没有，
+	   从线上 DOM 取（Header_h5Menu__Tl_yj 的 .Header_mute__M03P_ 与 .Header_menuIcon__X_Cn9
+	   点击后 DOM 实时换成的那个），逐字照抄。 —— */
+	h5SoundOn: {
+		viewBox: "0 0 20 28",
+		paths: [
+			"M7.405,7.332 L7.405,7.367 L0.932,7.367 L0.932,20.633 L7.405,20.633 L7.405,20.667 L19.275,27.718 L19.275,0.281 L7.405,7.332 Z",
+		],
+		fillRule: "evenodd",
+		source: "Header_h5Menu__Tl_yj .Header_mute__M03P_ 未静音态（线上 DOM 实测）",
+	},
+	h5SoundOff: {
+		viewBox: "0 0 32 28",
+		paths: [
+			"M30.466,24.955 L29.363,26.560 L24.987,23.505 L24.987,27.714 L13.611,20.665 L13.611,20.631 L6.356,20.631 L6.356,10.500 L0.639,6.513 L2.793,3.387 L2.859,3.434 L8.495,7.368 L10.209,8.564 L10.648,8.872 L24.987,18.879 L31.513,23.434 L30.466,24.955 ZM24.987,0.286 L24.987,15.704 L13.303,7.550 L24.987,0.286 Z",
+		],
+		fillRule: "evenodd",
+		source: "Header_h5Menu__Tl_yj .Header_mute__M03P_ 静音态（点一下后 DOM 替换成它，线上实测）",
+	},
+	h5Close: {
+		viewBox: "0 0 57 57",
+		paths: [
+			"M28.137,20.301 L48.026,0.414 L55.651,8.038 L35.762,27.925 L28.137,20.301 ZM56.625,48.787 L49.000,56.411 L28.137,35.550 L35.762,27.925 L56.625,48.787 ZM8.428,55.256 L0.803,47.632 L20.511,27.925 L28.137,35.550 L8.428,55.256 ZM1.777,9.193 L9.402,1.568 L28.137,20.301 L20.511,27.925 L1.777,9.193 Z",
+		],
+		fillRule: "evenodd",
+		source: "Header_menuIcon__X_Cn9 菜单展开后的关闭叉（线上 DOM 实测）",
 	},
 };
 

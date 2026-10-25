@@ -123,9 +123,9 @@ body.ef-contours::after {
      · 淡出结束后 visibility:hidden：不再绘制，也不再参与合成；
      · 退出期间去掉 backdrop-filter：blur(0) 的 backdrop root 没有视觉效果，
        却会让整页走一条额外的离屏合成路径。
-   选择器前面带 body.ef-contours，是为了压过组件内 Astro 作用域选择器
-   （#ef-boot.is-leaving[data-astro-cid-*]）。 */
-body.ef-contours #ef-boot.is-leaving {
+   选择器照抄组件里那个退出类（__00-Loading_leaving__IKIPd），权重比组件内
+   Astro 作用域选择器高一级，压得住。 */
+.__00-Loading_container__aBijT.__00-Loading_leaving__IKIPd {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   /* 0s 动画 + 2.5s 延迟：只做「到点摘掉」，不参与淡出本身 */
@@ -138,7 +138,7 @@ body.ef-contours #ef-boot.is-leaving {
 }
 /* 站主要求：先不显示任何图片（竖排栏图标等一律走内联 SVG）。
    要恢复内容里的图片（友链头像、正文配图），删掉这一条即可。 */
-.ef-shell img.ef-hide-hero, .ef-boot img, .ef-ch-kv img { display: none; }
+.ef-shell img.ef-hide-hero, .ef-shell .ef-ch-kv img { display: none; }
 /* 主题那条顶部渐变高光（Layout 渲染，180px 固定黑/白渐变，z-index 20）是 .ef-shell
    的兄弟节点，压不住它，所以这里直接按类名关掉。只有本站的壳页面会加载这份样式表。 */
 .top-gradient-highlight {
@@ -258,12 +258,12 @@ body.ef-contours {
   text-decoration: none;
   white-space: nowrap;
 }
-.ef-rail-wordmark-tag {
-  font-family: var(--ef-font-sans);
-  font-size: calc(0.66 * var(--efu));
-  line-height: 1;
-  letter-spacing: 0.18em;
-  color: #999;
+/* 站主的 LC 方标（public/icon-192.png，自带近白圆角方底 + 深色 LC + 黄斜条）。 */
+.ef-rail-brandmark {
+  display: block;
+  width: calc(3.6 * var(--efu));
+  height: auto;
+  border-radius: calc(0.5 * var(--efu));
 }
 .ef-rail-wordmark {
   font-family: var(--ef-font-wide);
@@ -1644,5 +1644,806 @@ button.ef-rail-social-item, button.ef-rail-jump {
 /* 之前是 .ef-shell img{display:none}，本意只想去掉首页主视觉大图，
    结果连友链头像、正文配图一起隐藏了（用户看到头像空框）。
    现在只隐藏主视觉与加载屏的图，其它 <img> 正常显示。 */
-.ef-shell img:not(.ef-hide-hero) { display: revert; }
-.ef-shell .ef-ch-kv img, .ef-shell .ef-boot img, .ef-boot img { display: none; }
+/* 三枚品牌图（竖排栏 LC 方标 / H5 顶栏 LC 方标 / 加载屏 LC 字标）必须显示，
+   其余 <img> 回到正常显示。用 :not 链把它们排除在外，避免 0,2,1 的权重
+   压过组件里那几条 0,3,0 的显式规则。 */
+.ef-shell
+  img:not(.ef-hide-hero):not(.ef-rail-brandmark):not(.ef-h5-brandmark):not(.ef-boot-brandmark) {
+  display: revert;
+}
+.ef-shell .ef-ch-kv img { display: none; }
+
+/* ====================================================================== *
+ * §10. 官网加载屏（__00-Loading_*）—— 逐条照抄
+ *
+ * 原文：F:/web/endfield-official/css/46158da72caa0121.css 里全部 27 条
+ *       .__00-Loading_container__aBijT 规则 + 关键帧 __00-Loading_fadeIn__CDcQn。
+ * 改法：只做一件事 —— rem 换成 calc(N * var(--efu))（1rem ≡ 1 --efu，1920×1080
+ *       下都是 12px；竖屏 1u = 5.778px，与官网 H5 根字号同源）。
+ *       数值、顺序、@media 条件、选择器层级一个字没动。
+ * 结构：src/components/common/BootScreen.astro（同名类名，DOM 与官网一一对应）。
+ * ====================================================================== */
+
+.__00-Loading_container__aBijT {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #141414;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.__00-Loading_container__aBijT svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* 官网 logo 槽里是内联 svg；本站换成 LC 字标（<img>），几何规则一致。
+   .ef-shell img 的兜底规则在后面，这里用更高的权重把它按住。 */
+.__00-Loading_container__aBijT .ef-boot-brandmark {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.__00-Loading_container__aBijT .__00-Loading_bg__mahvH {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url(/ef-official/bg.9e174372.jpg);
+  background-size: cover;
+  background-position: 50%;
+  background-repeat: no-repeat;
+  filter: blur(8px);
+}
+@media (orientation: portrait) {
+  .__00-Loading_container__aBijT .__00-Loading_bg__mahvH {
+    background-image: url(/ef-official/bg_m.529c4e62.jpg);
+  }
+}
+.__00-Loading_container__aBijT.__00-Loading_leaving__IKIPd {
+  transition: opacity 1s 1.4s;
+  opacity: 0;
+}
+.__00-Loading_container__aBijT.__00-Loading_leaving__IKIPd:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fffa00;
+  transform-origin: left;
+  transform: scaleX(0);
+  animation: __00-Loading_fadeIn__CDcQn 0.6s cubic-bezier(1, 0, 0.7, 1) 0.5s forwards;
+}
+@keyframes __00-Loading_fadeIn__CDcQn {
+  0% {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.__00-Loading_container__aBijT .__00-Loading_logo__IaIBj {
+  position: absolute;
+  left: 64.453125%;
+  top: calc(27.625 * var(--efu));
+  width: calc(16.5 * var(--efu));
+  height: calc(16.75 * var(--efu));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (orientation: portrait) {
+  .__00-Loading_container__aBijT .__00-Loading_logo__IaIBj {
+    left: 50%;
+    top: calc(50 * var(--efu));
+    transform: translate(-50%, -50%);
+    width: calc(19.3125 * var(--efu));
+    height: calc(20.9375 * var(--efu));
+  }
+}
+.__00-Loading_container__aBijT .__00-Loading_moreDeco__rmGYb {
+  position: absolute;
+  left: 64.453125%;
+  top: calc(59.375 * var(--efu));
+  white-space: nowrap;
+}
+@media (orientation: portrait) {
+  .__00-Loading_container__aBijT .__00-Loading_moreDeco__rmGYb {
+    left: calc(4.625 * var(--efu));
+    bottom: calc(5.75 * var(--efu));
+    top: unset;
+  }
+  .__00-Loading_container__aBijT
+    .__00-Loading_moreDeco__rmGYb
+    .__00-Loading_triangles__y5flj {
+    display: none;
+  }
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_moreDeco__rmGYb
+  .__00-Loading_deco__EFg6B {
+  margin-left: calc(-0.5 * var(--efu));
+  background-image: url(/ef-official/deco.dbe18bea.svg);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: 50%;
+  width: calc(8.8125 * var(--efu));
+  height: calc(4 * var(--efu));
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_moreDeco__rmGYb
+  .__00-Loading_divider__nnOZ0 {
+  margin-top: calc(1.25 * var(--efu));
+  margin-left: calc(-21.625 * var(--efu));
+  margin-bottom: calc(1 * var(--efu));
+  width: calc(70 * var(--efu));
+  height: 2px;
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_moreDeco__rmGYb
+  .__00-Loading_slogan__54Pmd {
+  font-size: calc(1.5 * var(--efu));
+  font-family: SansRegular, var(--ef-font-cjk);
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_moreDeco__rmGYb
+  .__00-Loading_triangles__y5flj {
+  position: absolute;
+  left: calc(-3.375 * var(--efu));
+  top: calc(1.5 * var(--efu));
+  width: calc(1.4375 * var(--efu));
+  height: calc(1.3125 * var(--efu));
+  background-image: url(/ef-official/triangles.bcbd794a.svg);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+.__00-Loading_container__aBijT .__00-Loading_progress__649iN {
+  position: absolute;
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_progress__649iN
+  .__00-Loading_progressBar__eFmW1 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fffa00;
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_progress__649iN
+  .__00-Loading_progressText__EwQ1g {
+  position: absolute;
+  height: 0;
+}
+@media (orientation: portrait) {
+  .__00-Loading_container__aBijT
+    .__00-Loading_progress__649iN
+    .__00-Loading_progressText__EwQ1g {
+    margin-left: calc(0.75 * var(--efu));
+    bottom: calc(-1.75 * var(--efu));
+  }
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_progress__649iN
+  .__00-Loading_progressText__EwQ1g
+  .__00-Loading_core__K_Z5a {
+  position: absolute;
+  left: 0;
+  bottom: calc(1.625 * var(--efu));
+  color: #fffa00;
+  line-height: 1;
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_progress__649iN
+  .__00-Loading_progressText__EwQ1g
+  .__00-Loading_core__K_Z5a:before {
+  content: "";
+  display: block;
+  height: calc(1.875 * var(--efu));
+  width: calc(0.5 * var(--efu));
+  background-color: #fffa00;
+  border-radius: calc(0.25 * var(--efu));
+  margin-bottom: calc(0.25 * var(--efu));
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_progress__649iN
+  .__00-Loading_progressText__EwQ1g
+  .__00-Loading_core__K_Z5a
+  .__00-Loading_value__Zf_CS {
+  font-family: SansMedium, var(--ef-font-cjk);
+  font-size: calc(4.375 * var(--efu));
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_progress__649iN
+  .__00-Loading_progressText__EwQ1g
+  .__00-Loading_core__K_Z5a
+  .__00-Loading_symbol__2HzCd {
+  font-family: SansRegular, var(--ef-font-cjk);
+  font-size: calc(3.25 * var(--efu));
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_progress__649iN
+  .__00-Loading_progressText__EwQ1g
+  .__00-Loading_deco__EFg6B {
+  position: absolute;
+  color: #666;
+  left: 0;
+  top: calc(-0.5 * var(--efu));
+}
+.__00-Loading_container__aBijT
+  .__00-Loading_progress__649iN
+  .__00-Loading_progressText__EwQ1g
+  .__00-Loading_deco__EFg6B:before {
+  content: "";
+  display: block;
+  height: calc(0.5 * var(--efu));
+  width: calc(0.25 * var(--efu));
+  border-left: calc(0.5 * var(--efu)) solid #666;
+  border-right: calc(0.5 * var(--efu)) solid #666;
+}
+@media (orientation: portrait) {
+  .__00-Loading_container__aBijT .__00-Loading_progress__649iN {
+    left: 0;
+    bottom: calc(17.75 * var(--efu));
+    width: 82.4074074074%;
+    height: calc(2.5 * var(--efu));
+  }
+  .__00-Loading_container__aBijT
+    .__00-Loading_progress__649iN
+    .__00-Loading_progressBar__eFmW1 {
+    width: 0;
+    height: 100%;
+  }
+}
+@media (orientation: landscape) {
+  .__00-Loading_container__aBijT .__00-Loading_progress__649iN {
+    left: 0;
+    top: 0;
+    width: calc(1.25 * var(--efu));
+    height: 100%;
+  }
+  .__00-Loading_container__aBijT
+    .__00-Loading_progress__649iN
+    .__00-Loading_progressBar__eFmW1 {
+    width: 100%;
+    height: 0;
+  }
+  .__00-Loading_container__aBijT
+    .__00-Loading_progress__649iN
+    .__00-Loading_progressText__EwQ1g {
+    left: calc(3.125 * var(--efu));
+  }
+}
+/* 官网：没有脚本时整块不显示（它靠 JS 推进度，没有 JS 就永远停在 0%）。 */
+@media (scripting: none) {
+  .__00-Loading_container__aBijT {
+    display: none;
+  }
+}
+
+/* ====================================================================== *
+ * §11. 官网 H5 顶栏 + 全屏菜单（Header_h5* / Header_menu*）—— 逐条照抄
+ *
+ * 原文：F:/web/endfield-official/css/46158da72caa0121.css 里
+ *       .Header_h5HeaderContainer__ctquk（含 buttonGroup / preserveButton / menuIcon）、
+ *       .Header_h5Menu__Tl_yj（含 menuButtons / navList / menuItem / mediaList /
+ *       hallowText）与 .HallowText_hollowText__OJN57。
+ * 改法：rem → calc(N * var(--efu))；图片换成本地 /ef-official/*。
+ *       官网 .SectionViewer_header__G6fOm 是 position:sticky，一并照抄。
+ * 结构：src/components/layout/EfH5Nav.astro
+ * ====================================================================== */
+
+.Header_h5HeaderContainer__ctquk {
+  position: relative;
+  width: 100%;
+  height: calc(9.625 * var(--efu));
+  z-index: 50;
+  color: #191919;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 0 calc(2 * var(--efu)) rgba(0, 0, 0, 0.3);
+  /* 官网 .SectionViewer_header__G6fOm{position:sticky;flex-shrink:0;top:0} */
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+}
+@media (orientation: landscape) {
+  .Header_h5HeaderContainer__ctquk {
+    display: none;
+  }
+}
+.Header_h5HeaderContainer__ctquk .Header_logo__s3lE_ {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(13.125 * var(--efu));
+  height: calc(14.375 * var(--efu));
+  transform-origin: left top;
+  transform: translate3d(calc(3.0625 * var(--efu)), calc(1.25 * var(--efu)), 0) scale(0.47);
+  color: #191919;
+  transition: transform 0.3s;
+  z-index: 70;
+}
+/* 官网 logo 槽里是终末地图形 svg；本站放 LC 方标（<img>，自带近白圆角方底）。 */
+.Header_h5HeaderContainer__ctquk .Header_logo__s3lE_ {
+  /* 压过上面桌面竖排栏那条裸 .Header_logo__s3lE_（flex column + 3.6u 图宽） */
+  display: block;
+}
+.Header_h5HeaderContainer__ctquk .Header_logo__s3lE_ .ef-h5-brandmark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+}
+.Header_h5HeaderContainer__ctquk .Header_logo__s3lE_.Header_active__jzCyf {
+  transform: translate3d(calc(50vw - 25 * var(--efu)), calc(7.125 * var(--efu)), 0) scale(1);
+}
+.Header_h5HeaderContainer__ctquk .Header_buttonGroup___Z1Nk {
+  position: absolute;
+  right: calc(9.75 * var(--efu));
+  height: calc(4.75 * var(--efu));
+  display: flex;
+  gap: calc(2.5 * var(--efu));
+}
+.Header_h5HeaderContainer__ctquk .Header_buttonGroup___Z1Nk .Header_iconButton__KWPpn {
+  position: relative;
+  width: calc(4.75 * var(--efu));
+  height: calc(4.75 * var(--efu));
+  border-radius: calc(0.25 * var(--efu));
+  background-color: #f2f2f2;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.Header_h5HeaderContainer__ctquk
+  .Header_buttonGroup___Z1Nk
+  .Header_iconButton__KWPpn
+  .Header_icon__3iDIG {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  height: calc(2.8125 * var(--efu));
+  width: auto;
+  color: #7c7c7c;
+}
+.Header_h5HeaderContainer__ctquk .Header_buttonGroup___Z1Nk .Header_preserveButton__StJCF {
+  position: relative;
+  width: calc(15.5 * var(--efu));
+  height: calc(4.75 * var(--efu));
+  box-sizing: border-box;
+  padding-left: calc(5.375 * var(--efu));
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+.Header_h5HeaderContainer__ctquk
+  .Header_buttonGroup___Z1Nk
+  .Header_preserveButton__StJCF:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #191919;
+  background-image: linear-gradient(
+    -45deg,
+    transparent,
+    transparent 16.1610023423%,
+    black 0,
+    black 33.8389976577%,
+    transparent 0,
+    transparent 66.1610023423%,
+    black 0,
+    black 83.8389976577%,
+    transparent 0,
+    transparent
+  );
+  background-size: calc(0.5 * var(--efu)) calc(0.5 * var(--efu));
+  background-repeat: repeat;
+  transform: translateZ(0);
+  border-radius: 4px;
+}
+.Header_h5HeaderContainer__ctquk
+  .Header_buttonGroup___Z1Nk
+  .Header_preserveButton__StJCF
+  .Header_text__52fEh {
+  position: relative;
+  font-family: SansMedium, var(--ef-font-cjk);
+  font-size: calc(1.875 * var(--efu));
+  white-space: nowrap;
+  text-align: center;
+  color: #fff;
+  transition: color 0.3s;
+  transform: translateZ(0);
+}
+.Header_h5HeaderContainer__ctquk
+  .Header_buttonGroup___Z1Nk
+  .Header_preserveButton__StJCF
+  .Header_tri__KNP87 {
+  position: absolute;
+  left: calc(1.3125 * var(--efu));
+  width: calc(2.625 * var(--efu));
+  height: auto;
+  color: #fff;
+  transition: color 0.3s;
+}
+.Header_h5HeaderContainer__ctquk
+  .Header_buttonGroup___Z1Nk
+  .Header_preserveButton__StJCF
+  .Header_divider__tUYjO {
+  position: absolute;
+  left: calc(5.0625 * var(--efu));
+  width: 2px;
+  height: calc(2.25 * var(--efu));
+  background-color: hsla(0, 0%, 100%, 0.5);
+  transition: background-color 0.3s;
+}
+.Header_h5HeaderContainer__ctquk .Header_menuIcon__X_Cn9 {
+  position: absolute;
+  right: calc(3.5 * var(--efu));
+  width: calc(3.3125 * var(--efu));
+  height: auto;
+  color: #191919;
+  z-index: 70;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: block;
+}
+.Header_h5HeaderContainer__ctquk .Header_menuIcon__X_Cn9 svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.Header_h5Menu__Tl_yj {
+  position: fixed;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #fff;
+  z-index: 60;
+  transform: translate3d(-105%, 0, 0);
+  transition: transform 0.3s;
+}
+.Header_h5Menu__Tl_yj.Header_active__jzCyf {
+  transform: translateZ(0);
+}
+@media (orientation: landscape) {
+  .Header_h5Menu__Tl_yj {
+    display: none;
+  }
+}
+.Header_h5Menu__Tl_yj:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 14.5625 * var(--efu));
+  background-image: url(/ef-official/block-bg.f05eda37.svg);
+  background-size: calc(13.5625 * var(--efu)) calc(13.5625 * var(--efu));
+  background-position: bottom 2px center;
+  opacity: 0.1;
+}
+.Header_h5Menu__Tl_yj:after {
+  content: "";
+  position: absolute;
+  height: calc(0.125 * var(--efu));
+  left: calc(50% - 25 * var(--efu));
+  top: calc(50% + 38.3125 * var(--efu));
+  width: calc(50 * var(--efu));
+  background-color: #ccc;
+}
+.Header_h5Menu__Tl_yj .Header_menuButtons__IRjCZ {
+  position: absolute;
+  width: calc(50 * var(--efu));
+  top: calc(50% - 34.375 * var(--efu));
+  left: calc(50% - 25 * var(--efu));
+  display: flex;
+  align-items: center;
+}
+.Header_h5Menu__Tl_yj .Header_menuButtons__IRjCZ .Header_divider__tUYjO {
+  margin: 0 calc(1.25 * var(--efu));
+  width: calc(0.1875 * var(--efu));
+  height: calc(3.125 * var(--efu));
+  background-color: #d9d9d9;
+}
+.Header_h5Menu__Tl_yj .Header_menuButtons__IRjCZ .Header_button__b0gdu {
+  position: relative;
+  height: calc(4 * var(--efu));
+  border-radius: calc(0.25 * var(--efu));
+  padding: 0 calc(0.75 * var(--efu)) 0 calc(1.75 * var(--efu));
+  background-color: #e5e5e5;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+.Header_h5Menu__Tl_yj .Header_menuButtons__IRjCZ .Header_button__b0gdu .Header_text__52fEh {
+  color: #191919;
+  font-family: SansMedium, var(--ef-font-cjk);
+  font-size: calc(2 * var(--efu));
+  padding-top: 0.14em;
+  line-height: 0.93;
+}
+.Header_h5Menu__Tl_yj .Header_menuButtons__IRjCZ .Header_button__b0gdu .Header_icon__3iDIG {
+  width: auto;
+  height: calc(2.5625 * var(--efu));
+  color: #999;
+}
+.Header_h5Menu__Tl_yj
+  .Header_menuButtons__IRjCZ
+  .Header_button__b0gdu
+  .Header_iconWrapper__BvBAU {
+  position: relative;
+  width: calc(2.5 * var(--efu));
+  height: calc(2.5 * var(--efu));
+  margin-left: calc(1.375 * var(--efu));
+  border-radius: 50%;
+  background-color: #fff;
+}
+.Header_h5Menu__Tl_yj
+  .Header_menuButtons__IRjCZ
+  .Header_button__b0gdu
+  .Header_iconWrapper__BvBAU
+  .Header_icon__3iDIG {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  height: calc(1.3125 * var(--efu));
+  width: auto;
+  color: #999;
+}
+.Header_h5Menu__Tl_yj .Header_menuButtons__IRjCZ .Header_mute__M03P_ {
+  position: absolute;
+  right: 0;
+  height: calc(4 * var(--efu));
+  width: calc(4 * var(--efu));
+  border-radius: calc(0.25 * var(--efu));
+  background-color: #e5e5e5;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.Header_h5Menu__Tl_yj
+  .Header_menuButtons__IRjCZ
+  .Header_mute__M03P_.Header_active__jzCyf
+  .Header_icon__3iDIG {
+  color: #ccc;
+}
+.Header_h5Menu__Tl_yj .Header_menuButtons__IRjCZ .Header_mute__M03P_ .Header_icon__3iDIG {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  height: calc(2.4375 * var(--efu));
+  width: auto;
+  color: #7c7c7c;
+  transition: color 0.2s;
+}
+.Header_h5Menu__Tl_yj .Header_navList__r2BGN {
+  position: absolute;
+  top: calc(50% - 28.5 * var(--efu));
+  left: calc(50% - 25 * var(--efu));
+  width: calc(50 * var(--efu));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: calc(1.1875 * var(--efu));
+}
+.Header_h5Menu__Tl_yj .Header_navList__r2BGN .Header_menuItem__14H7f {
+  position: relative;
+  height: calc(6.75 * var(--efu));
+  padding-left: calc(8.9375 * var(--efu));
+  display: flex;
+  align-items: center;
+  background-color: #f2f2f2;
+  border-radius: calc(0.25 * var(--efu));
+  overflow: hidden;
+  transition: background-color 0.3s;
+  cursor: pointer;
+  text-decoration: none;
+}
+.Header_h5Menu__Tl_yj
+  .Header_navList__r2BGN
+  .Header_menuItem__14H7f.Header_active__jzCyf {
+  background-color: #fffa00;
+}
+.Header_h5Menu__Tl_yj
+  .Header_navList__r2BGN
+  .Header_menuItem__14H7f.Header_active__jzCyf
+  .Header_icon__3iDIG {
+  color: #191919;
+}
+.Header_h5Menu__Tl_yj
+  .Header_navList__r2BGN
+  .Header_menuItem__14H7f.Header_active__jzCyf
+  .Header_divider__tUYjO {
+  background-color: #191919;
+}
+.Header_h5Menu__Tl_yj
+  .Header_navList__r2BGN
+  .Header_menuItem__14H7f.Header_active__jzCyf
+  .Header_arrow__LqT52 {
+  color: #191919;
+}
+.Header_h5Menu__Tl_yj .Header_navList__r2BGN .Header_menuItem__14H7f .Header_icon__3iDIG {
+  position: absolute;
+  left: calc(4.625 * var(--efu));
+  top: 50%;
+  width: calc(3.125 * var(--efu));
+  height: auto;
+  transform: translate3d(-50%, -50%, 0);
+  color: #bfbfbf;
+  transition: color 0.3s;
+}
+.Header_h5Menu__Tl_yj .Header_navList__r2BGN .Header_menuItem__14H7f .Header_divider__tUYjO {
+  position: relative;
+  width: calc(0.1875 * var(--efu));
+  height: calc(5 * var(--efu));
+  background-color: #d9d9d9;
+  transition: background-color 0.3s;
+}
+.Header_h5Menu__Tl_yj .Header_navList__r2BGN .Header_menuItem__14H7f .Header_text__52fEh {
+  margin-left: calc(2.5 * var(--efu));
+  font-family: SansMedium, var(--ef-font-cjk);
+  font-size: calc(2.5 * var(--efu));
+  padding-top: 0.14em;
+  line-height: 1;
+  color: #191919;
+  transition: color 0.3s;
+}
+.Header_h5Menu__Tl_yj .Header_navList__r2BGN .Header_menuItem__14H7f .Header_arrow__LqT52 {
+  position: absolute;
+  width: auto;
+  height: calc(1.375 * var(--efu));
+  right: calc(1.5625 * var(--efu));
+  color: #7c7c7c;
+  transition: color 0.3s;
+}
+.Header_h5Menu__Tl_yj .Header_mediaList__gE3ct {
+  position: absolute;
+  left: calc(50% - 25 * var(--efu));
+  bottom: calc(50% - 43.8125 * var(--efu));
+  width: calc(50 * var(--efu));
+  box-sizing: border-box;
+  padding: 0 calc(3.5 * var(--efu));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.Header_h5Menu__Tl_yj .Header_mediaList__gE3ct .Header_mediaItem__mUuKL {
+  height: calc(3.375 * var(--efu));
+  width: auto;
+  color: #777;
+  flex-shrink: 0;
+  display: block;
+}
+.Header_h5Menu__Tl_yj .Header_mediaList__gE3ct .Header_mediaItem__mUuKL svg {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+.Header_h5Menu__Tl_yj .Header_hallowText__ZR39f {
+  position: absolute;
+  bottom: calc(-5.5 * var(--efu));
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: calc(20 * var(--efu));
+  height: calc(20 * var(--efu));
+  letter-spacing: -0.1em;
+}
+.HallowText_hollowText__OJN57 {
+  padding-right: calc(1 * var(--efu));
+  font-family: Novecentosanswide-Bold, var(--ef-font-cjk);
+  background-image: linear-gradient(
+    -45deg,
+    transparent,
+    transparent 20.5805011712%,
+    black 0,
+    black 29.4194988288%,
+    transparent 0,
+    transparent 70.5805011712%,
+    black 0,
+    black 79.4194988288%,
+    transparent 0,
+    transparent
+  );
+  background-size: calc(0.5 * var(--efu)) calc(0.5 * var(--efu));
+  background-repeat: repeat;
+  background-position: 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: rgba(0, 0, 0, 0);
+  height: calc(15.625 * var(--efu));
+  font-size: calc(15.625 * var(--efu));
+  line-height: 1;
+  letter-spacing: calc(-0.625 * var(--efu));
+  width: fit-content;
+  opacity: 0.6;
+}
+.Header_h5HeaderContainer__ctquk .Header_logo__s3lE_:focus-visible,
+.Header_h5Menu__Tl_yj .Header_menuItem__14H7f:focus-visible,
+.Header_h5HeaderContainer__ctquk .Header_menuIcon__X_Cn9:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: calc(-0.25 * var(--efu));
+}
+
+/* 声音开关：两枚喇叭图标叠在同一格里，按 data-muted 换一个显示。 */
+#ef-h5nav [data-ef-sound-off] {
+  display: none;
+}
+#ef-h5nav[data-muted="true"] [data-ef-sound-on] {
+  display: none;
+}
+#ef-h5nav[data-muted="true"] [data-ef-sound-off] {
+  display: block;
+}
+/* 菜单开关：汉堡 ↔ 关闭叉，按 .ef-h5-open 换一个显示。 */
+#ef-h5nav [data-ef-h5-icon-close] {
+  display: none;
+}
+#ef-h5nav.ef-h5-open [data-ef-h5-icon-open] {
+  display: none;
+}
+#ef-h5nav.ef-h5-open [data-ef-h5-icon-close] {
+  display: block;
+}
+/* 菜单打开时顶栏只剩 logo + 关闭按钮：官网 buttonGroup 没有 z-index，
+   被 z-index:60 的 h5Menu 盖住 —— 这里照抄，不额外抬它。 */
+
+/* ====================================================================== *
+ * §12. 断点接管：≤860px 且竖屏 → 收掉竖排栏，换上官网 H5 顶栏
+ *
+ * 官网自己就是用 orientation 切的（@media(orientation:portrait) 生效，
+ * landscape 里 display:none）。桌面竖排栏是已验收的版式，所以只在
+ * 「窄 + 竖屏」这一档让 H5 顶栏接管；窄 + 横屏仍走竖排栏。
+ * ====================================================================== */
+@media (max-width: 860px) and (orientation: portrait) {
+  .ef-shell > .Header_pcHeaderContainer__Sy_8l {
+    display: none;
+  }
+  /* 竖排栏退场，内容不再让位；顶栏是 sticky 的，自己在流里占 9.625u */
+  .ef-shell #swup-container {
+    margin-left: 0;
+  }
+  .ef-shell .ef-shell-main {
+    padding-top: 0;
+  }
+}
+/* 反过来：宽屏一律不显示 H5 顶栏（官网 landscape 就是 display:none，
+   这里再补一条宽度上限，避免宽屏横屏时漏出来）。 */
+@media (min-width: 861px) {
+  .Header_h5HeaderContainer__ctquk {
+    display: none;
+  }
+}
+
+

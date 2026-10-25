@@ -1,143 +1,223 @@
 ---
-// 登入式加载动画 —— 对齐站主在官网看到的那一版（竖向）
-//   左边缘一条细竖条（3px）从上往下灌黄；
-//   百分比大字在左下、Loading 紧随其下；
-//   字标居中偏右；底部状态小字 + 口号；
-//   深色底恒不透明。不依赖断点，任何窗口都是这一套。
-//
-// 硬规定：不使用游戏官方素材与文案；只在首页；每会话一次；可跳过；减少动态效果时不渲染。
-import { backgroundWallpaper } from "@/config";
-
-const slogans = ((backgroundWallpaper as any)?.common?.homeText?.subtitle ?? []) as string[];
-const slogan = Array.isArray(slogans) && slogans.length > 0 ? String(slogans[0]) : "In Reddened Chrysalis, I Once Rest";
+/**
+ * 官网加载屏 —— 逐字复用版。
+ *
+ * 来源（三处合起来才是完整的「官网那一版」）：
+ *   结构  F:/web/endfield-official/index.html 里 SSR 出来的
+ *         <div class="__00-Loading_container__aBijT"> 整块（.ef-work/loading-block.html）
+ *   样式  F:/web/endfield-official/css/46158da72caa0121.css 里全部 16 个 .__00-Loading_* 类，
+ *         原样落在 src/styles/endfield-shell.css §10（只把 rem 换成 calc(N * var(--efu))）
+ *   行为  .ef-work/offjs/plain/8858-7e71d425d9268eb0.js 里那个 React 组件（线上 chunk）：
+ *           · 任务数组 C 每完成一项 M+1，进度 = M / C.length
+ *           · progressBar / progressText 用 framer-motion tween 500ms 跟到目标
+ *           · progressText 的 onUpdate 把 parseInt(动画中的位置) 写进数字 —— 所以
+ *             「百分比」不是单独算的，它就是黄条当前的位置读数（这里照此实现）
+ *           · bg 的 blur 从 8px 线性收到 0
+ *           · M >= C.length 时：加 .__00-Loading_leaving__IKIPd → 1500ms 后标记 loaded
+ *             → 2400ms 后卸载整块
+ *
+ * 照抄下来的文案（一个字没改）：
+ *   底图中下：OVER THE FRONTIER / INTO THE FRONT
+ *   进度文字旁：Updating...
+ *   百分比带 % 号，数字是 SansMedium 4.375rem，% 是 SansRegular 3.25rem
+ *
+ * 唯一换掉的：正中那枚「终末地」标志 → 站主的 LC 字标（public/lc-logo-horizontal.svg，
+ * 官网 .Loading_logo 槽位原本就是品牌标志位）。
+ */
 ---
 
-<div id="ef-boot" data-ef-boot>
-  <!-- 站主要求：先不显示任何图片。加载屏只留纯色底 + 竖条 + 文字。 -->
-  <div class="ef-boot-rail" aria-hidden="true"><span></span></div>
-  <div class="ef-boot-brand">
-    <span class="ef-boot-brand-cn">LegspCpd</span>
-    <span class="ef-boot-brand-en">BLOG</span>
+<div
+  id="ef-boot"
+  class="__00-Loading_container__aBijT"
+  data-ef-boot
+  role="status"
+  aria-label="页面加载中"
+>
+  <div class="__00-Loading_bg__mahvH" aria-hidden="true"></div>
+
+  <div class="__00-Loading_logo__IaIBj">
+    <img
+      class="ef-boot-brandmark"
+      src="/lc-logo-horizontal.svg"
+      alt="LC"
+      width="1200"
+      height="500"
+      decoding="async"
+      style="display:block;width:100%;height:auto"
+    />
   </div>
-  <div class="ef-boot-meter">
-    <span class="ef-boot-pct" id="ef-boot-pct">0%</span>
-    <span class="ef-boot-loading">Loading</span>
+
+  <div class="__00-Loading_moreDeco__rmGYb" aria-hidden="true">
+    <div class="__00-Loading_deco__EFg6B"></div>
+    <div class="__00-Loading_divider__nnOZ0"></div>
+    <div class="__00-Loading_slogan__54Pmd">OVER THE FRONTIER / INTO THE FRONT</div>
+    <div class="__00-Loading_triangles__y5flj"></div>
   </div>
-  <div class="ef-boot-foot">
-    <p class="ef-boot-status"><span class="ef-boot-mark">▲</span> 站点资源正在加载，请稍候</p>
-    {slogan && <p class="ef-boot-slogan">{slogan}</p>}
+
+  <div class="__00-Loading_progress__649iN">
+    <div class="__00-Loading_progressBar__eFmW1" data-ef-boot-bar></div>
+    <div class="__00-Loading_progressText__EwQ1g" data-ef-boot-text>
+      <div class="__00-Loading_core__K_Z5a">
+        <span class="__00-Loading_value__Zf_CS" data-ef-boot-value>0</span><span
+          class="__00-Loading_symbol__2HzCd">%</span
+        >
+      </div>
+      <div class="__00-Loading_deco__EFg6B">Updating...</div>
+    </div>
   </div>
 </div>
 
 <style>
-  #ef-boot {
-    position: fixed; inset: 0; z-index: 99999;
-    /* 官网原文：.__00-Loading_container__aBijT{...background-color:#141414;...z-index:100}
-       —— 是【完全不透明】的纯色底。此前写成 color-mix(#141414 86%, transparent)，
-       有 14% 透光，所以加载过程中后面的文章会透出来（站主两轮都指出这一点）。 */
-    background-color: #141414;
-    color: #fff;
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-    transition: backdrop-filter 0.7s var(--ef-ease-snap, ease-out), -webkit-backdrop-filter 0.7s var(--ef-ease-snap, ease-out);
-    transition: opacity 200ms var(--ef-ease-mech, ease-out);
+  /* 官网 .Loading_container svg{display:block;width:100%;height:auto} —— 我们这里换成
+     LC 字标（svg 或 png），几何规则一模一样。 */
+  .__00-Loading_container__aBijT .ef-boot-brandmark {
+    display: block;
+    width: 100%;
+    height: auto;
   }
-  /* 退出转场（照官网 .Loading_container.leaving 的确切参数）：
-     先一整层黄色从左侧扫过整屏（0.6s cubic-bezier(1,0,.7,1)，延迟 0.5s），
-     然后整块在延迟 1.4s 后用 1s 淡出。 */
-  /* 灌满后先去掉模糊（从模糊到清晰），再走官网那条黄条扫过 + 延迟淡出 */
-  #ef-boot.is-sharp { -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); }
-  #ef-boot.is-leaving {
-    transition: opacity 1s 1.4s;
-    opacity: 0;
-    pointer-events: none;
-  }
-  #ef-boot.is-leaving::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-color: #fffa00;
-    transform-origin: left;
-    transform: scaleX(0);
-    animation: ef-boot-wipe 0.6s cubic-bezier(1, 0, 0.7, 1) 0.5s forwards;
-  }
-  @keyframes ef-boot-wipe {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
-  }
-  /* 左侧竖向进度条：3px 贴边，轨道暗淡，填充黄，从上往下灌 */
-  .ef-boot-rail {
-    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-    background: rgba(255, 255, 255, 0.14);
-  }
-  .ef-boot-rail > span {
-    display: block; width: 100%; height: 0; background: #fffa00;
-    animation: ef-boot-rail 2400ms var(--ef-ease-snap, ease-out) forwards;
-  }
-  @keyframes ef-boot-rail { from { height: 0; } to { height: 100%; } }
-  /* 百分比：左下，Loading 紧随其下（官网就是这个位置关系） */
-  .ef-boot-meter {
-    position: absolute; left: 26px; bottom: 24%;
-    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-  }
-  .ef-boot-pct {
-    font-size: 4.375rem; line-height: 1; font-weight: 500;
-    font-stretch: 112%; font-variant-numeric: tabular-nums;
-  }
-  .ef-boot-loading {
-    font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255, 255, 255, 0.66);
-  }
-  /* 字标：居中偏右 */
-  .ef-boot-brand { position: absolute; left: 64%; top: 32%; }
-  .ef-boot-brand-cn { display: block; font-size: 2rem; font-weight: 800; font-stretch: 125%; letter-spacing: 0.02em; }
-  .ef-boot-brand-en { display: block; margin-top: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.24em; color: rgba(255, 255, 255, 0.66); }
-  /* 底部：状态 + 口号 */
-  .ef-boot-foot { position: absolute; left: 0; right: 0; bottom: 9%; text-align: center; }
-  .ef-boot-status { margin: 0 0 10px; font-size: 12px; color: rgba(255, 255, 255, 0.6); }
-  .ef-boot-mark { color: #fffa00; }
-  .ef-boot-slogan { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
-  @media (max-width: 720px) {
-    .ef-boot-pct { font-size: 2.8rem; }
-    .ef-boot-brand { left: 58%; top: 30%; }
-    .ef-boot-brand-cn { font-size: 1.4rem; }
-    .ef-boot-slogan { font-size: 1rem; }
-    .ef-boot-meter { left: 18px; bottom: 26%; }
-  }
-
-  /* 站主要求：先不显示任何图片 —— 官方 KV 底图整块去掉，只留纯色底。 */
-  #ef-boot { overflow: hidden; }
-  /* 官方那片 #fffa00 是整屏盖住的，必须压在内容之上，否则会透出正文 */
-  #ef-boot.is-leaving::after { z-index: 3; }
 </style>
 
 <script is:inline>
   (function () {
     var el = document.getElementById("ef-boot");
     if (!el) return;
-    // 站主要求：每次手动刷新都要完整走一遍加载屏，而不是「一个会话只放一次」。
-    // 原来这行读 sessionStorage 就是「加载一次之后就不加载了」的原因，已去掉读写。
-    // 只保留 reduced-motion 的无障碍逃生口。
-    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) { el.remove(); return; }
+
+    var bar = el.querySelector("[data-ef-boot-bar]");
+    var text = el.querySelector("[data-ef-boot-text]");
+    var value = el.querySelector("[data-ef-boot-value]");
+    var bg = el.querySelector(".__00-Loading_bg__mahvH");
+    var reduce =
+      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     document.documentElement.style.overflow = "hidden";
-    var pct = document.getElementById("ef-boot-pct");
-    var t0 = Date.now();
-    var timer = setInterval(function () {
-      var p = Math.min(100, Math.round(((Date.now() - t0) / 1400) * 100));
-      if (pct) pct.textContent = p + "%";
-      if (p >= 100) { clearInterval(timer); el.classList.add("is-sharp"); }
-    }, 60);
-    var done = false;
-    function leave() {
-      if (done) return;
-      done = true;
-      clearInterval(timer);
-      el.classList.add("is-leaving");
-      document.documentElement.style.overflow = "";
-      setTimeout(function () { el.remove(); }, 3000);
+
+    /* ---- 任务表：照官网那个 C 数组（每项是一个 Promise，完成即 M+1）----------- */
+    var tasks = [];
+
+    // 1) 字体
+    if (document.fonts && document.fonts.ready) tasks.push(document.fonts.ready);
+
+    /* 2) 官网那个数组装的是「逐张预加载页面图片」（226 chunk 里的 aJ：
+           () => preload(require("...png").src) × 30 余张）。本站照同一套语义 ——
+           数文档里已经出现的 <img>，一张一项，落在 12 张。**不等 window load**：
+           那会把 AdSense / Pagefind 这些跟首屏无关的东西也算进去，站主看到的就是
+           一次几秒钟的黑屏，与官网的「等图」不是一回事。 */
+
+    // 2) swup 就位（本站站内跳转依赖它，首页那几个容器没挂上就会整站重载）
+    tasks.push(
+      new Promise(function (res) {
+        if (window.swup) return res();
+        var t = setInterval(function () {
+          if (window.swup) { clearInterval(t); res(); }
+        }, 80);
+        setTimeout(function () { clearInterval(t); res(); }, 3000);
+      })
+    );
+
+    // 3) 文档里已经出现的 <img>（官网是预加载图，本站是首屏配图 / 头像）
+    var imgs = [].slice.call(document.images || []).slice(0, 12);
+    imgs.forEach(function (img) {
+      tasks.push(
+        new Promise(function (res) {
+          if (img.complete) return res();
+          img.addEventListener("load", function () { res(); }, { once: true });
+          img.addEventListener("error", function () { res(); }, { once: true });
+        })
+      );
+    });
+
+    // 4) 最短可见时长。官网靠游戏资源天然拖到 1.5s 以上；本站是静态站，不补这一档
+    //    的话 0% → 100% 会在两帧里跳完，那四个相位就看不见了。
+    //    从**文档起点**算 700ms（不是从这行脚本算）：HTML 到得晚时自动缩短等待，
+    //    leaving 永远落在导航后 ~0.7s，黄条扫过 ≈1.2s、整屏黄 ≈1.7s 就都对得上。
+    tasks.push(
+      new Promise(function (res) {
+        var left = 700 - performance.now();
+        setTimeout(res, left > 0 ? left : 0);
+      })
+    );
+
+    var total = tasks.length || 1;
+    var done = 0;
+
+    /* ---- 进度动画：官网 500ms tween + spring(stiffness 120, damping 20) ---------
+       spring 的阻尼比 ζ = 20 / (2·√120) ≈ 0.91，约 0.5s 落定；这里用同一时间常数的
+       指数逼近复现，帧率无关。数字读的是**动画中的位置**，与官网 onUpdate 一致。 ---- */
+    var target = 0;
+    var shown = 0;
+    var last = 0;
+    var TAU = 170; // ms，≈ 官网 spring 的落定时间常数
+    var landscape = window.matchMedia("(orientation: landscape)").matches;
+
+    function paint(p) {
+      var v = p.toFixed(2);
+      if (landscape) {
+        bar.style.width = "100%";
+        bar.style.height = v + "%";
+        text.style.top = v + "%";
+        text.style.left = "3.125rem";
+      } else {
+        bar.style.width = v + "%";
+        bar.style.height = "100%";
+        text.style.top = "unset";
+        text.style.left = v + "%";
+      }
+      if (bg) bg.style.filter = "blur(" + (8 - (p / 100) * 8).toFixed(3) + "px)";
+      if (value) value.textContent = String(parseInt(v, 10) || 0);
     }
-    setTimeout(leave, 1650);
-    el.addEventListener("click", leave);
-    window.addEventListener("keydown", leave, { once: true });
+
+    function tick(now) {
+      if (!last) last = now;
+      var dt = Math.min(now - last, 100);
+      last = now;
+      if (reduce) {
+        shown = target;
+      } else {
+        shown = target + (shown - target) * Math.exp(-dt / TAU);
+        if (Math.abs(shown - target) < 0.02) shown = target;
+      }
+      paint(shown);
+      if (shown !== target || !leaving) raf = requestAnimationFrame(tick);
+    }
+
+    var raf = requestAnimationFrame(tick);
+    paint(0);
+
+    /* ---- 任务完成 → M+1（与官网同一套 finally 语义）------------------------- */
+    var leaving = false;
+    var failSafe = setTimeout(finishTasks, 15000);
+
+    function bump() {
+      done = Math.min(done + 1, total);
+      target = (done / total) * 100;
+      if (done >= total) finishTasks();
+    }
+
+    function finishTasks() {
+      clearTimeout(failSafe);
+      if (leaving) return;
+      leaving = true;
+      // 官网：onFinished → setLeaving(true)；1500ms 后 loaded；2400ms 后卸载
+      el.classList.add("__00-Loading_leaving__IKIPd");
+      document.documentElement.style.overflow = "";
+      setTimeout(function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+        cancelAnimationFrame(raf);
+      }, 2400);
+    }
+
+    /* 注意：tasks 里装的是 Promise 本体，不是函数 —— 必须 Promise.resolve(t)。
+       之前写成 .then(t) 时 then 收到非函数会直接跳过，全部任务在微任务里瞬间
+       完成，loading 会在解析 HTML 的那一帧就加上 leaving（等于没显示）。 */
+    tasks.forEach(function (t) {
+      Promise.resolve(t)
+        .catch(function () {})
+        .then(bump);
+    });
+
+    // 兜底：脚本要是被 swup 之外的路径重放，也不会把 html 的滚动条永久锁死
+    window.addEventListener("pagehide", function () {
+      document.documentElement.style.overflow = "";
+    });
   })();
 </script>

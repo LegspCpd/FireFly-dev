@@ -8,6 +8,7 @@
 //   站内跳转：main 必须包在 #swup-container 里（astro.config.mjs 的 swup containers
 //   依赖它），否则切换页面会整站重载。
 import BootScreen from "@components/common/BootScreen.astro";
+import EfH5Nav from "@components/layout/EfH5Nav.astro";
 import { jumpPath, triPath } from "@/constants/efIcons";
 import "@/styles/endfield-shell.css";
 import Layout from "./Layout.astro";
@@ -208,6 +209,10 @@ const year = new Date().getFullYear();
 
 		<BootScreen />
 
+		<!-- 官网 H5 顶栏 + 全屏菜单：只在「≤860px 且竖屏」显示（见 §12），
+		     结构与类名照官网 Header_h5HeaderContainer / Header_h5Menu 搬用。 -->
+		<EfH5Nav />
+
 		<!-- 官网左侧竖排栏：位置/尺寸/配色/交互照 Header_pcHeaderContainer 搬用。
 		     收起态（7.5u）＝ 竖排窄版；悬停/键盘聚焦展开（22.5u）＝ 横向宽版。
 		     两套布局的几何值都取自官网 1920×1080 实测。 -->
@@ -217,10 +222,17 @@ const year = new Date().getFullYear();
 			aria-label="站点导航"
 		>
 			<div class="Header_innerContainer__cW_Dv">
-				<!-- 字标：官网 logo 槽位（top 1.5u、宽 5.1875u、居中）—— 小字 + 大字标 + 英文 -->
-				<a class="Header_logo__s3lE_" href="/" aria-label="LegspCpd BLOG 首页">
-					<span class="ef-rail-wordmark-tag">个人博客</span>
-					<span class="ef-rail-wordmark">LegspCpd</span>
+				<!-- 字标：官网 logo 槽位（top 1.5u、宽 5.1875u、居中）—— LC 方标 + LC + 英文 -->
+				<a class="Header_logo__s3lE_" href="/" aria-label="LC 首页">
+					<img
+						class="ef-rail-brandmark"
+						src="/icon-192.png"
+						alt="LC"
+						width="192"
+						height="192"
+						decoding="async"
+					/>
+					<span class="ef-rail-wordmark">LC</span>
 					<span class="ef-rail-wordmark-en">BLOG</span>
 				</a>
 
@@ -347,7 +359,7 @@ const year = new Date().getFullYear();
 							<rect fill="currentColor" x="8.6" y="5.4" width="17.4" height="2.2" opacity="0.45" />
 							<rect fill="currentColor" x="8.6" y="10.8" width="17.4" height="2.2" />
 						</svg>
-						<span class="ef-rail-mark-brand">LegspCpd</span>
+						<span class="ef-rail-mark-brand">LC</span>
 						<span class="ef-rail-mark-ver">Blog</span>
 					</p>
 				</div>
@@ -361,7 +373,7 @@ const year = new Date().getFullYear();
 
 				<footer class="ef-foot">
 					<div class="ef-wrap ef-foot-inner">
-						<p class="ef-foot-mark">LegspCpd<span>// BLOG</span></p>
+						<p class="ef-foot-mark">LC<span>// BLOG</span></p>
 						<ul class="ef-foot-links">
 							<li><a href="/archive/">文章</a></li>
 							<li><a href="/categories/">分类</a></li>
@@ -373,7 +385,7 @@ const year = new Date().getFullYear();
 								<a href="https://x.com/legspcpd" target="_blank" rel="noopener noreferrer">X</a>
 							</li>
 						</ul>
-						<p class="ef-foot-meta">&copy; {year} LegspCpd</p>
+						<p class="ef-foot-meta">&copy; {year} LC</p>
 					</div>
 				</footer>
 			</main>
