@@ -2,11 +2,15 @@
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 // 页名图标来源：标签：官网无「标签」，取 navInformation（竖排栏 /tags/ 同 key）。
-import EfIcon from "@components/common/EfIcon.astro";
+import EfSectionTitle from "@components/common/EfSectionTitle.astro";
+import EfSubpageHeader from "@components/common/EfSubpageHeader.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { getTagList } from "@/utils/content-utils";
 import { getTagUrl } from "@/utils/url-utils";
 
+// 官网没有「标签」页：页头用 .SubpageHeader_subpageHeader，两个小节标题用
+// .SectionTitle_sectionTitle（灰块滑出 + Gilroy-Medium 英文 + SansBold 中文）。
+// 标签云与柱图保持现状（套件 ef-chip / ef-bars），官网没有对应物，不改造型。
 const tags = await getTagList();
 
 // Top 10 标签排行
@@ -15,56 +19,76 @@ const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18
 ---
 
 <EndfieldLayout title={i18n(I18nKey.tags)} description={i18n(I18nKey.allTags)}>
-    <div class="card-base p-8 md:p-10 mb-4">
-        <!-- 眉标 + 页名 + 计数（官网骨架） -->
-        <p class="ef-eyebrow" data-replay="ef-in-power" style="--i: 0">// TAGS</p>
-        <h1 class="ef-page-name" data-replay="ef-in-power" style="--i: 1"><EfIcon name="navInformation" inline />{i18n(I18nKey.tags)}</h1>
-        <p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 2">
-            {i18n(I18nKey.allTags)} · {tags.length} {i18n(I18nKey.tagsCount)}
-        </p>
+	<EfSubpageHeader title={i18n(I18nKey.tags)} titleEn="Tags" icon="navInformation" />
 
-        {tags.length > 0 ? (
-            <div>
-                <!-- 标签云：套件 ef-chip（带切角，计数用 .n） -->
-                <ul class="ef-chip-row">
-                    {tags.map((t) => (
-                        <li>
-                            <a class="ef-chip" href={getTagUrl(t.name)}>
-                                {t.name.trim()}
-                                <span class="n">{t.count}</span>
-                            </a>
-                        </li>
-                    ))}
-                </ul>
+	<div class="ef-wrap">
+		<div class="ef-tag-body">
+			<p class="ef-field ef-page-sub" data-replay="ef-in-power" style="--i: 0">
+				{tags.length} {i18n(I18nKey.tagsCount)} · {countLabel(
+					tags.reduce((sum, t) => sum + t.count, 0),
+				)}
+			</p>
 
-                <!-- Top 10：套件 ef-ledger（原来是自造的进度条） -->
-                {topTags.length > 0 && (
-                    <div>
-                        <h2 class="ef-field ef-sub-head">Top 10</h2>
-                        <ul class="ef-ledger">
-                            {/* 柱图：套件 ef-bars（Top 10 标签的篇数分布，逐项归一化） */}
-                            <ol class="ef-bars" aria-label="Top 10">
-                                {topTags.map((t) => (
-                                    <li
-                                        style={"--v: " + (t.count / (topTags[0]?.count || 1)).toFixed(3)}
-                                        class={t.count === topTags[0]?.count ? "is-over" : undefined}
-                                    >
-                                        <span>{t.name.trim()}</span>
-                                    </li>
-                                ))}
-                            </ol>
-                            {topTags.map((t, idx) => (
-                                <li>
-                                    <a data-replay="ef-in-come" style={"--i: " + String(idx % 8)} href={getTagUrl(t.name)}>{t.name.trim()}</a>
-                                    <span class="ef-field">{countLabel(t.count)}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-            </div>
-        ) : (
-            <p class="ef-empty ef-field">{i18n(I18nKey.noData)}</p>
-        )}
-    </div>
+			{tags.length > 0 ? (
+				<>
+					<section class="ef-tag-block">
+						<EfSectionTitle en="All Tags" cn={i18n(I18nKey.allTags)} />
+						<ul class="ef-chip-row">
+							{tags.map((t) => (
+								<li>
+									<a class="ef-chip" href={getTagUrl(t.name)}>
+										{t.name.trim()}
+										<span class="n">{t.count}</span>
+									</a>
+								</li>
+							))}
+						</ul>
+					</section>
+
+					{topTags.length > 0 && (
+						<section class="ef-tag-block">
+							<EfSectionTitle en="Top 10" cn="热门排行" />
+							<ul class="ef-ledger">
+								<li>
+									<ol class="ef-bars" aria-label="Top 10">
+										{topTags.map((t) => (
+											<li
+												style={"--v: " + (t.count / (topTags[0]?.count || 1)).toFixed(3)}
+												class={t.count === topTags[0]?.count ? "is-over" : undefined}
+											>
+												<span>{t.name.trim()}</span>
+											</li>
+										))}
+									</ol>
+								</li>
+								{topTags.map((t, idx) => (
+									<li>
+										<a data-replay="ef-in-come" style={"--i: " + String(idx % 8)} href={getTagUrl(t.name)}>{t.name.trim()}</a>
+										<span class="ef-field">{countLabel(t.count)}</span>
+									</li>
+								))}
+							</ul>
+						</section>
+					)}
+				</>
+			) : (
+				<p class="ef-empty ef-field">{i18n(I18nKey.noData)}</p>
+			)}
+		</div>
+	</div>
 </EndfieldLayout>
+
+<style>
+	/* 与分类页同一基准：标题板到内容的距离取官网 .__10-NoticeList_items__ 的
+	   margin-top:2.625rem；两个小节之间按区块间距 4.5u 分开。 */
+	.ef-tag-body {
+		padding-block: calc(2.625 * var(--efu)) calc(6 * var(--efu));
+	}
+	.ef-tag-block {
+		margin-bottom: calc(4.5 * var(--efu));
+	}
+	.ef-tag-block :global(.ef-chip-row),
+	.ef-tag-block :global(.ef-ledger) {
+		margin-top: calc(1.5 * var(--efu));
+	}
+</style>
