@@ -42,6 +42,40 @@ export type CommentLabels = {
 	hoursAgo: (n: number) => string;
 	daysAgo: (n: number) => string;
 	unknownTime: string;
+	/** 发帖表单里的可选「网站」。 */
+	websiteLabel: string;
+	websitePlaceholder: string;
+	/** 昵称带网站时，外链的 title / aria-label。 */
+	websiteLinkTitle: string;
+	/** 楼中楼：回复按钮、表单、回执。 */
+	reply: string;
+	replyCancel: string;
+	replyTo: (name: string) => string;
+	replyPlaceholder: string;
+	replySubmit: string;
+	replyPosted: string;
+	/** 回复统一挂到顶层楼下，这句话告诉用户回复会落在哪一层。 */
+	replyFlattenNote: string;
+	/** 举报：按钮 / 原因单选 / 提交 / 取消 / 已举报 / 回执。 */
+	report: string;
+	reportReason: string;
+	reportSpam: string;
+	reportOffensive: string;
+	reportOther: string;
+	reportSubmit: string;
+	reportCancel: string;
+	reported: string;
+	reportPosted: string;
+	reportFailed: string;
+	/** keyset 分页：加载更多 / 加载中 / 到底了。 */
+	loadMore: string;
+	loadingMore: string;
+	endOfList: string;
+	/** 自动刷新提示条（n = 新增条数）。 */
+	newComments: (n: number) => string;
+	/** 限流与重复提交。 */
+	rateLimited: string;
+	duplicate: string;
 };
 
 export type CommentLocale = "zh_CN" | "zh_TW" | "en" | "ja" | "ko" | "ru";
@@ -84,6 +118,32 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		hoursAgo: (n) => `${n} 小时前`,
 		daysAgo: (n) => `${n} 天前`,
 		unknownTime: "时间未知",
+		websiteLabel: "网站",
+		websitePlaceholder: "https://…（可留空）",
+		websiteLinkTitle: "打开 TA 的网站（新标签页）",
+		reply: "回复",
+		replyCancel: "取消",
+		replyTo: (name) => `回复 ${name}`,
+		replyPlaceholder: "回复点什么……（Ctrl / ⌘ + Enter 发布）",
+		replySubmit: "发布回复",
+		replyPosted: "回复已发布。",
+		replyFlattenNote: "回复会接在这一层的讨论里（最多两层）。",
+		report: "举报",
+		reportReason: "举报原因",
+		reportSpam: "垃圾广告",
+		reportOffensive: "冒犯内容",
+		reportOther: "其他",
+		reportSubmit: "提交举报",
+		reportCancel: "取消",
+		reported: "已举报",
+		reportPosted: "已收到举报，谢谢。",
+		reportFailed: "举报提交失败，请稍后再试。",
+		loadMore: "加载更多",
+		loadingMore: "加载中……",
+		endOfList: "没有更多评论了。",
+		newComments: (n) => `有 ${n} 条新评论，点击刷新`,
+		rateLimited: "你发送得太快了，请稍后再试。",
+		duplicate: "和 10 分钟内发过的内容一样，没有重复发布。",
 	},
 	zh_TW: {
 		eyebrow: "COMMENTS",
@@ -122,6 +182,32 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		hoursAgo: (n) => `${n} 小時前`,
 		daysAgo: (n) => `${n} 天前`,
 		unknownTime: "時間未知",
+		websiteLabel: "網站",
+		websitePlaceholder: "https://…（可留空）",
+		websiteLinkTitle: "開啟 TA 的網站（另開分頁）",
+		reply: "回覆",
+		replyCancel: "取消",
+		replyTo: (name) => `回覆 ${name}`,
+		replyPlaceholder: "回覆點什麼……（Ctrl / ⌘ + Enter 送出）",
+		replySubmit: "送出回覆",
+		replyPosted: "回覆已送出。",
+		replyFlattenNote: "回覆會接在這一層的討論裡（最多兩層）。",
+		report: "檢舉",
+		reportReason: "檢舉原因",
+		reportSpam: "垃圾廣告",
+		reportOffensive: "冒犯內容",
+		reportOther: "其他",
+		reportSubmit: "送出檢舉",
+		reportCancel: "取消",
+		reported: "已檢舉",
+		reportPosted: "已收到檢舉，謝謝。",
+		reportFailed: "檢舉送出失敗，請稍後再試。",
+		loadMore: "載入更多",
+		loadingMore: "載入中……",
+		endOfList: "沒有更多留言了。",
+		newComments: (n) => `有 ${n} 則新留言，點一下重新整理`,
+		rateLimited: "你送出得太快了，請稍後再試。",
+		duplicate: "和 10 分鐘內送過的內容一樣，沒有重複送出。",
 	},
 	en: {
 		eyebrow: "COMMENTS",
@@ -160,6 +246,32 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		hoursAgo: (n) => `${n} h ago`,
 		daysAgo: (n) => `${n} d ago`,
 		unknownTime: "unknown time",
+		websiteLabel: "Website",
+		websitePlaceholder: "https://… (optional)",
+		websiteLinkTitle: "Open their website (new tab)",
+		reply: "Reply",
+		replyCancel: "Cancel",
+		replyTo: (name) => `Reply to ${name}`,
+		replyPlaceholder: "Write a reply… (Ctrl / ⌘ + Enter to post)",
+		replySubmit: "Post reply",
+		replyPosted: "Reply posted.",
+		replyFlattenNote: "Replies join this thread (two levels at most).",
+		report: "Report",
+		reportReason: "Reason",
+		reportSpam: "Spam",
+		reportOffensive: "Offensive",
+		reportOther: "Other",
+		reportSubmit: "Submit report",
+		reportCancel: "Cancel",
+		reported: "reported",
+		reportPosted: "Report received — thank you.",
+		reportFailed: "Could not send the report. Please try again.",
+		loadMore: "Load more",
+		loadingMore: "Loading…",
+		endOfList: "No more comments.",
+		newComments: (n) => `${n} new comment${n === 1 ? "" : "s"} — click to refresh`,
+		rateLimited: "You are posting too fast. Please try again later.",
+		duplicate: "Identical to what was posted in the last 10 minutes — not posted again.",
 	},
 	ja: {
 		eyebrow: "COMMENTS",
@@ -198,6 +310,32 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		hoursAgo: (n) => `${n} 時間前`,
 		daysAgo: (n) => `${n} 日前`,
 		unknownTime: "日時不明",
+		websiteLabel: "サイト",
+		websitePlaceholder: "https://…（任意）",
+		websiteLinkTitle: "サイトを開く（新しいタブ）",
+		reply: "返信",
+		replyCancel: "キャンセル",
+		replyTo: (name) => `${name} さんに返信`,
+		replyPlaceholder: "返信を入力……（Ctrl / ⌘ + Enter で送信）",
+		replySubmit: "返信する",
+		replyPosted: "返信しました。",
+		replyFlattenNote: "返信はこの階層のスレッドにまとまります（最大 2 階層）。",
+		report: "通報",
+		reportReason: "通報理由",
+		reportSpam: "スパム",
+		reportOffensive: "不快な内容",
+		reportOther: "その他",
+		reportSubmit: "通報を送信",
+		reportCancel: "キャンセル",
+		reported: "通報済み",
+		reportPosted: "通報を受け付けました。ありがとうございます。",
+		reportFailed: "通報を送信できませんでした。しばらくして再試行してください。",
+		loadMore: "さらに読み込む",
+		loadingMore: "読み込み中……",
+		endOfList: "これ以上のコメントはありません。",
+		newComments: (n) => `新着 ${n} 件 — クリックで更新`,
+		rateLimited: "送信が速すぎます。しばらくしてからお試しください。",
+		duplicate: "10 分以内に送った内容と同じため、重複送信はしませんでした。",
 	},
 	ko: {
 		eyebrow: "COMMENTS",
@@ -236,6 +374,32 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		hoursAgo: (n) => `${n}시간 전`,
 		daysAgo: (n) => `${n}일 전`,
 		unknownTime: "시간 정보 없음",
+		websiteLabel: "웹사이트",
+		websitePlaceholder: "https://… (선택)",
+		websiteLinkTitle: "웹사이트 열기(새 탭)",
+		reply: "답글",
+		replyCancel: "취소",
+		replyTo: (name) => `${name} 님에게 답글`,
+		replyPlaceholder: "답글을 입력하세요… (Ctrl / ⌘ + Enter 로 등록)",
+		replySubmit: "답글 등록",
+		replyPosted: "답글을 등록했습니다.",
+		replyFlattenNote: "답글은 이 층의 스레드에 모입니다(최대 2단계).",
+		report: "신고",
+		reportReason: "신고 사유",
+		reportSpam: "스팸",
+		reportOffensive: "불쾌한 내용",
+		reportOther: "기타",
+		reportSubmit: "신고 보내기",
+		reportCancel: "취소",
+		reported: "신고함",
+		reportPosted: "신고가 접수되었습니다. 감사합니다.",
+		reportFailed: "신고를 보내지 못했습니다. 잠시 후 다시 시도하세요.",
+		loadMore: "더 보기",
+		loadingMore: "불러오는 중……",
+		endOfList: "더 이상 댓글이 없습니다.",
+		newComments: (n) => `새 댓글 ${n}개 — 클릭하여 새로 고침`,
+		rateLimited: "너무 빠르게 등록했습니다. 잠시 후 다시 시도하세요.",
+		duplicate: "10분 이내에 등록한 내용과 같아 중복 등록하지 않았습니다.",
 	},
 	ru: {
 		eyebrow: "COMMENTS",
@@ -274,6 +438,32 @@ const LABELS: Record<CommentLocale, CommentLabels> = {
 		hoursAgo: (n) => `${n} ч назад`,
 		daysAgo: (n) => `${n} дн назад`,
 		unknownTime: "время неизвестно",
+		websiteLabel: "Сайт",
+		websitePlaceholder: "https://… (необязательно)",
+		websiteLinkTitle: "Открыть сайт автора (новая вкладка)",
+		reply: "Ответить",
+		replyCancel: "Отмена",
+		replyTo: (name) => `Ответ ${name}`,
+		replyPlaceholder: "Напишите ответ… (Ctrl / ⌘ + Enter — отправить)",
+		replySubmit: "Отправить ответ",
+		replyPosted: "Ответ отправлен.",
+		replyFlattenNote: "Ответы собираются в этой ветке (не более двух уровней).",
+		report: "Жалоба",
+		reportReason: "Причина",
+		reportSpam: "Спам",
+		reportOffensive: "Оскорбление",
+		reportOther: "Другое",
+		reportSubmit: "Отправить жалобу",
+		reportCancel: "Отмена",
+		reported: "жалоба отправлена",
+		reportPosted: "Жалоба получена. Спасибо.",
+		reportFailed: "Не удалось отправить жалобу. Попробуйте позже.",
+		loadMore: "Показать ещё",
+		loadingMore: "Загрузка…",
+		endOfList: "Больше комментариев нет.",
+		newComments: (n) => `Новых комментариев: ${n} — нажмите, чтобы обновить`,
+		rateLimited: "Вы пишете слишком часто. Попробуйте позже.",
+		duplicate: "То же самое уже отправлено за последние 10 минут — повтор не отправлен.",
 	},
 };
 

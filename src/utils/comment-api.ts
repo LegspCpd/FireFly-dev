@@ -12,7 +12,10 @@
  *      运行时全局 window.__COMMENT_API_BASE__、配置文件兜底）；
  *   2. 按 docs/comment-api.md 的契约发 GET / POST；
  *   3. 把后端返回的多种字段形状归一化成 CommentItem。所有失败都返回结果对象，
- *      **不抛异常** —— 组件据此降级成演示态 / 内联错误条，不会白屏、不会刷屏报错。
+ *      **不抛异常** —— 组件据此降级成演示态 / 内联错误条，不会白屏、不会刷屏报错；
+ *   4. 分页 / 楼中楼 / 举报：列表按 keyset 游标（created_at + id）翻页，子评论另发一次
+ *      parent_id 批量查询，举报写 public.comment_reports。这三件事只在 PostgREST 方言下
+ *      成立（通用契约没有对应约定，各函数上都写明了退化行为）。
  *
  * 后端有两种方言，同一份代码按地址自动识别（组件不用改）：
  *   - 通用契约：{base}/comments?path=…（自建 Worker / Supabase Edge Function 等）；
@@ -36,6 +39,10 @@ export type CommentItem = {
 	avatar: string;
 	/** true = 本地演示态预览，不来自后端。 */
 	preview: boolean;
+	/** 主页地址（可选）；组件只把 http/https 渲染成 nofollow 外链，其余按纯文本。 */
+	website: string;
+	/** 父评论 id；顶层评论为 null（后端没给也算顶层）。 */
+	parentId: string | null;
 };
 
 export type CommentApiErrorKind =
@@ -43,6 +50,10 @@ export type CommentApiErrorKind =
 	| "network"
 	| "timeout"
 	| "http"
+	/** 429（PostgREST 里是 PT429）：被限流，界面换成「发送太快」而不是通用失败。 */
+	| "rateLimit"
+	/** 409（PT409）：10 分钟内同 path + 昵称 + 正文的重复提交。 */
+	| "duplicate"
 	| "parse";
 
 export type CommentApiError = {
@@ -54,7 +65,34 @@ export type CommentApiError = {
 };
 
 export type CommentListResult =
-	| { ok: true; comments: CommentItem[] }
+	| {
+			ok: true;
+			comments: CommentItem[];
+			/** true = 还有下一页（靠「多取一条」判断，不额外发 count 请求）。 */
+			hasMore: boolean;
+	  }
+	| { ok: false; error: CommentApiError };
+
+export type CommentRepliesResult =
+	| { ok: true; replies: CommentItem[] }
+	| { ok: false; error: CommentApiError };
+
+/** 举报原因：与 comment_reports.reason 的取值对齐（三个固定选项，前端不做自由输入）。 */
+export type CommentReportReason = "spam" | "offensive" | "other";
+
+export type CommentReportInput = {
+	/** 被举报评论的 id（PostgREST 的 bigint 主键，能转数字就转）。 */
+	commentId: string;
+	reason: CommentReportReason;
+	/**
+	 * 尽力而为的访客指纹 hash（**不是 IP**，浏览器拿不到自己的 IP）。
+	 * 只有 comment_reports 有 ip_hash 列；comments 表没有，所以发帖时**不能**带。
+	 */
+	visitorHash?: string;
+};
+
+export type CommentReportResult =
+	| { ok: true }
 	| { ok: false; error: CommentApiError };
 
 export type CommentPostResult =
@@ -68,15 +106,42 @@ export type CommentThread = {
 	path: string;
 	/** 超时毫秒数，默认 8000。 */
 	timeoutMs?: number;
+	/** 每页条数，默认 COMMENT_PAGE_SIZE（只对 PostgREST 方言生效）。 */
+	pageSize?: number;
+	/** true = 只要顶层评论（楼中楼的子评论另外批量取）。 */
+	topLevelOnly?: boolean;
+	/** keyset 游标：从这一条**之后**继续取；null / 省略 = 首屏。 */
+	cursor?: CommentCursor | null;
+};
+
+/** keyset 游标 = 上一页最后一条的排序键（order 是 created_at DESC, id DESC）。 */
+export type CommentCursor = {
+	createdAt: string;
+	id: string;
 };
 
 export type CommentDraft = {
 	author: string;
 	content: string;
+	/** 可选的个人网站；上限与库里的 comments_website_len 一致（200）。 */
+	website?: string;
+	/** 回复某条评论时带父 id；顶层评论留空。 */
+	parentId?: string | null;
 };
 
 const DEFAULT_TIMEOUT_MS = 8000;
 const MAX_DETAIL_LENGTH = 300;
+
+/**
+ * 每页条数：首屏 20 条，点「加载更多」用 keyset 游标续取。
+ * 不用 offset —— 翻页期间有人插评论时，offset 会漏条 / 重条。
+ */
+export const COMMENT_PAGE_SIZE = 20;
+/** 一次批量取子评论的上限（只有一层楼中楼，正常远小于这个数）。 */
+export const COMMENT_REPLY_LIMIT = 200;
+/** 昵称 / 网站长度上限，与数据库 CHECK 约束（comments_nickname_len / comments_website_len）对齐。 */
+export const COMMENT_NAME_MAX = 40;
+export const COMMENT_WEBSITE_MAX = 200;
 
 /** 环境变量名，按优先级排列：先私有名（构建期），再 Astro 的 PUBLIC_ 公开名。 */
 const ENV_NAMES: readonly string[] = ["COMMENT_API_BASE", "PUBLIC_COMMENT_API_BASE"];
@@ -176,20 +241,64 @@ export function isDataApiBase(raw: unknown): boolean {
 /** Data API 需要的列，与 docs/neon-data-api.md 的建表 SQL 一一对应。 */
 const DATA_API_COLUMNS =
 	"id,nickname,website,parent_id,content,created_at,status";
-/** 单次拉取上限：评论是倒序时间线，先取最新 200 条就够。 */
-const DATA_API_PAGE_SIZE = 200;
+
+type DataApiListOptions = {
+	pageSize: number;
+	topLevelOnly?: boolean;
+	cursor?: CommentCursor | null;
+};
 
 /**
  * PostgREST 的列表地址。过滤值写成 `eq.` 前缀，
  * 免得 path 里的特殊字符被 PostgREST 误解析成运算符。
+ *
+ * 排序 (created_at DESC, id DESC) 与库里的
+ * comments_path_created_idx (path, created_at DESC, id DESC) 对齐，
+ * 游标条件就是「严格小于上一页最后一条的排序键」：
+ *   created_at < C 或 (created_at = C 且 id < I)
+ * created_at 是 timestamptz，同刻多条是可能的，所以必须用 id 兜底。
+ *
+ * limit 故意多要一条：返回数 > pageSize 就说明还有下一页，省掉一次 count 查询。
  */
-function buildDataApiListUrl(base: string, path: string): string {
+function buildDataApiListUrl(
+	base: string,
+	path: string,
+	options: DataApiListOptions,
+): string {
 	const params = new URLSearchParams({
 		select: DATA_API_COLUMNS,
 		path: `eq.${path}`,
 		status: "eq.visible",
-		order: "created_at.desc",
-		limit: String(DATA_API_PAGE_SIZE),
+		order: "created_at.desc,id.desc",
+		limit: String(options.pageSize + 1),
+	});
+	if (options.topLevelOnly) params.set("parent_id", "is.null");
+	if (options.cursor) {
+		// 值里的 + 号（+00:00）由 URLSearchParams 编码成 %2B，PostgREST 解回来就是原文
+		params.set(
+			"or",
+			`(created_at.lt.${options.cursor.createdAt},and(created_at.eq.${options.cursor.createdAt},id.lt.${options.cursor.id}))`,
+		);
+	}
+	return `${base}/comments?${params.toString()}`;
+}
+
+/**
+ * 一批父评论的子评论（楼中楼第一层）。子评论按**时间正序**（老的在上），
+ * 与顶层列表的倒序相反 —— 一层楼里先说的先读。
+ */
+function buildDataApiRepliesUrl(
+	base: string,
+	path: string,
+	parentIds: readonly string[],
+): string {
+	const params = new URLSearchParams({
+		select: DATA_API_COLUMNS,
+		path: `eq.${path}`,
+		status: "eq.visible",
+		parent_id: `in.(${parentIds.join(",")})`,
+		order: "created_at.asc,id.asc",
+		limit: String(COMMENT_REPLY_LIMIT),
 	});
 	return `${base}/comments?${params.toString()}`;
 }
@@ -329,6 +438,29 @@ function makeError(
 	return { kind, status, detail: detail.slice(0, MAX_DETAIL_LENGTH) };
 }
 
+/**
+ * 把非 2xx 归到「限流 / 重复 / 普通 HTTP」三档。实测（2026-10-25，Neon Data API + 库里触发器）：
+ *
+ *   429 {"code":"PT429","message":"rate limit exceeded: site-wide flood valve (60/min)",
+ *        "details":"comment_rate_limit_global",
+ *        "hint":"too many comments in the last 60 seconds across all clients"}
+ *   409 {"code":"PT409","message":"duplicate comment","details":"comment_duplicate",
+ *        "hint":"identical path+nickname+content already posted within 10 minutes"}
+ *
+ * PostgREST 把 SQLSTATE `PT<xxx>` 原样映射成 HTTP <xxx>，所以状态码是主判据，
+ * 响应体里的 code / details 用来兜底（换成别家实现时也认这套文本）。
+ * 原始 message 仍收进 detail，折叠显示，方便排查。
+ */
+function toHttpError(status: number, detail: string): CommentApiError {
+	if (status === 429 || /PT429|rate.?limit|too many requests/i.test(detail)) {
+		return makeError("rateLimit", status, detail);
+	}
+	if (status === 409 || /PT409|duplicate/i.test(detail)) {
+		return makeError("duplicate", status, detail);
+	}
+	return makeError("http", status, detail);
+}
+
 function toNetworkError(error: unknown): CommentApiError {
 	const name =
 		typeof error === "object" && error !== null && "name" in error
@@ -402,6 +534,8 @@ export function toCommentItem(raw: unknown, index: number): CommentItem | null {
 			"gravatar",
 		]),
 		preview: false,
+		website: pickString(raw, ["website", "url", "homepage", "site"]),
+		parentId: pickString(raw, ["parent_id", "parentId", "parent"]) || null,
 	};
 }
 
@@ -463,7 +597,15 @@ async function readDetail(response: Response): Promise<string> {
 	}
 }
 
-/** 拉取某个线程的评论列表。 */
+/**
+ * 拉取某个线程的评论列表（keyset 分页）。
+ *
+ * 方言差异：
+ *   - PostgREST 方言：带游标、带 parent_id 过滤、多取一条判断 hasMore；
+ *   - 通用契约（docs/comment-api.md）：没有游标 / 子评论的约定，所以只取首页、
+ *     hasMore 恒为 false（「加载更多」不会出现），子评论若后端一并返回，
+ *     由组件按 parentId 自行分组。
+ */
 export async function fetchComments(
 	thread: CommentThread,
 ): Promise<CommentListResult> {
@@ -471,9 +613,15 @@ export async function fetchComments(
 	if (!base) return { ok: false, error: makeError("invalid", 0, "no api base") };
 	// 读和写走同一个归一化，尾斜杠才拆不开线程（见 normalizeThreadPath）
 	const path = normalizeThreadPath(thread.path);
-	const url = isDataApiBase(base)
-		? buildDataApiListUrl(base, path)
-		: `${base}/comments?path=${encodeURIComponent(path)}`;
+	const dataApi = isDataApiBase(base);
+	const pageSize = Math.max(1, thread.pageSize ?? COMMENT_PAGE_SIZE);
+	const url = dataApi
+		? buildDataApiListUrl(base, path, {
+				pageSize,
+				topLevelOnly: thread.topLevelOnly,
+				cursor: thread.cursor,
+			})
+		: `${base}/comments?path=${encodeURIComponent(path)}&limit=${pageSize}`;
 	const init: RequestInit = {
 		method: "GET",
 		headers: { Accept: "application/json" },
@@ -483,7 +631,7 @@ export async function fetchComments(
 	const timeoutMs = thread.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 	let response: Response;
 	try {
-		response = isDataApiBase(base)
+		response = dataApi
 			? await dataApiRequest(url, init, deriveAuthBase(base), timeoutMs)
 			: await requestWithTimeout(url, init, timeoutMs);
 	} catch (error) {
@@ -492,7 +640,7 @@ export async function fetchComments(
 	if (!response.ok) {
 		return {
 			ok: false,
-			error: makeError("http", response.status, await readDetail(response)),
+			error: toHttpError(response.status, await readDetail(response)),
 		};
 	}
 	let payload: unknown;
@@ -502,7 +650,60 @@ export async function fetchComments(
 		const message = error instanceof Error ? error.message : String(error);
 		return { ok: false, error: makeError("parse", response.status, message) };
 	}
-	return { ok: true, comments: extractList(payload) };
+	const rows = extractList(payload);
+	// 通用契约没有游标约定：宁可少给一个按钮，也不给出一个只会重复拉同一页的按钮。
+	if (!dataApi) return { ok: true, comments: rows, hasMore: false };
+	return {
+		ok: true,
+		comments: rows.slice(0, pageSize),
+		hasMore: rows.length > pageSize,
+	};
+}
+
+/**
+ * 取一批父评论的子评论（楼中楼第一层，时间正序）。
+ *
+ * 只在 PostgREST 方言下有意义：通用契约一次返回整条线程，子评论已经在
+ * fetchComments 的结果里了，这里直接回空数组 —— 不会多发一个请求。
+ */
+export async function fetchReplies(
+	thread: CommentThread,
+	parentIds: readonly string[],
+): Promise<CommentRepliesResult> {
+	const base = normalizeApiBase(thread.base);
+	const ids = parentIds.filter((id) => /^\d+$/.test(id));
+	if (!isDataApiBase(base) || ids.length === 0) {
+		return { ok: true, replies: [] };
+	}
+	const path = normalizeThreadPath(thread.path);
+	const url = buildDataApiRepliesUrl(base, path, ids);
+	const init: RequestInit = {
+		method: "GET",
+		headers: { Accept: "application/json" },
+		credentials: "omit",
+		cache: "no-store",
+	};
+	const timeoutMs = thread.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+	let response: Response;
+	try {
+		response = await dataApiRequest(url, init, deriveAuthBase(base), timeoutMs);
+	} catch (error) {
+		return { ok: false, error: toResultError(error) };
+	}
+	if (!response.ok) {
+		return {
+			ok: false,
+			error: toHttpError(response.status, await readDetail(response)),
+		};
+	}
+	let payload: unknown;
+	try {
+		payload = await response.json();
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		return { ok: false, error: makeError("parse", response.status, message) };
+	}
+	return { ok: true, replies: extractList(payload) };
 }
 
 /** 提交一条评论；失败时调用方保留草稿并展示内联错误。 */
@@ -518,10 +719,20 @@ export async function postComment(
 	if (!content) return { ok: false, error: makeError("invalid", 0, "empty content") };
 	// 两种方言的行字段名不同：通用契约用 author，Data API 用 nickname。
 	const dataApi = isDataApiBase(base);
-	const body: Record<string, string> = dataApi
+	const website = (draft.website ?? "").trim().slice(0, COMMENT_WEBSITE_MAX);
+	const parentId = (draft.parentId ?? "").trim();
+	const body: Record<string, string | number> = dataApi
 		? { path, nickname: author, content, status: "visible" }
 		: { path, content };
 	if (!dataApi && author) body.author = author;
+	if (website) body.website = website;
+	// parent_id 在库里是 bigint：能转数字就转，免得 PostgREST 的 json → bigint 转换挑刺。
+	if (parentId) body.parent_id = /^\d+$/.test(parentId) ? Number(parentId) : parentId;
+	/*
+	 * 这里**不**带 ip_hash：comments 表没有这个列（实测 select=ip_hash →
+	 * 400 42703 column "ip_hash" of relation "comments" does not exist），
+	 * 带上就是整个插入失败。该列只存在于 comment_reports（见 reportComment）。
+	 */
 	const headers: Record<string, string> = {
 		"Content-Type": "application/json",
 		Accept: "application/json",
@@ -549,7 +760,7 @@ export async function postComment(
 	if (!response.ok) {
 		return {
 			ok: false,
-			error: makeError("http", response.status, await readDetail(response)),
+			error: toHttpError(response.status, await readDetail(response)),
 		};
 	}
 	// 200 / 201 / 204 都算成功；拿不到可解析的实体就用本地回显兜底，
@@ -571,6 +782,125 @@ export async function postComment(
 			createdAt: new Date().toISOString(),
 			avatar: "",
 			preview: false,
+			website,
+			parentId: parentId || null,
 		},
 	};
+}
+
+/**
+ * 举报一条评论：POST public.comment_reports。
+ *
+ * 后端侧实测（2026-10-25，Neon Data API）：
+ *   POST {comment_id:112, reason:"spam"}                     → 201（空体）
+ *   POST {comment_id:112, reason:"spam", ip_hash:"deadbeef"} → 201（该表确有 ip_hash 列）
+ *   POST {comment_id:999999, …}                              → 409 23503 外键不存在
+ * 匿名角色对这张表**只有 INSERT**（SELECT 是 403 permission denied），所以举报记录
+ * 前端读不回来 —— 「已举报」状态由组件写在 localStorage 里。
+ *
+ * 通用契约没有举报端点，这里直接返回 invalid，组件据此不渲染「举报」按钮
+ * （不给一个按了必然失败的按钮）。
+ */
+export async function reportComment(
+	thread: CommentThread,
+	input: CommentReportInput,
+): Promise<CommentReportResult> {
+	const base = normalizeApiBase(thread.base);
+	if (!base) return { ok: false, error: makeError("invalid", 0, "no api base") };
+	if (!isDataApiBase(base)) {
+		return { ok: false, error: makeError("invalid", 0, "reports unsupported") };
+	}
+	const id = input.commentId.trim();
+	if (!id) return { ok: false, error: makeError("invalid", 0, "no comment id") };
+	const body: Record<string, string | number> = {
+		comment_id: /^\d+$/.test(id) ? Number(id) : id,
+		reason: input.reason,
+	};
+	if (input.visitorHash) body.ip_hash = input.visitorHash;
+	const init: RequestInit = {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			Accept: "application/json",
+			// 举报不需要回填实体；return=minimal 让 PostgREST 回 201 空体
+			Prefer: "return=minimal",
+		},
+		credentials: "omit",
+		body: JSON.stringify(body),
+	};
+	const timeoutMs = thread.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+	let response: Response;
+	try {
+		response = await dataApiRequest(
+			`${base}/comment_reports`,
+			init,
+			deriveAuthBase(base),
+			timeoutMs,
+		);
+	} catch (error) {
+		return { ok: false, error: toResultError(error) };
+	}
+	if (!response.ok) {
+		return {
+			ok: false,
+			error: toHttpError(response.status, await readDetail(response)),
+		};
+	}
+	return { ok: true };
+}
+
+/**
+ * 尽力而为的访客指纹（**不是 IP**）：
+ * 浏览器拿不到自己的 IP，Data API 也不会把代理头透给我们，所以用
+ * 「本机随机访客 id + 粗环境桶（UA / 语言 / 时区 / 屏幕）」算一个稳定 hash，
+ * 填进 comment_reports.ip_hash。同一个浏览器长期稳定、不可反查、不产生任何第三方请求。
+ *
+ * 纯本地用途（后端限流统计），拿不到环境（SSR / 隐私模式关掉 localStorage）就返回空串，
+ * 调用方直接不传这个字段 —— 举报照样能提交，实测不传也能插。
+ *
+ * 算法：FNV-1a 32bit 跑两遍（不同 offset basis），输出 16 位十六进制。
+ * 不用于安全用途，只求便宜、无依赖、结果稳定。
+ */
+export function commentVisitorHash(): string {
+	try {
+		if (typeof window === "undefined") return "";
+		const key = "ef:comment:visitor";
+		let visitor = "";
+		try {
+			visitor = localStorage.getItem(key) ?? "";
+			if (!visitor) {
+				visitor = `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+				localStorage.setItem(key, visitor);
+			}
+		} catch {
+			// 隐私模式：退化成「本次会话内稳定」，不写盘
+			visitor = "ephemeral";
+		}
+		const nav = typeof navigator === "undefined" ? undefined : navigator;
+		let timeZone = "";
+		try {
+			timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+		} catch {
+			timeZone = "";
+		}
+		const screenSize =
+			typeof screen === "undefined" ? "" : `${screen.width}x${screen.height}`;
+		const raw = [
+			visitor,
+			nav?.userAgent ?? "",
+			nav?.language ?? "",
+			timeZone,
+			screenSize,
+		].join("|");
+		let h1 = 0x811c9dc5;
+		let h2 = 0x01000193;
+		for (let i = 0; i < raw.length; i++) {
+			const code = raw.charCodeAt(i);
+			h1 = Math.imul(h1 ^ code, 16777619) >>> 0;
+			h2 = Math.imul(h2 ^ code, 2246822519) >>> 0;
+		}
+		return `v1-${h1.toString(16).padStart(8, "0")}${h2.toString(16).padStart(8, "0")}`;
+	} catch {
+		return "";
+	}
 }
