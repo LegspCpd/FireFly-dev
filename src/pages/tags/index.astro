@@ -91,4 +91,23 @@ const countLabel = (n: number) => `${n} ${i18n(n === 1 ? I18nKey.postCount : I18
 	.ef-tag-block :global(.ef-ledger) {
 		margin-top: calc(1.5 * var(--efu));
 	}
+	/* 套件 .ef-bars 是 grid-auto-columns:1fr 的柱图，必须由容器给出确定宽度：
+	   它给 .ef-ledger > li（flex 行）当子项时没有宽度，1fr 列解析为 0，
+	   10 根柱子全塌成 0 宽、10 个标签（绝对定位 nowrap）全挤在同一 x 上互相压字
+	   （实测 1440 下 37 组文字矩形相交、390 下 39 组）。
+	   这里只把宽度交还给行宽（100% = 版心 792 / 355.34），没有另定任何数值；
+	   柱高仍由 --v、列宽仍由 1fr、标签字号仍由套件原值控制。 */
+	.ef-tag-block :global(.ef-bars) {
+		width: 100%;
+	}
+	/* 窄屏仍放不下：390 上 10 列 = 每列 31.9，最长标签 Cloudflare 51.06，
+	   单行 nowrap 必然相邻相交（实测 2 组）；折行则标签高 42.44、比柱图预留的
+	   8rem 多出 31px，会压到下面 .ef-ledger 的第一行（实测 gap -31）。
+	   官网没有柱图这个对应物，不给它另定字号 / 列宽 / 断点，窄屏索性不画标签 ——
+	   同一份 Top 10（名字 + 篇数）就在紧下面的账本里，信息不丢。 */
+	@media (max-width: 860px) {
+		.ef-tag-block :global(.ef-bars > li > span) {
+			display: none;
+		}
+	}
 </style>
