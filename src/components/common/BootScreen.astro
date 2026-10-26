@@ -5,16 +5,19 @@
  * 来源（三处合起来才是完整的「官网那一版」）：
  *   结构  F:/web/endfield-official/index.html 里 SSR 出来的
  *         <div class="__00-Loading_container__aBijT"> 整块（.ef-work/loading-block.html）
- *   样式  F:/web/endfield-official/css/46158da72caa0121.css 里全部 16 个 .__00-Loading_* 类，
+ *   样式  F:/web/endfield-official/css/46158da72caa0121.css 里全部 27 个 .__00-Loading_* 类，
  *         原样落在 src/styles/endfield-shell.css §10（只把 rem 换成 calc(N * var(--efu))）
- *   行为  .ef-work/offjs/plain/8858-7e71d425d9268eb0.js 里那个 React 组件（线上 chunk）：
- *           · 任务数组 C 每完成一项 M+1，进度 = M / C.length
- *           · progressBar / progressText 用 framer-motion tween 500ms 跟到目标
- *           · progressText 的 onUpdate 把 parseInt(动画中的位置) 写进数字 —— 所以
- *             「百分比」不是单独算的，它就是黄条当前的位置读数（这里照此实现）
- *           · bg 的 blur 从 8px 线性收到 0
- *           · M >= C.length 时：加 .__00-Loading_leaving__IKIPd → 1500ms 后标记 loaded
- *             → 2400ms 后卸载整块
+ *   行为  .ef-work/offjs/plain/8858-7e71d425d9268eb0.js 的 module 71272（线上 chunk，已逐行对照）：
+ *           · 任务数组 C 每完成一项 M+1；15s 兜底 h(Z) 一次补齐
+ *           · animate 目标一律是 M/Z*100（blur 是 8 - M/Z*8）
+ *           · 三处 animate 的 transition 都是 { type:"tween", duration:.5 }，
+ *             没写 ease —— framer-motion 默认 "easeOut" = cubic-bezier(0,0,.58,1)
+ *           · progressText 的 onUpdate 把 parseInt(动画中的位置) 写进数字 ——
+ *             所以「百分比」不是单独算的，它就是黄条当前位置的读数（这里照此实现）
+ *           · M>=Z 时：加 .__00-Loading_leaving__IKIPd → 1500ms 标记 loaded
+ *             → 2400ms 调 onFinished 卸载整块
+ *           · 组件里那个 useSpring(120,20) 只被 f.set() 写过、从没进过 animate/style，
+ *             是死代码，本站不实现
  *
  * 照抄下来的文案（一个字没改）：
  *   底图中下：OVER THE FRONTIER / INTO THE FRONT
@@ -23,8 +26,43 @@
  *
  * 唯一换掉的：正中那枚「终末地」标志 → 站主的 LC 字标（public/lc-logo-horizontal.svg，
  * 官网 .Loading_logo 槽位原本就是品牌标志位）。
+ *
+ * 与官网的三处【必要适配】（本站没有 html{font-size:9px}，官网的 1rem 由 JS 写成）：
+ *   · 3.125rem → calc(3.125 * var(--efu))，见下面的 TEXT_LEFT
+ *   · 容器继承来的 font-size/line-height/font-family 在 endfield-shell.css §10 里钉住
+ *   · box-sizing 回到 content-box，同 §10
  */
 ---
+
+<!-- 首帧底色：把官网容器规则内联在这里（关键 CSS）。
+     官网那 27 条 .__00-Loading_* 走的是 Next.js 压在 <head> 的关键 CSS，所以它第一帧
+     就是暗的：实测 1440×900 从 t≈35ms 起整屏 #121212→#141414，中间没有浅色帧。
+     本站 §10 在 98KB 的外部样式表里，它到达之前浏览器先用页面画布上色 —— 实测两版
+     都会在 t≈50ms 闪一帧 #f2f2f2（本站画布是浅色 #f2f2f2，官网是 #121212，所以官网
+     没有这一帧）。下面只内联官网容器那一条规则原文，让首帧即暗；几何/字体/动效仍然
+     只有 endfield-shell.css §10 一个 owner，这里不重复任何别的声明。 -->
+<style is:inline>
+  #ef-boot {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #141414;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  /* 官网同款：脚本关掉时整块不显示（原文 .__00-Loading_container__aBijT{display:none}）。 */
+  @media (scripting: none) {
+    #ef-boot {
+      display: none;
+    }
+  }
+</style>
 
 <div
   id="ef-boot"
@@ -86,106 +124,162 @@
     var text = el.querySelector("[data-ef-boot-text]");
     var value = el.querySelector("[data-ef-boot-value]");
     var bg = el.querySelector(".__00-Loading_bg__mahvH");
-    var reduce =
-      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    document.documentElement.style.overflow = "hidden";
+    /* 官网 useOrientation()：innerWidth >= innerHeight 就是 landscape，且监听 resize
+       （8858 chunk module 90286）。这里同判据、同监听。 */
+    var landscape = window.innerWidth >= window.innerHeight;
+    window.addEventListener("resize", function () {
+      landscape = window.innerWidth >= window.innerHeight;
+    });
 
-    /* ---- 任务表：照官网那个 C 数组（每项是一个 Promise，完成即 M+1）----------- */
+    /* 官网 progressText 是内联 style 的 "3.125rem"。本站的 1rem 是 --efu（§10 里所有
+       数值都已经换成 calc(N * var(--efu))），所以这里等价写法是 calc。 */
+    var TEXT_LEFT = "calc(3.125 * var(--efu))";
+
+    /* ---- 官网三处 animate 的 transition：{ type: "tween", duration: .5 }。
+            没写 ease，framer-motion 的默认值是 "easeOut"，即 cubic-bezier(0,0,.58,1)
+            （5578 chunk：animateTarget 里 `ease:"easeOut"`；easing 表里
+             easeOut = cubicBezier(0, 0, .58, 1)）。
+            实测吻合：官网 .leaving 后 447ms 的 bg blur 实测 0.107px，本式算得 0.107px；
+            495ms 实测 0.000 / 本式 0.001。 ---- */
+    var DURATION = 500;
+    function cubicBezier(x1, y1, x2, y2) {
+      function A(a, b) {
+        return 1 - 3 * b + 3 * a;
+      }
+      function B(a, b) {
+        return 3 * b - 6 * a;
+      }
+      function C(a) {
+        return 3 * a;
+      }
+      function calc(t, a, b) {
+        return ((A(a, b) * t + B(a, b)) * t + C(a)) * t;
+      }
+      function slope(t, a, b) {
+        return 3 * A(a, b) * t * t + 2 * B(a, b) * t + C(a);
+      }
+      return function (x) {
+        var t = x;
+        for (var i = 0; i < 12; i++) {
+          var s = slope(t, x1, x2);
+          if (s === 0) break;
+          t -= (calc(t, x1, x2) - x) / s;
+        }
+        return calc(t, y1, y2);
+      };
+    }
+    var EASE = cubicBezier(0, 0, 0.58, 1);
+
+    /* framer-motion 的 tween：目标一变就从「当前动画值」重新起一条 500ms 的曲线
+       （不是从头再来，也不是 Spring）。 */
+    function Tween(from) {
+      this.from = from;
+      this.to = from;
+      this.value = from;
+      this.start = 0;
+      this.animating = false;
+    }
+    Tween.prototype.set = function (to, now) {
+      this.from = this.value;
+      this.to = to;
+      this.start = now;
+      this.animating = to !== this.from;
+      return this;
+    };
+    Tween.prototype.tick = function (now) {
+      if (!this.animating) return this.value;
+      var p = (now - this.start) / DURATION;
+      if (p >= 1) {
+        this.animating = false;
+        this.value = this.to;
+        return this.value;
+      }
+      if (p < 0) p = 0;
+      this.value = this.from + (this.to - this.from) * EASE(p);
+      return this.value;
+    };
+
+    /* 官网三处 motion.div 各自一份 tween，起止值、时长、缓动完全一样：
+         progressBar   height(横屏) / width(竖屏)    目标 M/Z*100
+         progressText  top(横屏)    / left(竖屏)     目标 M/Z*100   ← 百分比读的是这一条
+         bg            filter: blur(8 - M/Z*8 px) */
+    var barTween = new Tween(0);
+    var textTween = new Tween(0);
+    var blurTween = new Tween(8 - (0 / 1) * 8);
+
+    var pending = null; // 下一个要跟的目标（%）；null = 没有新目标
+    var running = true;
+
+    function paint() {
+      if (landscape) {
+        bar.style.width = "100%";
+        bar.style.height = barTween.value + "%";
+        text.style.top = textTween.value + "%";
+        text.style.left = TEXT_LEFT;
+      } else {
+        bar.style.width = barTween.value + "%";
+        bar.style.height = "100%";
+        text.style.top = "unset";
+        text.style.left = textTween.value + "%";
+      }
+      if (bg) bg.style.filter = "blur(" + blurTween.value + "px)";
+      /* 官网 onUpdate：parseInt(横屏读 top、竖屏读 left) || 0 —— 就是 textTween 当前值。 */
+      if (value) value.textContent = String(parseInt(textTween.value, 10) || 0);
+    }
+
+    var raf = requestAnimationFrame(function loop(now) {
+      if (pending !== null) {
+        barTween.set(pending, now);
+        textTween.set(pending, now);
+        blurTween.set(8 - (pending / 100) * 8, now);
+        pending = null;
+      }
+      barTween.tick(now);
+      textTween.tick(now);
+      blurTween.tick(now);
+      paint();
+      if (running) raf = requestAnimationFrame(loop);
+    });
+    paint();
+
+    /* ---- 任务表：对应官网 aJ 数组（226 chunk @157441 = 33 张图预加载 + tu.setup()）----
+       tasks 里装 Promise 本体（不是函数）—— 官网是 Promise.resolve().then(t)，
+       传进 then 的是函数；这里装的是已经起跑的 Promise，所以下面用 Promise.resolve(t)。 */
     var tasks = [];
 
-    // 1) 字体
+    /* 官网最后一项是 Hypergryph SDK 的 setup()。本站没有 SDK，用「字体就绪」顶替
+       同一个语义：文档自身排版资源就绪。仍然只算一项。 */
     if (document.fonts && document.fonts.ready) tasks.push(document.fonts.ready);
 
-    /* 2) 官网那个数组装的是「逐张预加载页面图片」（226 chunk 里的 aJ：
-           () => preload(require("...png").src) × 30 余张）。本站照同一套语义 ——
-           数文档里的 <img>，一张一项。三条硬约束，都是为了不把整屏拖长：
-             · 跳过 loading="lazy"（不在视口里的图永远不会发 load/error）
-             · 跳过没有 src 的占位图
-             · 单张 2.5s 上限（网络卡住的图不许拖住整屏）
-           **不等 window load**，也不等 swup 就位：前者会连 AdSense / Pagefind 一起算，
-           后者在线上冷启动要 3s（swup 没就位时点站内链接只是退回普通整页跳转，
-           不影响正确性），两者都会让站主看到一次远长于官网的黑屏。 */
+    /* 官网前面 33 项是构建期写死的图片清单，逐张 preload（并发池 5）。
+       本站没有构建期清单，对应语义是「这份文档此刻真正要加载的图片」，一张一项。
+       只过滤 loading="lazy"：那些图浏览器在滚到之前根本不发请求（官网的写死清单里
+       也不含懒加载图），把它们算成任务会让进度条一直挂到 15s 兜底。
+       单词任务不设超时 —— 官网也只有整屏 15s 一个兜底。 */
     var imgs = [].slice.call(document.images || []).filter(function (img) {
       return img.loading !== "lazy" && (img.getAttribute("src") || img.currentSrc);
-    }).slice(0, 12);
+    });
     imgs.forEach(function (img) {
       tasks.push(
         new Promise(function (res) {
-          var done = false;
-          var fin = function () { if (!done) { done = true; res(); } };
-          if (img.complete) return fin();
-          img.addEventListener("load", fin, { once: true });
-          img.addEventListener("error", fin, { once: true });
-          setTimeout(fin, 2500);
+          if (img.complete) return res();
+          img.addEventListener("load", res, { once: true });
+          img.addEventListener("error", res, { once: true });
         })
       );
     });
 
-    // 3) 最短可见时长。官网靠游戏资源天然拖到 1.5s 以上；本站是静态站，不补这一档
-    //    的话 0% → 100% 会在两帧里跳完，那四个相位就看不见了。
-    //    从**文档起点**算 700ms（不是从这行脚本算）：HTML 到得晚时自动缩短等待，
-    //    leaving 永远落在导航后 ~0.7s，黄条扫过 ≈1.2s、整屏黄 ≈1.7s 就都对得上。
-    tasks.push(
-      new Promise(function (res) {
-        var left = 700 - performance.now();
-        setTimeout(res, left > 0 ? left : 0);
-      })
-    );
-
     var total = tasks.length || 1;
     var done = 0;
-
-    /* ---- 进度动画：官网 500ms tween + spring(stiffness 120, damping 20) ---------
-       spring 的阻尼比 ζ = 20 / (2·√120) ≈ 0.91，约 0.5s 落定；这里用同一时间常数的
-       指数逼近复现，帧率无关。数字读的是**动画中的位置**，与官网 onUpdate 一致。 ---- */
-    var target = 0;
-    var shown = 0;
-    var last = 0;
-    var TAU = 170; // ms，≈ 官网 spring 的落定时间常数
-    var landscape = window.matchMedia("(orientation: landscape)").matches;
-
-    function paint(p) {
-      var v = p.toFixed(2);
-      if (landscape) {
-        bar.style.width = "100%";
-        bar.style.height = v + "%";
-        text.style.top = v + "%";
-        text.style.left = "3.125rem";
-      } else {
-        bar.style.width = v + "%";
-        bar.style.height = "100%";
-        text.style.top = "unset";
-        text.style.left = v + "%";
-      }
-      if (bg) bg.style.filter = "blur(" + (8 - (p / 100) * 8).toFixed(3) + "px)";
-      if (value) value.textContent = String(parseInt(v, 10) || 0);
-    }
-
-    function tick(now) {
-      if (!last) last = now;
-      var dt = Math.min(now - last, 100);
-      last = now;
-      if (reduce) {
-        shown = target;
-      } else {
-        shown = target + (shown - target) * Math.exp(-dt / TAU);
-        if (Math.abs(shown - target) < 0.02) shown = target;
-      }
-      paint(shown);
-      if (shown !== target || !leaving) raf = requestAnimationFrame(tick);
-    }
-
-    var raf = requestAnimationFrame(tick);
-    paint(0);
-
-    /* ---- 任务完成 → M+1（与官网同一套 finally 语义）------------------------- */
     var leaving = false;
     var failSafe = setTimeout(finishTasks, 15000);
 
+    /* 官网：一项完成 → h(e => Math.min(e+1, Z))；到 Z 时那次 render 同时做两件事 ——
+       加 .leaving，并把三个 animate 目标推到 100%。 */
     function bump() {
       done = Math.min(done + 1, total);
-      target = (done / total) * 100;
+      pending = (done / total) * 100;
       if (done >= total) finishTasks();
     }
 
@@ -193,27 +287,21 @@
       clearTimeout(failSafe);
       if (leaving) return;
       leaving = true;
-      // 官网：onFinished → setLeaving(true)；1500ms 后 loaded；2400ms 后卸载
+      pending = 100;
       el.classList.add("__00-Loading_leaving__IKIPd");
-      document.documentElement.style.overflow = "";
+      /* 官网：1500ms 标记全局 loaded（本站没有这个 store，跳过），2400ms onFinished
+         → 父组件卸载整块。本站没有父组件，直接 removeChild。 */
       setTimeout(function () {
-        if (el.parentNode) el.parentNode.removeChild(el);
+        running = false;
         cancelAnimationFrame(raf);
+        if (el.parentNode) el.parentNode.removeChild(el);
       }, 2400);
     }
 
-    /* 注意：tasks 里装的是 Promise 本体，不是函数 —— 必须 Promise.resolve(t)。
-       之前写成 .then(t) 时 then 收到非函数会直接跳过，全部任务在微任务里瞬间
-       完成，loading 会在解析 HTML 的那一帧就加上 leaving（等于没显示）。 */
     tasks.forEach(function (t) {
       Promise.resolve(t)
         .catch(function () {})
         .then(bump);
-    });
-
-    // 兜底：脚本要是被 swup 之外的路径重放，也不会把 html 的滚动条永久锁死
-    window.addEventListener("pagehide", function () {
-      document.documentElement.style.overflow = "";
     });
   })();
 </script>

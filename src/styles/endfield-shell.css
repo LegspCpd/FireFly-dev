@@ -110,31 +110,12 @@
       background:#141414，退出时 opacity 1s/延迟 1.4s 淡出，淡出期间还有一条
       #FFFA00 的黄条 scaleX 扫过整屏。截图若落在这一秒里，整页就被 1%~2% 的
       深灰/黄「染」了一层 —— 这正是「同一台机器截图，一会儿灰一会儿黄」的来源。
-      官网加载屏退出后整块卸载，这里在淡出结束后把该层从绘制树里摘掉（见 §1.5）。 */
+      官网的做法是退出即卸载；本站同样在 .leaving 之后 2400ms 由 BootScreen.astro
+      自己 removeChild（与官网 8858 chunk 的 setTimeout(…, 2400) 同值），所以这里
+      不需要任何「退出后再摘层」的补丁，退出类上也不加官网没有的动画。 */
 body.ef-contours::before,
 body.ef-contours::after {
   content: none;
-}
-
-/* ---- 1.5 加载屏退出后不再留全屏合成层 ------------------------------------
-   #ef-boot 淡出结束（延迟 1.4s + 1s ≈ 2.4s）后仍是 position:fixed 的全屏元素，
-   且带着 backdrop-filter（.is-sharp 之后是 blur(0)）—— 一个**铺满视口、带滤镜的
-   合成层**。官网的做法是退出即卸载；本站不动组件，只在这一层上补两件事：
-     · 淡出结束后 visibility:hidden：不再绘制，也不再参与合成；
-     · 退出期间去掉 backdrop-filter：blur(0) 的 backdrop root 没有视觉效果，
-       却会让整页走一条额外的离屏合成路径。
-   选择器照抄组件里那个退出类（__00-Loading_leaving__IKIPd），权重比组件内
-   Astro 作用域选择器高一级，压得住。 */
-.__00-Loading_container__aBijT.__00-Loading_leaving__IKIPd {
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  /* 0s 动画 + 2.5s 延迟：只做「到点摘掉」，不参与淡出本身 */
-  animation: ef-boot-retire 0s linear 2.5s forwards;
-}
-@keyframes ef-boot-retire {
-  to {
-    visibility: hidden;
-  }
 }
 /* 站主要求：先不显示任何图片（竖排栏图标等一律走内联 SVG）。
    要恢复内容里的图片（友链头像、正文配图），删掉这一条即可。 */
@@ -1922,6 +1903,26 @@ button.ef-rail-social-item, button.ef-rail-jump {
  * ====================================================================== */
 
 .__00-Loading_container__aBijT {
+  /* —— 本站顶替官网 rem 的三处对齐（官网靠 html{font-size:9px} 与 CSS 默认值）——
+     官网 8858 chunk @8128 用 JS 把根字号写成
+       横屏 w/h > 2560/1440 ? 16·h/1440 : 16·w/2560  ≡ min(.625vw, 1.111111vh)
+       竖屏 w/h > 0.5625    ? 16·h/1920 : 16·w/1080  ≡ min(1.481481vw, .833333vh)
+     本站全站用 --efu 顶替 1rem。这里把 --efu 就地钉在同一个公式上（数值与站内
+     :root / .ef-shell 那两处完全一致），好处是加载屏不再依赖 .ef-shell 的 860px
+     断点 —— 861px 以上的竖屏窗口也能拿到官网那个根字号。 */
+  /* 官网 JS 写的是 16·w/2560 与 16·h/1440，这里用它们的小数精确值。
+     写 6 位（1.111111）时 810×1440 档会差 1e-6px，被 Chrome 的 calc 放大到
+     标语 font-size 8.66666px（官网 8.66667px）；所以小数位给足。 */
+  --efu: min(0.625vw, 1.1111111111111112vh);
+
+  /* 官网容器从 body 继承到的是 font-size:1rem(=9px)、line-height:normal、
+     font-family:sans-serif（实测官方 html/body/容器三处同值）。本站全局是
+     17px / 27px / SansMedium，不钉住的话 "Updating..." 会变成 15px 的
+     SansMedium（官网是 9px 的系统无衬线），标语行高也会从 18px 涨到 24.3px。 */
+  font-size: var(--efu);
+  line-height: normal;
+  font-family: sans-serif;
+
   position: fixed;
   top: 0;
   left: 0;
@@ -1934,6 +1935,24 @@ button.ef-rail-social-item, button.ef-rail-jump {
   align-items: center;
   justify-content: center;
   z-index: 100;
+}
+@media (orientation: portrait) {
+  .__00-Loading_container__aBijT {
+    /* 16·w/1080 与 16·h/1920 的精确小数（同上给足小数位）。 */
+    --efu: min(1.4814814814814815vw, 0.8333333333333334vh);
+  }
+}
+/* 官网整块走 CSS 默认的 content-box；本站全局 *{box-sizing:border-box} 会把
+   .progressText .deco::before 的 .25rem 内容宽压成「边框和」8px（官网是
+   2.25px 内容宽 + 两侧各 .5rem 边框 = 11.25px，本站只剩 8px）。整棵子树回到
+   content-box。加载屏里只有这一处带边框/内边距，其余矩形不受影响。 */
+.__00-Loading_container__aBijT,
+.__00-Loading_container__aBijT *,
+.__00-Loading_container__aBijT::before,
+.__00-Loading_container__aBijT::after,
+.__00-Loading_container__aBijT *::before,
+.__00-Loading_container__aBijT *::after {
+  box-sizing: content-box;
 }
 .__00-Loading_container__aBijT svg {
   display: block;
