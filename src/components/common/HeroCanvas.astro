@@ -19,22 +19,26 @@ const latestLabel = latest
 
 <section class="ef-hero">
 	<div class="ef-hero-inner" data-ef-parallax="-0.035">
-		<p class="ef-hero-eyebrow" data-ef-reveal="flash"><i aria-hidden="true"></i>// 01 HOME</p>
+		<div class="ef-hero-head">
+			<p class="ef-hero-eyebrow" data-ef-reveal="flash"><i aria-hidden="true"></i>// 01 HOME</p>
 
-		<h1 class="ef-hero-title" data-ef-reveal="up" style="--ef-d: 60ms">LEGSPCPD BLOG</h1>
+			<h1 class="ef-hero-title" data-ef-reveal="up" style="--ef-d: 60ms">LEGSPCPD BLOG</h1>
+		</div>
 
-		<ul class="ef-hero-facts" data-ef-reveal="up" style="--ef-d: 200ms">
-			<li><b>{postTotal}</b><span>篇文章</span></li>
-			<li><b>{tagTotal}</b><span>个标签</span></li>
-			<li><b>{catTotal}</b><span>个分类</span></li>
-			<li><b>{latestLabel}</b><span>最近更新</span></li>
-		</ul>
+		<div class="ef-hero-bar" data-ef-reveal="up" style="--ef-d: 200ms">
+			<ul class="ef-hero-facts">
+				<li><b>{postTotal}</b><span>篇文章</span></li>
+				<li><b>{tagTotal}</b><span>个标签</span></li>
+				<li><b>{catTotal}</b><span>个分类</span></li>
+				<li><b>{latestLabel}</b><span>最近更新</span></li>
+			</ul>
 
-		<div class="ef-hero-actions" data-ef-reveal="up" style="--ef-d: 240ms">
-			<a class="ef-hero-btn" href="/archive/">
-				<span>浏览全部文章</span><i aria-hidden="true">→</i>
-			</a>
-			<a class="ef-hero-btn ef-hero-btn--ghost" href="/about/">关于本站</a>
+			<div class="ef-hero-actions" style="--ef-d: 240ms">
+				<a class="ef-hero-btn" href="/archive/">
+					<span>浏览全部文章</span><i aria-hidden="true">→</i>
+				</a>
+				<a class="ef-hero-btn ef-hero-btn--ghost" href="/about/">关于本站</a>
+			</div>
 		</div>
 	</div>
 
@@ -91,26 +95,61 @@ const latestLabel = latest
 		border-bottom: 1px solid #e5e5e5;
 	}
 
+	/* 官网首页每一节都是整屏（1440×900 实测整页 8874px ≈ 9.86 屏），
+	   首屏就是一张整幅海报：标题块在上、字段/按钮条压在版心底边。
+	   这两块之间的留白是排版留白，不是「下面没东西」的空档。 */
 	.ef-hero-inner {
 		position: relative;
 		z-index: 2;
+		display: flex;
+		flex-direction: column;
 		width: 100%;
-		max-width: calc(96 * var(--efu));
+		/* 官网首屏是**整条内容区**（1440 实测内容区 1372.5px，本站 .ef-shell
+		   main 实测 1373px，同宽）。改前这里 max-width:96u = 864px，
+		   左右各空 254px —— 站主「留这么大个空白给谁看」的直接来源。 */
+		max-width: 100%;
+		min-height: 100dvh;
 		margin-inline: auto;
-		padding: calc(8 * var(--efu)) calc(4 * var(--efu)) calc(6 * var(--efu));
+		padding: calc(7 * var(--efu)) calc(4 * var(--efu)) calc(4.5 * var(--efu));
 	}
 
-	/* 眉标：官网英文标签一律大写 + 字距 .14em，前面一枚黄方块 */
+	/* 标题块：在「顶栏以下、字段条以上」的剩余高度里垂直居中 */
+	.ef-hero-head {
+		flex: 1 1 auto;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		padding-block: calc(4 * var(--efu));
+	}
+
+	/* 字段条 = 官网 .LandingBottom_wrapper：整条压底、上边一条细线，
+	   左边字段、右边按钮，和官网首屏底部那条工具条同一个位置和做法。 */
+	.ef-hero-bar {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: calc(1.5 * var(--efu)) calc(3 * var(--efu));
+		margin-top: auto;
+	}
+
+	/* 眉标 = 官网那个「// xxx」小标签（.__06-Notice 里那条「// 公告」）：
+	   官网原值 font-size:1.5rem、color:gray、font-family:SansMedium，
+	   1440×900 实测 13.5px / line-height 13.5px；前面一枚黄方块。
+	   改前是 1.125u（10.125px）+ 自定的 .14em 字距 —— 官网拉丁标签的字距是
+	   Header_text 的 .05em / 全站标签约定的 .08em，没有 .14em 这一档。 */
 	.ef-hero-eyebrow {
 		display: flex;
 		align-items: center;
 		gap: calc(0.75 * var(--efu));
 		margin: 0 0 calc(1.5 * var(--efu));
-		font-family: SansMedium, sans-serif;
-		font-size: calc(1.15 * var(--efu));
-		letter-spacing: 0.14em;
+		font-family: var(--ef-font-sans);
+		font-size: calc(1.5 * var(--efu));
+		letter-spacing: var(--ef-ls-wide);
 		text-transform: uppercase;
-		color: #666;
+		/* 官网公告列表副标题的灰：.__06-Notice_subtitle__T6dJ9{color:gray} */
+		color: gray;
 	}
 	.ef-hero-eyebrow > i {
 		display: inline-block;
@@ -119,13 +158,21 @@ const latestLabel = latest
 		background: #fffa00;
 	}
 
-	/* 巨字：官网首屏是超大字重的中文标题，左对齐、极紧行高 */
+	/* 巨字 = 官网竖排栏里那枚字标 .Header_hallowText__ZR39f 的逐值原样：
+	     font-size:20rem; height:20rem; letter-spacing:-.1em
+	   （官方 css 原文；1440×900 → 180px、1920×1080 → 240px）。
+	   字族同样取字标那一套：HallowText 是 Novecentosanswide-Bold
+	   （宽体拉丁字标，官网字标/专辑名都用它），中文再退到 SansBold。
+	   行高：HallowText_hollowText 原值 line-height:1（官网首屏整块高度就按它算），
+	   改前的 .92 与 -.02em 都不是官网任何一处的值。
+	   官网首页那张大标题是位图（bg_title 481.5×347.6，无文字节点），
+	   全站可量的最大**文字**字标就是这枚 20rem。 */
 	.ef-hero-title {
 		margin: 0;
-		font-family: SansBold, Novecentosanswide-Bold, system-ui, sans-serif;
-		font-size: clamp(3rem, calc(11 * var(--efu)), 11rem);
-		line-height: 0.92;
-		letter-spacing: -0.02em;
+		font-family: Novecentosanswide-Bold, SansBold, var(--ef-font-cjk);
+		font-size: clamp(2.5rem, calc(20 * var(--efu)), 20rem);
+		line-height: 1;
+		letter-spacing: -0.1em;
 		color: #191919;
 	}
 
@@ -165,7 +212,7 @@ const latestLabel = latest
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0 calc(2.5 * var(--efu));
-		margin: calc(2.5 * var(--efu)) 0 0;
+		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
@@ -177,15 +224,16 @@ const latestLabel = latest
 		border-top: 1px solid #e5e5e5;
 	}
 	.ef-hero-facts b {
-		font-family: Novecentosanswide-Bold, SansBold, sans-serif;
-		font-size: calc(2.1 * var(--efu));
+		font-family: Novecentosanswide-Bold, SansBold, var(--ef-font-cjk);
+		font-size: calc(2.25 * var(--efu));
 		line-height: 1;
 		color: #191919;
 		font-variant-numeric: tabular-nums;
 	}
 	.ef-hero-facts span {
-		font-size: calc(1.1 * var(--efu));
-		color: #666;
+		font-family: var(--ef-font-sans);
+		font-size: calc(1.25 * var(--efu));
+		color: gray;
 		letter-spacing: 0.04em;
 	}
 
@@ -207,10 +255,13 @@ const latestLabel = latest
 		padding: 0 calc(2 * var(--efu));
 		border: 0;
 		border-radius: calc(0.25 * var(--efu));
-		background-color: #191919;
-		color: #f2f2f2;
-		font-family: SansMedium, system-ui, sans-serif;
-		font-size: calc(1.5 * var(--efu));
+		/* 官网 .Button_button__njqVS 原值：background-color:#383838; color:#eee;
+		   font-size:1.75rem; border-radius:2px（hover 时 6px）。
+		   改前是自定的 #191919 底 / #f2f2f2 字 —— 比官网重一档。 */
+		background-color: #383838;
+		color: #eee;
+		font-family: var(--ef-font-sans);
+		font-size: calc(1.75 * var(--efu));
 		line-height: 1;
 		letter-spacing: 0.04em;
 		text-decoration: none;
@@ -220,9 +271,12 @@ const latestLabel = latest
 		font-style: normal;
 		transition: transform 0.25s;
 	}
+	/* 官网 .Button_button__njqVS 的 hover：background-color:#484848; color:#fff;
+	   border-radius:6px —— 主按钮 hover 不是刷黄，是「加深 + 圆角化」。 */
 	.ef-hero-btn:hover {
-		background-color: #fffa00;
-		color: #191919;
+		background-color: #484848;
+		color: #fff;
+		border-radius: calc(0.7 * var(--efu));
 	}
 	.ef-hero-btn:hover i {
 		transform: translate3d(calc(0.4 * var(--efu)), 0, 0);
@@ -253,7 +307,7 @@ const latestLabel = latest
 	.ef-hero-side-mark {
 		margin: 0;
 		writing-mode: vertical-rl;
-		font-family: Novecentosanswide-Bold, sans-serif;
+		font-family: Novecentosanswide-Bold, var(--ef-font-cjk);
 		font-size: calc(1.1 * var(--efu));
 		letter-spacing: 0.5em;
 		color: #d9d9d9;
@@ -262,7 +316,7 @@ const latestLabel = latest
 	.ef-hero-side-scroll {
 		margin: 0;
 		writing-mode: vertical-rl;
-		font-family: SansMedium, sans-serif;
+		font-family: var(--ef-font-sans);
 		font-size: calc(0.95 * var(--efu));
 		letter-spacing: 0.28em;
 		color: #999;
@@ -288,7 +342,17 @@ const latestLabel = latest
 		}
 		.ef-hero-inner {
 			max-width: 100%;
+			/* H5 首屏不是整屏：内容有多高就多高（官网 H5 首屏也由内容撑开） */
+			min-height: auto;
 			padding: calc(8 * var(--efu)) calc(3.5 * var(--efu)) calc(6 * var(--efu));
+		}
+		.ef-hero-head {
+			padding-block: 0;
+		}
+		.ef-hero-bar {
+			flex-direction: column;
+			align-items: stretch;
+			gap: calc(2 * var(--efu));
 		}
 		.ef-hero-eyebrow {
 			margin-bottom: calc(2 * var(--efu));

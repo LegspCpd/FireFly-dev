@@ -505,20 +505,29 @@ function startBands(): void {
    即四次缓出（开头快、尾巴收）。官网把它挂在 clip-path 上，随滚动进度擦除。
    本站：滚入时从左到右擦出来，一次性（擦完就摘观察器，回头滚动不再重播）。
 
-   擦除窗口固定 0.5 屏：
-     enter "75% top"   元素上边走到视口 75% 处 = progress 0（刚进来一屏的四分之一）
-     leave "25% top"   元素上边走到视口 25% 处 = progress 1（已经露出四分之三屏）
-   两点相距 0.5 屏，与块自身高度无关 —— 长文页那种几千 px 的大块也不会出现
-   「滚了半天右半屏还是空的」；反过来起始点不能太早（贴视口下沿就开始），
-   否则擦除都发生在还没进视口的那半块上，屏幕上什么也看不到。 */
+   擦除窗口固定 0.45 屏（数值与下面 WIPE_ENTER / WIPE_LEAVE 一字对应）：
+     enter "105% top"  元素上边走到视口 105% 处 = progress 0（刚好在视口下沿）
+     leave "60% top"   元素上边走到视口 60% 处 = progress 1（已经露出四成屏）
+   两点相距 0.45 屏，与块自身高度无关 —— 长文页那种几千 px 的大块也不会出现
+   「滚了半天右半屏还是空的」。窗口必须**盖住视口下沿**：进度只跟滚动位置绑定、
+   不会自己跑完，若起点落在屏幕中部（原 75%），块顶边停在 60% 处时还剩九成没擦，
+   屏幕下半截就一直是空的。 */
 
 const WIPE_ATTR = "data-ef-wipe";
 const WIPE_DONE = "ef-wiped";
-/* 擦除窗口：元素上边从视口的 75% 处（刚进来四分之一屏）走到 25% 处（已经露出
-   四分之三屏）—— 固定 0.5 屏的滚动量，跟块自身高度无关；两块位置要和下面
-   onScroll 的 enter / leave 一字对应。 */
-const WIPE_ENTER = 0.75;
-const WIPE_LEAVE = 0.25;
+/* 擦除窗口：元素上边从视口底边（105%）走到 60% 处 —— 固定 0.45 屏的滚动量，
+   跟块自身高度无关；两块位置要和下面 onScroll 的 enter / leave 一字对应。
+
+   窗口原来是 75% → 25%（在屏幕中间那半屏里擦）。问题是擦除进度只跟滚动位置
+   绑定、不会自己跑完：块的上边停在视口 60% 处时，按老窗口算出来还剩 90% 没擦，
+   于是**屏幕下半部分永远是空的**，必须再往下滚才会露出来 —— 站主看到的
+   「往下拉就这么少东西」「留这么大个空白」有一半是这里造成的（实测 1440×900
+   scrollY=1800 时，视口下沿那块 .ef-sec 的 clip-path 还是 inset(0 9.9% 0 0)，
+   下面几块干脆是 inset(0 100% 0 0) 完全不可见）。
+   现在块顶边一进屏幕（105%，即刚压到视口底边）就开始擦，到 60% 处擦完 ——
+   屏幕上凡是「已经露出来超过半屏」的块，都保证是完整可见的。 */
+const WIPE_ENTER = 1.05;
+const WIPE_LEAVE = 0.6;
 const WIPE_STEP = 1000; // --ef-wipe 保留一位小数（0.1% ≈ 1px），量化后再看要不要写
 
 /* 会被擦除的块：区块与文章面板（都是「大块内容」）。
@@ -598,9 +607,9 @@ function wipeOne(el: HTMLElement, vh: number): void {
 		el.classList.add(WIPE_DONE);
 		return;
 	}
-	/* 起始就在上半屏（首屏里、或锚点直接落在块中）：不做擦除，直接可见 ——
+	/* 起始就已经露到 60% 以上（首屏里、或锚点直接落在块中）：不做擦除，直接可见 ——
 	   否则首屏会被裁掉一截，得等用户滚动才露出来。 */
-	if (rect.top < vh * WIPE_LEAVE * 2) {
+	if (rect.top < vh * WIPE_LEAVE) {
 		el.classList.add(WIPE_DONE);
 		return;
 	}
@@ -618,8 +627,8 @@ function wipeOne(el: HTMLElement, vh: number): void {
 	el.setAttribute(WIPE_ATTR, "run");
 	item.obs = onScroll({
 		target: el,
-		enter: "75% top",
-		leave: "25% top",
+		enter: "105% top",
+		leave: "60% top",
 		onUpdate: () => paintWipe(item),
 		onResize: () => paintWipe(item),
 	});
@@ -634,7 +643,8 @@ function finishSeenWipes(): void {
 	);
 	for (let i = 0; i < nodes.length; i++) {
 		const el = nodes[i];
-		if (el.getBoundingClientRect().top >= vh * 0.5) continue;
+		/* 与擦除窗口的终点同一个阈值（60% 屏），否则兜底会比正常路径更早/更晚定格 */
+		if (el.getBoundingClientRect().top >= vh * WIPE_LEAVE) continue;
 		finishWipe(el);
 	}
 }

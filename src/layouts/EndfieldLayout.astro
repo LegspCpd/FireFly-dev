@@ -9,6 +9,7 @@
 //   依赖它），否则切换页面会整站重载。
 import BootScreen from "@components/common/BootScreen.astro";
 import EfH5Nav from "@components/layout/EfH5Nav.astro";
+import { filingConfig } from "@/config";
 import { jumpPath, triPath } from "@/constants/efIcons";
 import "@/styles/endfield-shell.css";
 import Layout from "./Layout.astro";
@@ -182,6 +183,24 @@ const railSocial = [
 ];
 
 const year = new Date().getFullYear();
+
+// ── 页脚备案 / 附加链接（全部来自 src/config/filingConfig.ts）──────────────
+// 站主 2026-10-26：「我后面会换域名的，并且还会备案(现在没有这个打算)」。
+// 所以这里只做预留：filingConfig 默认三项全空 —— 空则**一个节点都不渲染**，
+// 不留空 <p>、不留「备案号：暂无」这类占位符文字。将来备案下来只改那个配置文件。
+const icp = filingConfig.icp?.trim() ?? "";
+const police = filingConfig.police?.trim() ?? "";
+// 备案行整体是否存在：两个号都空就整行不出现
+const hasFiling = icp !== "" || police !== "";
+// 备案号默认链到工信部备案系统；公安备案没配 url 就只出文字，绝不伪造跳转地址
+const icpHref = icp === "" ? "" : filingConfig.icpUrl?.trim() || "https://beian.miit.gov.cn/";
+const policeHref = police === "" ? "" : filingConfig.policeUrl?.trim() || "";
+// 附加链接：过滤掉缺 label / 缺 url 的半条配置，避免渲染出空 <a>
+const footerExtraLinks = (filingConfig.extraLinks ?? []).filter(
+	(l) => l && l.label !== "" && l.url !== "",
+);
+// 外链判定：显式声明优先，否则看是不是 http(s):// 开头的绝对地址
+const isExternal = (url: string, ext?: boolean) => ext ?? /^https?:\/\//i.test(url);
 ---
 
 <Layout
@@ -411,9 +430,48 @@ const year = new Date().getFullYear();
 								<li>
 									<a href="https://x.com/legspcpd" target="_blank" rel="noopener noreferrer">X</a>
 								</li>
+								{/* 附加链接 = src/config/filingConfig.ts 的 extraLinks。默认空数组：
+								    空数组时不产出任何 <li>，页脚链接行与改动前逐字节一致。
+								    样式沿用 .ef-foot-links（含条目间的竖细线），不新增任何 CSS。 */}
+								{footerExtraLinks.map((link) => (
+									<li>
+										<a
+											href={link.url}
+											target={isExternal(link.url, link.external) ? "_blank" : undefined}
+											rel={isExternal(link.url, link.external) ? "noopener noreferrer" : undefined}
+										>
+											{link.label}
+										</a>
+									</li>
+								))}
 							</ul>
 						</div>
 						<p class="ef-foot-meta">&copy; {year} LC</p>
+						{/* 备案行：filingConfig 里配了 icp / police 才输出；两个号都空时整行不存在
+						    （不是空 <p>，也没有「备案号：暂无」这类占位符）。
+						    字号 / 颜色 / 居中直接复用上面的 .ef-foot-meta（1.25u / #6e6e6e），不发明新规格；
+						    链接色靠 Tailwind preflight 的 a{color:inherit} 继承同一个 #6e6e6e，所以也不用加 CSS。 */}
+						{hasFiling && (
+							<p class="ef-foot-meta">
+								{icp !== "" &&
+									(icpHref ? (
+										<a href={icpHref} target="_blank" rel="noopener noreferrer">
+											{icp}
+										</a>
+									) : (
+										<span>{icp}</span>
+									))}
+								{icp !== "" && police !== "" && <span> · </span>}
+								{police !== "" &&
+									(policeHref ? (
+										<a href={policeHref} target="_blank" rel="noopener noreferrer">
+											{police}
+										</a>
+									) : (
+										<span>{police}</span>
+									))}
+							</p>
+						)}
 					</div>
 				</footer>
 			</main>

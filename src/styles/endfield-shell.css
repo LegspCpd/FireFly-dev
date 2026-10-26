@@ -202,9 +202,18 @@ body.ef-contours {
   padding-bottom: calc(6 * var(--efu));
 }
 
+/* —— 版心 = 官网的内容区宽度（**不是 96u**）——
+   官网 1440×900 实测：左侧竖排栏 7.5rem（= 67.5px），余下内容区 1372.5px；
+   1920×1080 实测：栏 90px，内容区 1830px。即官网版心 = 100vw − 7.5rem，
+   **铺满整条内容区**，没有任何「居中 96u」的窄版心。
+   本站 .ef-shell 的 main 已经等于这条内容区（1440 下实测 x=68 / w=1373，
+   与官网 67.5 / 1372.5 逐值吻合），所以这里 width:100% 就是官网同宽。
+   改前是 max-width:96u（1440 下 864px，两侧各留 254px 空白）—— 这正是站主
+   「人家界面多大，我们多大」「留这么大个空白给谁看」的来源。
+   阅读类长文另有 .ef-prose（65u）/ .ef-sheet（96u），不受影响。 */
 .ef-wrap {
   width: 100%;
-  max-width: calc(96 * var(--efu));
+  max-width: 100%;
   margin-inline: auto;
   padding-inline: calc(4 * var(--efu));
 }
@@ -888,12 +897,16 @@ body.ef-contours {
   line-height: var(--ef-lh-tight);
   color: var(--ef-ink);
 }
-/* 计数是字段：官网 SansMedium 1.25rem + 等宽数字 */
+/* 计数是字段：官网 1.5rem（= 官网 .__06-Notice_subtitle 与「// 公告」那一档
+   SansMedium；1440×900 实测 13.5px / line-height 1，正是黄带上这一行该取的档位）。
+   改前用 var(--ef-fs-label) = clamp(13px, 1.25u, 15px)，1440 下被下限顶成 13px，
+   比官网小半档且不是官网任何一档。 */
 .ef-sec-count {
   margin-inline-start: auto;
-  font-family: var(--ef-font-num);
-  font-size: var(--ef-fs-label);
-  color: var(--ef-ink-2);
+  font-family: var(--ef-font-sans);
+  font-size: calc(1.5 * var(--efu));
+  line-height: 1;
+  color: var(--ef-ink);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1035,18 +1048,24 @@ body.ef-contours {
   color: #fff;
   border-radius: 2px;
 }
+/* 标题 = 官网公告卡片 .__06-Notice_title__YvY2R 原值：
+   font-size:2.25rem; line-height:1.5; color:#191919（1440×900 实测 20.25px）。
+   改前这里是 1.75rem（15.75px），比官网小一整档 —— 这正是「下面的字不像人家」的主因。 */
 .ef-card-title {
   margin: 0;
   font-family: var(--ef-font-bold);
-  font-size: var(--ef-fs-card);
-  line-height: var(--ef-lh-head);
+  font-size: var(--ef-fs-subhead);
+  line-height: var(--ef-lh-ui);
   color: var(--ef-ink);
   transition: color 0.2s;
 }
+/* 摘要 = 官网正文 .__20-NoticeDetail_content__wIAEN 的原值：
+   font-size:1.625rem、td{color:#4d4d4d}（1440×900 实测 14.625px）。
+   改前是 1.375rem / #666，两档都比官网小且偏灰。 */
 .ef-card-desc {
   margin: 0;
-  color: var(--ef-ink-2);
-  font-size: var(--ef-fs-small);
+  color: #4d4d4d;
+  font-size: var(--ef-fs-body);
   line-height: var(--ef-lh-ui);
   display: -webkit-box;
   -webkit-line-clamp: 3;

@@ -824,7 +824,18 @@ button, .btn { border-radius: 0 !important; }
 }
 .ef-page-sub { margin: 0 0 1.6rem; color: var(--ef-ink-2) !important; }
 .ef-page-list { margin-top: 0.4rem; }
-.ef-page-list a { color: var(--ef-ink) !important; text-decoration: none; }
+/* 分类行是密排的记录行（.ef-ledger 每行 9.35px 内距 + 一条细线），不是主题那张
+   分类卡。分类链接的 href 是 /archive/?category=…，会被下面第 7 节那条
+   a[href^="/archive/?category="] { padding: 0.75rem !important } 命中 ——
+   实测 1440×900 下这一行被撑到 **72px 高**（比同页「最新动态」那几行 46px 高出
+   26px），一屏只装得下三行。这里把密排行的内距复位；那条 !important 是给
+   主题分类卡用的，不动它，只在 .ef-page-list 这一层收回。 */
+.ef-page-list a {
+  color: var(--ef-ink) !important;
+  text-decoration: none;
+  padding: 0 !important;
+  gap: 0 !important;
+}
 .ef-page-list a:hover { color: var(--ef-signal) !important; }
 .ef-empty { padding: 2.5rem 0; text-align: center; color: var(--ef-ink-2) !important; }
 
@@ -1109,9 +1120,16 @@ friend-filter button.ef-chip[data-active] {
   /* 官网 SansBlack 只在两处广告/页脚位用到；本站目前无对应元素，
      注册好备用，别处要用力重感时直接引用它即可。 */
   --ef-font-black: SansBlack, var(--ef-font-cjk);
+  /* 宽体族（Novecento）**没有中文字形**：官网那边它只出现在 GameplayAlbum 的
+     拉丁专辑名、ENDFIELD 字标这类纯拉丁位置。本站把它放在 h1~h4 上，中文就必须
+     落到官网正文那一档 —— 回退栈末尾原本直接接 CJK 系统栈（Windows 上是
+     Microsoft YaHei），结果是「标题拉丁走 Novecento、中文走雅黑」，和官网
+     （标题中文 = HarmonyOS Sans SC Bold）不是同一款字。
+     这里把 SansBold 插在宽体族与系统栈之间：拉丁仍取 Novecento，中文取
+     HarmonyOS Bold，与官网一致。 */
   --ef-font-wide: "Novecentosanswide-DemiBold", "Novecentosanswide-Medium",
-    "Novecentosanswide-Bold", var(--ef-font-cjk);
-  --ef-font-num: "Novecentosanswide-Medium", var(--ef-font-cjk);
+    "Novecentosanswide-Bold", var(--ef-font-bold);
+  --ef-font-num: "Novecentosanswide-Medium", var(--ef-font-bold);
   --font-sans: var(--ef-font-sans);
 
   /* 套件（public/endfield-ui/endfield.css，先于本表加载）里读界面/正文的是它自己那
@@ -1123,20 +1141,26 @@ friend-filter button.ef-chip[data-active] {
   --ef-t-field: var(--ef-fs-meta); /* 官网 1.5rem   —— 日期、编号、字段 */
   --ef-t-body: var(--ef-fs-body); /* 官网 1.625rem —— 正文 */
 
-  /* —— 字级（官网 rem，1rem = --efu = 12px @1920）—— clamp 上限即官网像素，
-     下限只保证窄屏可读；官网窄屏另有一套 H5，这里不照搬。 */
-  --ef-fs-1: clamp(11px, calc(1 * var(--efu)), 12px);          /* 1rem   */
-  --ef-fs-2: clamp(12px, calc(1.125 * var(--efu)), 13.5px);    /* 1.125  */
-  --ef-fs-3: clamp(13px, calc(1.25 * var(--efu)), 15px);       /* 1.25   */
-  --ef-fs-4: clamp(13px, calc(1.375 * var(--efu)), 16.5px);    /* 1.375  */
-  --ef-fs-5: clamp(14px, calc(1.5 * var(--efu)), 18px);        /* 1.5    */
-  --ef-fs-6: clamp(15px, calc(1.625 * var(--efu)), 19.5px);    /* 1.625  */
-  --ef-fs-7: clamp(16px, calc(1.75 * var(--efu)), 21px);       /* 1.75   */
-  --ef-fs-8: clamp(17px, calc(1.875 * var(--efu)), 22.5px);    /* 1.875  */
-  --ef-fs-9: clamp(20px, calc(2.25 * var(--efu)), 27px);       /* 2.25   */
-  --ef-fs-10: clamp(22px, calc(2.5 * var(--efu)), 30px);       /* 2.5    */
-  --ef-fs-11: clamp(26px, calc(3 * var(--efu)), 36px);         /* 3      */
-  --ef-fs-12: clamp(32px, calc(4.5 * var(--efu)), 54px);       /* 4.5    */
+  /* —— 字级（官网 rem；1rem = --efu）——
+     官网 JS 在 <html> 上写的就是本站 --efu 这个式子，所以官网的每个字号都是
+     「N rem」的纯倍数：1440×900 实测 1rem = 9px、1920×1080 实测 1rem = 12px，
+     官网 SectionTitle 中文 3rem = 27 / 36px、dividerTitle 3.75rem = 33.75 / 45px、
+     Button 1.75rem = 15.75 / 21px、公告正文 1.625rem = 14.625 / 19.5px。
+     改前这 12 档每条都套了 clamp(下限, calc(N*--efu), 上限)，1440 下 11 档被下限
+     顶高（1.25rem→13px、1.375rem→13px、1.625rem→15px、2.25rem→20px、3rem→26px…），
+     1920 以上又被上限压住 —— 与官网任何一档都对不上号。这里全部改成纯倍数。 */
+  --ef-fs-1: calc(1 * var(--efu));          /* 1rem      */
+  --ef-fs-2: calc(1.125 * var(--efu));      /* 1.125rem  */
+  --ef-fs-3: calc(1.25 * var(--efu));       /* 1.25rem   */
+  --ef-fs-4: calc(1.375 * var(--efu));      /* 1.375rem  */
+  --ef-fs-5: calc(1.5 * var(--efu));        /* 1.5rem    */
+  --ef-fs-6: calc(1.625 * var(--efu));      /* 1.625rem  */
+  --ef-fs-7: calc(1.75 * var(--efu));       /* 1.75rem   */
+  --ef-fs-8: calc(1.875 * var(--efu));      /* 1.875rem  */
+  --ef-fs-9: calc(2.25 * var(--efu));       /* 2.25rem   */
+  --ef-fs-10: calc(2.5 * var(--efu));       /* 2.5rem    */
+  --ef-fs-11: calc(3 * var(--efu));         /* 3rem      */
+  --ef-fs-12: calc(4.5 * var(--efu));       /* 4.5rem    */
 
   /* 角色别名（官网里这些角色就是这些字级） */
   --ef-fs-micro: var(--ef-fs-1);
@@ -1159,6 +1183,26 @@ friend-filter button.ef-chip[data-active] {
   --ef-lh-meta: 1.333;
   /* 字距只有一处：拉丁大写标签的 .08em（中文内容官网实测是 normal，不加） */
   --ef-ls-wide: 0.08em;
+}
+
+/* 窄屏可读下限（≤1100px）：桌面档上面 12 条是官网纯倍数，但 --efu 在窄屏会掉到
+   3~7px，正文就成了 5~9px。官网在这一档走的是另一套 H5 尺寸表（媒体查询里整表重写），
+   本站只有一套 CSS，所以只在这里把同名的 12 档套回「下限」，档位编号与倍数不变。 */
+@media (max-width: 1100px) {
+  :root {
+    --ef-fs-1: clamp(11px, calc(1 * var(--efu)), 12px);
+    --ef-fs-2: clamp(12px, calc(1.125 * var(--efu)), 13.5px);
+    --ef-fs-3: clamp(13px, calc(1.25 * var(--efu)), 15px);
+    --ef-fs-4: clamp(13px, calc(1.375 * var(--efu)), 16.5px);
+    --ef-fs-5: clamp(14px, calc(1.5 * var(--efu)), 18px);
+    --ef-fs-6: clamp(15px, calc(1.625 * var(--efu)), 19.5px);
+    --ef-fs-7: clamp(16px, calc(1.75 * var(--efu)), 21px);
+    --ef-fs-8: clamp(17px, calc(1.875 * var(--efu)), 22.5px);
+    --ef-fs-9: clamp(20px, calc(2.25 * var(--efu)), 27px);
+    --ef-fs-10: clamp(22px, calc(2.5 * var(--efu)), 30px);
+    --ef-fs-11: clamp(26px, calc(3 * var(--efu)), 36px);
+    --ef-fs-12: clamp(32px, calc(4.5 * var(--efu)), 54px);
+  }
 }
 
 body, button, input, select, textarea { font-family: var(--ef-font-sans); }
