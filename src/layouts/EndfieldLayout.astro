@@ -201,6 +201,13 @@ const footerExtraLinks = (filingConfig.extraLinks ?? []).filter(
 );
 // 外链判定：显式声明优先，否则看是不是 http(s):// 开头的绝对地址
 const isExternal = (url: string, ext?: boolean) => ext ?? /^https?:\/\//i.test(url);
+
+// 备案行按顺序排列：ICP 在前、公安备案在后（与官网 table.siteInfos 的行序一致）。
+// 半条配置（只有地址没号）不会进数组 —— 数组空 = 整行不存在，不留空 <p>。
+const filingItems = [
+	{ label: icp, href: icpHref },
+	{ label: police, href: policeHref },
+].filter((item) => item.label !== "");
 ---
 
 <Layout
@@ -406,7 +413,9 @@ const isExternal = (url: string, ext?: boolean) => ext ?? /^https?:\/\//i.test(u
 		<!-- swup 容器：必须存在且包住 main，否则站内跳转会整站重载 -->
 		<div id="swup-container">
 			<main id="ef-main" class="ef-shell-main">
-				<slot />
+				<div class="ef-main-body">
+					<slot />
+				</div>
 
 				{/* 页脚 = 官网 .footer_footer：深色横带 + 居中灰字字标 + 居中链接。
 				    官网把上半个深色区叫 .topContainer（底边一条半透明细线、线下留白），
@@ -445,33 +454,34 @@ const isExternal = (url: string, ext?: boolean) => ext ?? /^https?:\/\//i.test(u
 									</li>
 								))}
 							</ul>
+							{/* 备案行 = 官网 /notice 页脚那行「沪ICP备… / 增值电信… / 沪网文…」。
+							    位置：与官网同序 —— 紧跟在链接行下面（官网 table.siteInfos 上距 14px，
+							    computed margin-top:14px），在 .ef-foot-top 那条细线之上、版权行之前。
+							    规格全部取官网上线实测的 computed 值，写在本文件的样式表 .ef-foot-filing 里：
+							    12px / line-height 18px / #8a8a8a / 项间 36px（备案项之间官网没有竖线）。
+							    icpUrl / policeUrl 有值才输出 <a>（颜色同 #8a8a8a，不是默认链接蓝）；
+							    没值就只出文字，绝不伪造跳转地址。两个号都空 -> filingItems 为空 -> 整行不存在
+							    （不是空 <p>，也没有「备案号：暂无」这类占位符）。 */}
+							{hasFiling && (
+								<p class="ef-foot-filing">
+									{filingItems.map((item) =>
+										item.href ? (
+											<a
+												class="ef-foot-filing-item"
+												href={item.href}
+												target="_blank"
+												rel="noopener noreferrer"
+											>
+												{item.label}
+											</a>
+										) : (
+											<span class="ef-foot-filing-item">{item.label}</span>
+										),
+									)}
+								</p>
+							)}
 						</div>
 						<p class="ef-foot-meta">&copy; {year} LC</p>
-						{/* 备案行：filingConfig 里配了 icp / police 才输出；两个号都空时整行不存在
-						    （不是空 <p>，也没有「备案号：暂无」这类占位符）。
-						    字号 / 颜色 / 居中直接复用上面的 .ef-foot-meta（1.25u / #6e6e6e），不发明新规格；
-						    链接色靠 Tailwind preflight 的 a{color:inherit} 继承同一个 #6e6e6e，所以也不用加 CSS。 */}
-						{hasFiling && (
-							<p class="ef-foot-meta">
-								{icp !== "" &&
-									(icpHref ? (
-										<a href={icpHref} target="_blank" rel="noopener noreferrer">
-											{icp}
-										</a>
-									) : (
-										<span>{icp}</span>
-									))}
-								{icp !== "" && police !== "" && <span> · </span>}
-								{police !== "" &&
-									(policeHref ? (
-										<a href={policeHref} target="_blank" rel="noopener noreferrer">
-											{police}
-										</a>
-									) : (
-										<span>{police}</span>
-									))}
-							</p>
-						)}
 					</div>
 				</footer>
 			</main>

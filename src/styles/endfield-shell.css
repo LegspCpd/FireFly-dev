@@ -180,7 +180,23 @@ body.ef-contours {
   flex: 1 1 auto;
   width: 100%;
   min-height: 60vh;
-  padding-bottom: calc(6 * var(--efu));
+  /* 页脚必须「深色到底」。改前这里是 display:block + padding-bottom:6u，
+     于是深色页脚下面永远垫着一条 #f2f2f2 的纸色带 ——
+     1440×900 首页实测 54.3px、390×844 实测 34.9px，
+     短页（/404.html，文档高正好等于视口 900）实测空出 170.3px，
+     就是站主截图里「页脚下方那片白」。
+     现在 main 自己是一条纵向 flex：页面内容进 .ef-main-body（flex:1 吃掉多余高度），
+     页脚用 .ef-foot 的 margin-top:auto 贴住 main 底边；而 main 在 #swup-container
+     （min-height:100dvh 的纵向 flex）里是 flex:1，所以内容比视口矮时 main 会被
+     撑到视口高，页脚正好落在视口底部。 */
+  display: flex;
+  flex-direction: column;
+}
+/* 内容槽：只负责吃掉多余高度，不参与任何视觉；各页自己的排版规则不受影响。
+   单独包一层是为了不让 slot 里的元素变成 flex 项 —— 那会改掉相邻外边距的折叠行为。 */
+.ef-main-body {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* —— 版心 = 官网的内容区宽度（**不是 96u**）——
@@ -1305,6 +1321,45 @@ body.ef-contours {
 .ef-foot-links a:hover {
   color: var(--ef-signal);
 }
+/* 备案行 = 官网 /notice 页脚里那张 table.siteInfos（线上实测 1440×900 的逐项 computed 值）：
+     table   { margin:14px 0 0; font-size:12px; line-height:18px; color:#8a8a8a;
+               border-collapse:collapse }
+     td.info { padding-right:36px; white-space:nowrap; vertical-align:top }
+     a       { color:#8a8a8a }（与正文同色，不是浏览器默认链接蓝）
+   **备案项之间没有竖线**：官网那 36px 是 td 的右内距，纯留白。竖线
+   （divider__C6LKj4：1px × 14px #fff，两侧各 18.16px）只出现在它上面那行
+   「协议 / 隐私 / 客服」链接里，备案行里一根都没有 —— 所以照实做 36px 列间距，不发明分隔线。
+   官网第 2 行那三列与第 1 行严格同列（table 布局）；本站备案项只有 ICP / 公安两项，
+   一行放得下，flex + column-gap:36px 与官网同一间距，多了换行也是同一间距。
+   居中：官网 .container 是 flex justify-content:center（整块居中），H5 档 td 实测也是
+   text-align:center；本站页脚其余行本来就居中，这里走同一条基线。
+   H5 档（官网 390×844 实测）：td 变 display:block 逐个独占一行、居中，
+   font-size 12.45px（= 容器 16.6px 的 75%）、line-height 18.675px（1.5）、table 上距 16.6px。 */
+.ef-foot-filing {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 36px;
+  margin: 14px 0 0;
+  padding: 0;
+  font-family: var(--ef-font-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8a8a8a;
+}
+.ef-foot-filing-item {
+  white-space: nowrap;
+}
+/* 只有 icpUrl / policeUrl 配了值才会输出成 <a>：颜色取官网的 #8a8a8a，去掉默认下划线 */
+a.ef-foot-filing-item {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a.ef-foot-filing-item:hover {
+  color: #f0f0f0;
+}
+
 /* 版权落在 .topContainer 那条细线下面。官网这一栏没有单独的类名，
    字级照同模块的 .label（SansMedium 1.25rem / #6e6e6e），居中。 */
 .ef-foot-meta {
@@ -1808,6 +1863,16 @@ html.ef-motion [data-ef-wipe]:not(.ef-wiped) {
   }
   .ef-foot-meta {
     padding-bottom: calc(2.5 * var(--efu));
+  }
+  /* 备案行 H5 档 = 官网 390×844 实测：td 变 display:block 独占一行、居中，
+     字号 12.45px（容器 16.6px × 75%）、行高 18.675px（1.5）、表上距 16.6px，
+     列间距归零（官网 H5 的 td padding 实测是 0）。 */
+  .ef-foot-filing {
+    flex-direction: column;
+    align-items: center;
+    column-gap: 0;
+    margin-top: 16.6px;
+    font-size: 12.45px;
   }
 }
 
