@@ -174,7 +174,10 @@ export const siteConfig: SiteConfig = {
 
 	// 分页配置
 	pagination: {
-		postsPerPage: 10,
+		// 每页篇数：首页网格本来只展示前 9 张卡（allPosts.slice(0, 9)），
+		// 取 6 让 8 篇文章真正分成 2 页，分页圆钮才有可翻的下一页；
+		// 取 10 时 ceil(8/10)=1 页，分页永远只有一个圆钮可翻（等于没有分页）。
+		postsPerPage: 6,
 	},
 
 	// 图像优化及响应式配置

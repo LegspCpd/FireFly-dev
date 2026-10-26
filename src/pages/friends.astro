@@ -432,12 +432,17 @@ const description =
 	</script>
 
 
-  <!-- 一键申请友链：弹窗（脚本会把它移到 body，避免被带 transform 的祖先裁切） -->
+  <!-- 一键申请友链：弹窗（脚本会把它移到 body，避免被带 transform 的祖先裁切）。
+       关于 data-api 里那条绝对地址：友链提交接口是一个**独立部署的服务端**
+       （friends-api 子域），不是本站域名，所以换站点域名（siteConfig.site_url）时它不动，
+       这里保留绝对地址；真要搬这个服务，只改 data-api 与 data-api-fallback 两行。
+       data-site 才是本站地址，由 siteConfig.site_url 派生，不再写死。 -->
   <div
     id="friend-apply-panel"
     class="float-panel-closed fixed inset-0 z-[1200] flex items-center justify-center p-3 sm:p-4 transition-all duration-200"
     data-api="https://friends-api.legspcpd.top"
     data-api-fallback="https://api.vercel-lc.cc.cd"
+    data-site={siteConfig.site_url}
     inert
     aria-hidden="true"
   >
@@ -677,7 +682,12 @@ const description =
         root.dataset.bound = "1";
 
         var host = root.querySelector("[data-site-url]");
-        if (host) host.textContent = location.host === "localhost:4321" ? "https://blog.legspcpd.top" : location.origin;
+        // 站点地址不再写死：模板把 siteConfig.site_url 写在 data-site 上，本地开发取它，
+        // 线上仍按当前 origin 显示（镜像域名下不会把正式域名塞给用户）。
+        var siteUrl = root.getAttribute("data-site") || "";
+        if (host)
+          host.textContent =
+            location.host === "localhost:4321" && siteUrl ? siteUrl : location.origin;
 
         // 开关按钮在这里绑定，弹窗本身移到 body，避免被带 transform 的祖先裁切
         var trigger = document.getElementById("friend-apply-switch");

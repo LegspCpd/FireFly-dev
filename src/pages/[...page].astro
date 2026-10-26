@@ -1,10 +1,19 @@
 ---
 import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+import EfSectionTitle from "@components/common/EfSectionTitle.astro";
 import HeroCanvas from "@components/common/HeroCanvas.astro";
 import EndfieldPostGrid from "@components/layout/EndfieldPostGrid.astro";
 import EndfieldLayout from "@layouts/EndfieldLayout.astro";
 import { siteConfig } from "@/config";
-import { getSortedPosts } from "@/utils/content-utils";
+import {
+	getCategoryList,
+	getSeriesList,
+	getSortedPosts,
+	getSortedProjects,
+	getTagList,
+} from "@/utils/content-utils";
+import { getTagUrl, removeFileExtension, url } from "@/utils/url-utils";
 
 export const getStaticPaths = (async ({ paginate }) => {
 	const allBlogPosts = await getSortedPosts();
@@ -13,6 +22,63 @@ export const getStaticPaths = (async ({ paginate }) => {
 
 const { page } = Astro.props;
 const isHome = page.currentPage === 1;
+
+/* 首页 = 多区块长页（站主要求「往下拉东西全部展现出来」）：
+   hero → //ENDFIELD 跑带（都在 HeroCanvas 里）→ 最新文章 → 最新动态 → 分类
+   → 标签 → 系列 → 项目 → 归档 → 关于 → 页脚。
+
+   每一块的内容全部取自现有 content collection / config，**没有一处写死造数据**；
+   某一类没有数据（例如全站没有系列）就整块不渲染，不留空壳。
+   区块语汇沿用已验收的官网组件：EfSectionTitle（.SectionTitle_sectionTitle）、
+   套件 .ef-ledger / .ef-chip-row / .ef-page-list、首页既有 .ef-grid + .ef-card，
+   以及官网黄带 .ef-sec-head —— 不新增任何自造视觉。 */
+let allPosts: any[] = [];
+let dynamicEntries: any[] = [];
+let categories: any[] = [];
+let tags: any[] = [];
+let seriesList: any[] = [];
+let projects: any[] = [];
+
+if (isHome) {
+	[allPosts, dynamicEntries, categories, tags, seriesList, projects] = await Promise.all([
+		getSortedPosts(),
+		getCollection("dynamic"),
+		getCategoryList(),
+		getTagList(),
+		getSeriesList(),
+		getSortedProjects(),
+	]);
+}
+
+const pad = (n: number) => String(n).padStart(2, "0");
+const stamp = (d: Date) => d.getFullYear() + "." + pad(d.getMonth() + 1) + "." + pad(d.getDate());
+
+/* 最新动态：正文取 entry.body（content layer 的原始 markdown），
+   去掉图片语法与标记符号后截断成一行摘要 —— 不引入新的渲染路径。 */
+const dynList = dynamicEntries
+	.slice()
+	.sort((a, b) => b.data.published.getTime() - a.data.published.getTime())
+	.slice(0, 5)
+	.map((entry) => {
+		const text = (entry.body ?? "")
+			.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+			.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+			.replace(/[#>*`_~|-]/g, " ")
+			.replace(/\s+/g, " ")
+			.trim();
+		return { date: stamp(new Date(entry.data.published)), text: text.slice(0, 80) };
+	})
+	.filter((item) => item.text.length > 0);
+
+/* 归档入口：按年份给出篇数（与 /archive/ 的分组口径一致：全部文章按年分桶） */
+const yearMap = new Map<string, number>();
+for (const post of allPosts) {
+	const year = String(new Date(post.data.published).getFullYear());
+	yearMap.set(year, (yearMap.get(year) ?? 0) + 1);
+}
+const years = [...yearMap.entries()].map(([year, count]) => ({ year, count }));
+const totalTagged = tags.reduce((sum, t) => sum + t.count, 0);
+const seriesTotal = seriesList.reduce((sum, s) => sum + s.count, 0);
 ---
 
 <EndfieldLayout title={siteConfig.title} description={siteConfig.subtitle}>
@@ -31,10 +97,141 @@ const isHome = page.currentPage === 1;
 							<p class="ef-eyebrow">// LATEST</p>
 							<h2 class="ef-sec-title">最新文章</h2>
 						</div>
-						<p class="ef-sec-count">{page.data.length} 篇文章</p>
+						<p class="ef-sec-count">{allPosts.length} 篇文章</p>
 					</div>
 					<div class="ef-wrap">
-						<EndfieldPostGrid posts={page.data.slice(0, 6)} columns={3} />
+						<EndfieldPostGrid posts={allPosts.slice(0, 9)} columns={3} />
+						<p class="ef-home-more">
+							<a class="ef-btn" href={url("/archive/")}>全部文章 →</a>
+						</p>
+					</div>
+				</section>
+
+				{dynList.length > 0 && (
+					<section class="ef-sec">
+						<div class="ef-wrap">
+							<EfSectionTitle en="Journal" cn="最新动态" />
+							<ul class="ef-ledger ef-page-list ef-home-dyn">
+								{dynList.map((item) => (
+									<li>
+										<span class="ef-home-dyn-text">{item.text}</span>
+										<span class="ef-field">{item.date}</span>
+									</li>
+								))}
+							</ul>
+							<p class="ef-home-more">
+								<a class="ef-btn" href={url("/dynamic/")}>全部动态 →</a>
+							</p>
+						</div>
+					</section>
+				)}
+
+				{categories.length > 0 && (
+					<section class="ef-sec">
+						<div class="ef-wrap">
+							<EfSectionTitle en="Categories" cn="分类" />
+							<ul class="ef-ledger ef-page-list ef-home-cols">
+								{categories.map((category) => (
+									<li>
+										<a href={category.url}>{category.name}</a>
+										<span class="ef-field">{category.count} 篇</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					</section>
+				)}
+
+				{tags.length > 0 && (
+					<section class="ef-sec">
+						<div class="ef-wrap">
+							<EfSectionTitle en="Tags" cn="标签" />
+							<p class="ef-field ef-home-sub">
+								{tags.length} 个标签 · {totalTagged} 次标注
+							</p>
+							<ul class="ef-chip-row">
+								{tags.map((tag) => (
+									<li>
+										<a class="ef-chip" href={getTagUrl(tag.name)}>
+											{tag.name.trim()}
+											<span class="n">{tag.count}</span>
+										</a>
+									</li>
+								))}
+							</ul>
+						</div>
+					</section>
+				)}
+
+				{seriesList.length > 0 && (
+					<section class="ef-sec">
+						<div class="ef-wrap">
+							<EfSectionTitle en="Series" cn="系列" />
+							<p class="ef-field ef-home-sub">
+								{seriesList.length} 个系列 · {seriesTotal} 篇
+							</p>
+							<ul class="ef-ledger ef-page-list">
+								{seriesList.map((series) => (
+									<li>
+										<a href={url("/series/")}>{series.name}</a>
+										<span class="ef-field">{series.count} 篇</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					</section>
+				)}
+
+				{siteConfig.pages.projects && projects.length > 0 && (
+					<section class="ef-sec">
+						<div class="ef-wrap">
+							<EfSectionTitle en="Projects" cn="项目" />
+							<ul class="ef-ledger ef-page-list">
+								{projects.slice(0, 6).map((project) => (
+									<li>
+										<a href={url("/projects/" + removeFileExtension(project.id) + "/")}>
+											{project.data.title}
+										</a>
+										<span class="ef-field">
+											{project.data.status || stamp(new Date(project.data.published))}
+										</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					</section>
+				)}
+
+				{years.length > 0 && (
+					<section class="ef-sec">
+						<div class="ef-wrap">
+							<EfSectionTitle en="Archive" cn="归档" />
+							<p class="ef-field ef-home-sub">按年份归档，共 {allPosts.length} 篇</p>
+							<ul class="ef-ledger ef-page-list ef-home-cols">
+								{years.map((item) => (
+									<li>
+										<a href={url("/archive/") + "#y" + item.year}>{item.year} 年</a>
+										<span class="ef-field">{item.count} 篇</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					</section>
+				)}
+
+				<section class="ef-sec">
+					<div class="ef-wrap">
+						<EfSectionTitle en="About" cn="关于本站" />
+						<p class="ef-home-lede">{siteConfig.subtitle}</p>
+						<ul class="ef-ledger ef-home-cols">
+							<li><span>文章</span><span class="ef-field">{allPosts.length}</span></li>
+							<li><span>分类</span><span class="ef-field">{categories.length}</span></li>
+							<li><span>标签</span><span class="ef-field">{tags.length}</span></li>
+							<li><span>动态</span><span class="ef-field">{dynamicEntries.length}</span></li>
+						</ul>
+						<p class="ef-home-more">
+							<a class="ef-btn" href={url("/about/")}>关于本站 →</a>
+						</p>
 					</div>
 				</section>
 			</>
@@ -57,7 +254,7 @@ const isHome = page.currentPage === 1;
 	    箭头 path 逐字取自官网 index.html 里 .Pagination_arrow 的 SVG（viewBox 0 0 18 27）。
 	    文字版「上一页 / 下一页」换成官网的箭头，可读名称留在 aria-label 上。 */}
 	{
-		page.total > 1 && (
+		page.lastPage > 1 && (
 			<nav class="ef-wrap ef-pager" aria-label="分页">
 				{page.url.prev ? (
 					<a class="ef-pager-btn" href={page.url.prev} aria-label="上一页">
@@ -77,7 +274,7 @@ const isHome = page.currentPage === 1;
 				<span class="ef-pager-num">
 					<span>{page.currentPage}</span>
 					<span class="ef-pager-divider">/</span>
-					<span>{page.total}</span>
+					<span>{page.lastPage}</span>
 				</span>
 				{page.url.next ? (
 					<a class="ef-pager-btn" href={page.url.next} aria-label="下一页">
@@ -100,13 +297,68 @@ const isHome = page.currentPage === 1;
 </EndfieldLayout>
 
 <style>
-	/* 首屏不再吃满一整屏：hero 的纵向占高从 100dvh 收到 58dvh。
-	   站主要求「往下滚一点点就有内容」，所以只压缩占高，标题字号 / 数值行 / 按钮
-	   这些照官网定下的排版尺度一律不动（内部 padding 也不动）。
-	   为什么写在页面这一侧而不是 HeroCanvas.astro：那个文件归外壳那条线在改，
-	   这里不改它的源码。组件内的规则编译成 .ef-hero[data-astro-cid-xxxx]（两段权重），
-	   所以覆盖规则叠一个重复类 + 元素名，权重 0,2,1 > 0,2,0，稳定压住。 */
-	:global(section.ef-hero.ef-hero) {
-		min-height: 58dvh;
+	/* 首屏回归官网的「一屏就是一屏」：官网首页每一节都占满一个视口
+	   （1440×900 实测 body 高 8874 ≈ 9.86 屏，SectionViewer 每节 100vh）。
+	   所以这里把 hero 从 58dvh 放回 100dvh —— 原来那 42dvh 的空档正是
+	   「往下滚一点点有内容」与「留这么大空白」两难里选错的一边。
+	   组件内的规则编译成 .ef-hero[data-astro-cid-xxxx]（0,2,0），
+	   这里叠一个重复类 + 元素名（0,2,1）压住，不写 !important。 */
+	@media (min-width: 861px) {
+		:global(section.ef-hero.ef-hero) {
+			min-height: 100dvh;
+		}
+	}
+
+	/* 区块尾部的通栏入口按钮 */
+	.ef-home-more {
+		margin: calc(2.5 * var(--efu)) 0 0;
+	}
+	/* 按钮配色取官网 .Button_button__njqVS 的两态：
+	     浅色变体 .Button_light__kRD_6    { background-color:#fff; color:#000 }
+	     悬停     .Button_button__njqVS:hover { background-color:#484848; color:#fff; border-radius:6px }
+	   加 .ef-home-more 前缀（0,2,0）压过外壳里那条 .ef-btn（0,1,0）——
+	   外壳那条是给留言板用的墨底，直接套在这里会变成墨底墨字（首轮截图里就是三块黑板）。 */
+	.ef-home-more :global(.ef-btn) {
+		background: var(--ef-panel);
+		color: #000;
+		border: 1px solid var(--ef-rule);
+	}
+	.ef-home-more :global(.ef-btn:hover) {
+		background: #484848;
+		color: #fff;
+		border-color: #484848;
+		border-radius: calc(0.7 * var(--efu));
+	}
+
+	/* 动态与分类的行：套件 .ef-ledger 提供细线，这里只把长文本压到一行 */
+	.ef-home-dyn-text {
+		flex: 1 1 auto;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.ef-home-sub {
+		margin: calc(1.25 * var(--efu)) 0 0;
+	}
+	/* 分类 / 归档这类短行，两列排开，一屏内看得完（官网信息面板的做法） */
+	.ef-home-cols {
+		columns: 2;
+		column-gap: calc(4 * var(--efu));
+	}
+	.ef-home-cols > li {
+		break-inside: avoid;
+	}
+	@media (max-width: 720px) {
+		.ef-home-cols {
+			columns: 1;
+		}
+	}
+	.ef-home-lede {
+		margin: calc(1.5 * var(--efu)) 0 0;
+		max-width: min(100%, calc(65 * var(--efu)));
+		font-size: var(--ef-fs-lede);
+		line-height: var(--ef-lh-body);
+		color: var(--ef-ink);
 	}
 </style>

@@ -21,6 +21,7 @@ export type {
 	PluginCollapsibleConfig,
 	PluginLanguageBadgeConfig,
 } from "./expressiveCodeConfig";
+export type { FilingConfig, FooterExtraLink } from "./filingConfig";
 export type { FontSelectionConfig } from "./fontConfig";
 export type { FriendLink, FriendsPageConfig } from "./friendsConfig";
 export type { GalleryAlbum, GalleryConfig } from "./galleryConfig";

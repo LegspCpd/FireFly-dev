@@ -1,5 +1,8 @@
 import type { APIRoute } from "astro";
 
+// 站点 origin 从配置派生（astro.config.mjs 的 site: siteConfig.site_url）。
+// 换域名时只改 siteConfig.site_url，这里跟着走，不再留一份写死的域名。
+const SITE_ORIGIN = new URL(import.meta.env.SITE).origin;
 const SITEMAP_URL = new URL("sitemap-index.xml", import.meta.env.SITE).href;
 
 // robots.txt - LegspCpd Blog
@@ -9,7 +12,7 @@ const SITEMAP_URL = new URL("sitemap-index.xml", import.meta.env.SITE).href;
 //   3) Google 不支持 Crawl-delay（声明无效）；Bingbot / Baiduspider 支持，保留。
 const rules = [
 	"# robots.txt - LegspCpd Blog",
-	"# https://blog.legspcpd.top",
+	"# " + SITE_ORIGIN,
 	"",
 	"# ============================================",
 	"# 通用规则 - 适用于所有爬虫",
