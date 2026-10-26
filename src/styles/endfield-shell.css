@@ -1253,7 +1253,14 @@ body.ef-contours {
   color: #191919;
 }
 
-/* —— 页脚 = 官网 .footer_footer（css/*.css 原值，1rem ≡ var(--efu)）——
+/* —— 页脚 = 官网运行期注入的那套（hg_web_sdk 3.0.3，2026-10-26 线上实测）——
+   ⚠ 官网页脚有两套，别搞混：
+     ① 静态 CSS 里的 .footer_footer（#101010）—— 线上 DOM 里**根本没挂**，
+        实测 document.querySelector('.footer_footer') === null；下面这几行
+        就是 ① 的原值，保留作对照。
+     ② hg_web_sdk 运行期往 body 末尾注入的 .container__jEaFQy —— 这才是用户在
+        /notice 看到、官网此刻真正渲染的页脚；本站上一版照 ① 抄，所以底色/
+        链接色/字号全错。本轮全部改成 ② 的实测值（见本节末尾「实测」段）。
    官网该模块从 CSS 里抄得到、首页 DOM 里还没挂上，所以按 CSS 原值落地：
      .footer       { width:100%; background-color:#101010; overflow:hidden }
      .topContainer { padding-bottom:4rem; border-bottom:1px solid rgba(81,81,81,.5);
@@ -1267,54 +1274,97 @@ body.ef-contours {
                                  border-left:1px solid rgba(240,240,240,.3) }
    官网 H5 覆盖：topContainer padding-bottom 2.25rem；label margin 2rem auto 0；
                  links margin 2.5rem auto 0；条的间距 1.5rem / 1.5rem。
-   即：一条 #101010 的深色横带，灰字字标居中，链接居中并用竖细线分隔。 */
+   即：一条 #101010 的深色横带，灰字字标居中，链接居中并用竖细线分隔。
+
+   —— 实测（headless Chrome，https://endfield.hypergryph.com/notice，滚到页底，
+      root 节点 .container__jEaFQy；1440×900 / 1920×1080 / 390×844 三档）——
+      底色        rgb(37,39,38) = #252726（三档一致；截图取像素复核，整片纯色，
+                  无渐变/半透明叠加）
+      链接行      color #ffffff，font 15px / line-height 22.5px(1.5)，
+                  family SDK_Sans-Medium（weight 400）；三档都是 15px，不随 rem 缩放
+      竖细线      .divider__C6LKj4::before = 1px × 14px，**纯 #ffffff**，垂直居中；
+                  1440 下该 divider 盒总宽 36.33px，1920 下 35.3px（flex 均分余量）
+      横细线      .divider__C6LKj4 = 1px 高，**#585858**（不是半透明）
+      备案/资质   table.siteInfos：color #8a8a8a，12px / 18px，margin-top 14px，
+                  td padding-right 36px，border-collapse collapse
+                  （H5 390：12.45px / 18.675px，td 变 block 居中、间距 0）
+      反诈行      #8a8a8a / 12px / 18px
+      公司信息行  #8a8a8a / 12px / 18px
+      版权行      #8a8a8a / 12px / 18px
+      左上 logo   copyright.png（664×157）实测 100% 不透明像素是 #ffffff
+      H5 竖细线   4 个 divider 的 rect 实测全 0×0（H5 不画竖线），链接条自带
+                  15px 左右内距 → 相邻文字净空 30px
+
+   本站只有一条页脚，按站主要求**以用户看到的那套（②）为基准**。
+   几何（max-content 居中、间距档）沿用上一轮，本轮只改颜色 / 字重 / 字号。 */
 .ef-foot {
   margin-top: auto;
   width: 100%;
-  background-color: #101010;
+  background-color: #252726;
   overflow: hidden;
 }
-/* 官网 .topContainer：上半个深色区，底边一条半透明细线，线下面留 2.5rem */
+/* 上半个深色区，底边一条细线。官网页脚那条横线实测是 #585858 实色 1px
+   （.divider__C6LKj4，1440/1920/390 三档都是 rgb(88,88,88)），不是半透明。 */
 .ef-foot-top {
   padding-bottom: calc(4 * var(--efu));
-  border-bottom: 1px solid rgb(81 81 81 / 0.5);
+  border-bottom: 1px solid #585858;
   margin-bottom: calc(2.5 * var(--efu));
 }
-/* 字标 = 官网 .label：max-content 居中、SansMedium 1.25rem、#6e6e6e */
+/* 字标：官网页脚左上那组 logo 图（copyright.png 664×157）实测 100% 不透明像素
+   都是 #ffffff，所以字标也走 #ffffff。字号与链接同档 15px、行高 1.5。 */
 .ef-foot-mark {
   width: max-content;
   margin: calc(3.75 * var(--efu)) auto 0;
   font-family: var(--ef-font-sans);
-  font-size: calc(1.25 * var(--efu));
-  line-height: 1;
+  font-size: 15px;
+  line-height: 1.5;
   letter-spacing: 0.06em;
-  color: #6e6e6e;
+  color: #ffffff;
   text-transform: uppercase;
 }
 .ef-foot-mark span {
   margin-inline-start: calc(0.5 * var(--efu));
   color: var(--ef-signal);
 }
-/* 链接 = 官网 .links：整块居中，条目之间一条竖细线（非首个才有） */
+/* 链接 = 官网 .links__oqRpsq：整块居中（1440 实测 flex-wrap:wrap +
+   justify-content:center + align-items:center），条目之间一条竖细线。
+   实测竖线 = .divider__C6LKj4::before{width:1px;height:14px;background:#fff}，
+   1440 下竖线所在的 divider 盒总宽 36.33px（flex 均分余量），所以线两侧各 ~17.7px。 */
 .ef-foot-links {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   width: max-content;
+  max-width: 100%;
   margin: calc(5 * var(--efu)) auto 0;
   padding: 0;
   list-style: none;
 }
+.ef-foot-links li {
+  position: relative;
+}
 .ef-foot-links li + li {
-  margin-left: calc(3 * var(--efu));
-  padding-left: calc(3 * var(--efu));
-  border-left: 1px solid rgb(240 240 240 / 0.3);
+  margin-left: calc(36.33px / 2);
+  padding-left: calc(36.33px / 2);
+}
+.ef-foot-links li + li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 14px;
+  background: #ffffff;
 }
 .ef-foot-links a {
   display: block;
   text-align: center;
   font-family: var(--ef-font-sans);
-  font-size: calc(1.25 * var(--efu));
-  line-height: 1;
-  color: #f0f0f0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #ffffff;
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -1357,19 +1407,20 @@ a.ef-foot-filing-item {
   transition: color 0.2s;
 }
 a.ef-foot-filing-item:hover {
-  color: #f0f0f0;
+  color: #ffffff;
 }
 
-/* 版权落在 .topContainer 那条细线下面。官网这一栏没有单独的类名，
-   字级照同模块的 .label（SansMedium 1.25rem / #6e6e6e），居中。 */
+/* 版权落在那条横细线下面。官网页脚里这一行没有单独的类名，实测就是
+   .versionMetaOrTelephone__llaRxr 里的「© …」那行：#8a8a8a / 12px / 18px，
+   与备案行、反诈行、公司信息行同一档。 */
 .ef-foot-meta {
   margin: 0;
   padding-bottom: calc(4 * var(--efu));
   text-align: center;
   font-family: var(--ef-font-sans);
-  font-size: calc(1.25 * var(--efu));
-  line-height: 1;
-  color: #6e6e6e;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8a8a8a;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1846,8 +1897,13 @@ html.ef-motion [data-ef-wipe]:not(.ef-wiped) {
     padding-inline: calc(2 * var(--efu));
   }
 
-  /* 页脚 = 官网 .footer 的 H5 覆盖：topContainer 下距 2.25rem、label 上距 2rem、
-     links 上距 2.5rem、条间距 1.5rem / 1.5rem */
+  /* 页脚 H5 档 —— 官网 390×844 实测（hg_web_sdk 注入页脚）：
+       · links__oqRpsq 仍 flex-wrap:wrap + justify-content:center；
+       · 竖细线**不出现**：4 个 divider__C6LKj4 的 rect 实测全是 0×0；
+       · 链接条自身带 15px 左右内距，所以相邻文字之间是 30px 净空；
+       · link 字号仍是 15px（与桌面同档），行高 22.5px；
+       · 次行（备案/反诈/公司/版权）字号 12.45px、行高 18.675px。
+     本站照抄：藏竖线 + 每侧 15px 间距；次行 12.45px。 */
   .ef-foot-top {
     padding-bottom: calc(2.25 * var(--efu));
   }
@@ -1858,11 +1914,15 @@ html.ef-motion [data-ef-wipe]:not(.ef-wiped) {
     margin: calc(2.5 * var(--efu)) auto 0;
   }
   .ef-foot-links li + li {
-    margin-left: calc(1.5 * var(--efu));
-    padding-left: calc(1.5 * var(--efu));
+    margin-left: 15px;
+    padding-left: 15px;
+  }
+  .ef-foot-links li + li::before {
+    content: none;
   }
   .ef-foot-meta {
     padding-bottom: calc(2.5 * var(--efu));
+    font-size: 12.45px;
   }
   /* 备案行 H5 档 = 官网 390×844 实测：td 变 display:block 独占一行、居中，
      字号 12.45px（容器 16.6px × 75%）、行高 18.675px（1.5）、表上距 16.6px，
