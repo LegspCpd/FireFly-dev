@@ -1,0 +1,30 @@
+---
+// 站点管理面板：纯静态页面，零服务端、零密钥。
+// 凭据由使用者打开页面时粘贴，只进 sessionStorage；页面本身与构建产物里都不存在任何 token。
+// 不套 Layout：不加载统计/评论/swup，避免后台被站点脚本拖慢或埋点。
+// 搜索收录：页面级 noindex + robots.txt 里 Disallow，且不进站内导航/ sitemap。
+import AdminPanel from "@/components/admin/AdminPanel.svelte";
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+		<meta name="referrer" content="no-referrer" />
+		<meta name="color-scheme" content="dark" />
+		<title>站点管理面板 · Firefly</title>
+		<style is:inline>
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				background: #0d1014;
+			}
+		</style>
+	</head>
+	<body>
+		<AdminPanel client:load />
+	</body>
+</html>

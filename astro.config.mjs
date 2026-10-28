@@ -99,6 +99,19 @@ console.log(
 	`[deploy] DEPLOY_TARGET=${DEPLOY_TARGET} → adapter=${adapter?.name ?? "none"}；产物目录：${outputHint}`,
 );
 
+// ========== Keystatic 管理面板（本地内容后台，默认关闭；本地定制） ==========
+// 为什么默认不挂：@keystatic/astro 会注入 /keystatic 与 /api/keystatic 两条 prerender: false 的路由，
+// 静态产物里既跑不起来，也不该把后台入口打进 dist。只有显式 ENABLE_KEYSTASTIC=1 时才动态引入，
+// 因此默认构建的产物里不会出现任何 keystatic 相关 chunk。
+// 用法：pnpm admin（= ENABLE_KEYSTASTIC=1 astro dev）→ http://127.0.0.1:4321/keystatic
+const ENABLE_KEYSTASTIC = process.env.ENABLE_KEYSTASTIC === "1";
+const keystaticIntegrations = [];
+if (ENABLE_KEYSTASTIC) {
+	const { default: keystatic } = await import("@keystatic/astro");
+	keystaticIntegrations.push(keystatic());
+	console.log("[keystatic] 已启用（仅本机开发）：http://127.0.0.1:4321/keystatic");
+}
+
 // ========== SEO: 构建文章 URL -> lastmod 映射（用于 sitemap 新鲜度信号，本地定制） ==========
 const postLastmodMap = new Map();
 (function buildPostLastmodMap() {
@@ -348,6 +361,10 @@ export default defineConfig({
 				if (pathname === "/sponsor/" && !siteConfig.pages.sponsor) {
 					return false;
 				}
+				// 排除管理面板（纯前端后台，不入 sitemap）
+				if (pathname === "/admin/" || pathname === "/admin") {
+					return false;
+				}
 				// 排除无需索引的页面（本地定制）
 				if (
 					pathname.startsWith("/api/") ||
@@ -397,6 +414,8 @@ export default defineConfig({
 			},
 		}),
 		mdx(),
+		// 管理面板集成：默认是空数组，只有 ENABLE_KEYSTASTIC=1 才会被填进来
+		...keystaticIntegrations,
 	],
 	markdown: {
 		processor: unified({

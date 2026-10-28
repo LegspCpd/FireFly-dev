@@ -29,6 +29,8 @@ const rules = [
 	"Disallow: /yandex_",
 	"Disallow: /baidu_verify_",
 	"Disallow: /404",
+	"# 管理面板：纯前端后台，不收录、不入 sitemap",
+	"Disallow: /admin/",
 	"",
 	"# 屏蔽会产出重复内容的分页与筛选参数",
 	"Disallow: /*?page=",
