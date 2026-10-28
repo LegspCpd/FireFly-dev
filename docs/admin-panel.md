@@ -49,6 +49,16 @@
 - 改 `src/config/*.ts` 时页面上有黄色提示：括号/引号写错会让构建失败，Vercel 那次部署会直接失败；
   所以改配置建议一次只改一个值，保存后看部署结果。
 
+### 新建 / 删除 / 传图 / diff（同一套「一次操作 = 一次 commit」）
+
+- **新建**：左栏「＋ 新建」→ 选类型（posts / dynamic / projects / 任意路径）→ 填 slug（和标题）或完整路径 →
+  「创建并提交」。模板严格照 `src/content.config.ts` 只写 schema 里存在的键（posts 一定带 title + published，
+  默认 `draft: true`，tags/category 给空值），建完自动打开编辑器。任意路径文件内容为空，可直接写。
+- **删除**：文件树每项右侧的 ✕ → 弹层里会**写清完整路径**再确认。删除同样进 git 历史，之后能在 GitHub 的提交里恢复。
+- **上传图片**：编辑器右上「插入图片」→ 选本地图片 → 直接 commit 到 `public/uploads/YYYY/MM/<名字>-<随机>.<ext>`
+  → 自动把 `![](/uploads/...)` 插到**光标处**。上限 5MB，只收 png / jpg / webp / svg / gif。
+- **查看改动**：保存前点「查看改动」，逐行 diff（前端 LCS 算的，不引第三方库），绿色 + / 红色 −，带行号与 +N/−N 统计。
+
 ## 3. 保存之后会怎样
 
 1. 面板调用 `PUT /repos/{owner}/{repo}/contents/{path}`，带上文件 `sha`，message 默认 `chore(admin): 更新 {path}`（可改）。
@@ -72,7 +82,10 @@ Keystatic 仍然保留，但**只在本机开发用**（`pnpm admin`，见 `docs
 
 ## 6. 已知限制
 
-- 一次保存 = 一次 commit，没有草稿区、没有 diff 预览（改前请自己看一遍原文）。
-- 列表用 `git/trees?recursive=1`，超大仓库会慢；本仓库 1756 个文件，1~2 秒。
-- 不支持新建/删除文件（只改已有文件）。需要新建文章请用 `pnpm new-post`，或直接在 GitHub 网页端建。
-- 图片上传没做（浏览器端要另接 uploads API），需要换图请用 GitHub 网页端传。
+- 一次操作 = 一次 commit（改 / 新建 / 删除 / 传图各算一次），没有草稿区、没有「暂存多文件再一起提交」。
+- 列表用 `git/trees?recursive=1`，超大仓库会慢；本仓库 1764 个文件，1~2 秒。
+- 删除是**硬删除**（文件从树上消失），但 commit 还在，可以在 GitHub 里 revert 找回。
+- 图片固定进 `public/uploads/YYYY/MM/`，不能选 `src/assets`（那需要构建期图片处理管线，浏览器端改不了）。
+- 传图后 markdown 用根路径 `/uploads/...`：Astro 会把 `public/` 原样搬到站点根，路径一定存在。
+- diff 是逐行文本比较（LCS），超过 400 万格（约 2000×2000 行）会自动降级为「只显示相同前缀 + 提示」。
+- 仍然不解析 TypeScript、不做 schema 校验；配置改错 → 那次 Vercel 构建会失败，回面板改回来即可。

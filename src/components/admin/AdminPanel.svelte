@@ -459,6 +459,294 @@
 		mode = next;
 	}
 
+	// ================= 新建 / 删除 / 上传图片 / diff 预览 =================
+	// 全部在本组件内扩展，不新建架构：仍然只有「一次保存 = 一次 commit」这一条路径。
+
+	type NewKind = "posts" | "dynamic" | "projects" | "path";
+
+	let bodyEl = $state<HTMLTextAreaElement | undefined>(undefined);
+	let fileInputEl = $state<HTMLInputElement | undefined>(undefined);
+
+	let showNew = $state(false);
+	let newKind = $state<NewKind>("posts");
+	let newSlug = $state("");
+	let newTitle = $state("");
+	let newPath = $state("");
+	let newBusy = $state(false);
+	let newErr = $state("");
+
+	let delPath = $state<string | null>(null);
+	let delBusy = $state(false);
+
+	let uploadBusy = $state(false);
+	let uploadMsg = $state("");
+	let showDiff = $state(false);
+
+	const NEW_KINDS = [
+		{ id: "posts", label: "posts 博客文章", prefix: "src/content/posts/" },
+		{ id: "dynamic", label: "dynamic 动态", prefix: "src/content/dynamic/" },
+		{ id: "projects", label: "projects 项目", prefix: "src/content/projects/" },
+		{ id: "path", label: "任意路径（配置 / 样式 / 文档…）", prefix: "" },
+	];
+
+	function pad2(n: number): string {
+		return n < 10 ? "0" + n : String(n);
+	}
+
+	function today(): string {
+		const d = new Date();
+		return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+	}
+
+	function nowStamp(): string {
+		const d = new Date();
+		return today() + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+	}
+
+	function yq(s: string): string {
+		return '"' + s.replace(/"/g, '\\"') + '"';
+	}
+
+	function targetPath(): string {
+		if (newKind === "path") return newPath.trim().replace(/^\/+/, "");
+		const slug = newSlug
+			.trim()
+			.replace(/\.(md|mdx)$/i, "")
+			.replace(/\s+/g, "-")
+			.replace(/[^A-Za-z0-9._-]/g, "");
+		return (NEW_KINDS.find((k) => k.id === newKind)?.prefix ?? "") + slug + ".md";
+	}
+
+	// 模板严格照 src/content.config.ts：只写 schema 里存在的键，必填键一定出现
+	function buildTemplate(): string {
+		const title = newTitle.trim() || newSlug.trim() || "未命名";
+		if (newKind === "posts") {
+			return "---\ntitle: " + yq(title) + "\npublished: " + today() + "\ndraft: true\ntags: []\ncategory: \"\"\n---\n\n";
+		}
+		if (newKind === "dynamic") {
+			return "---\npublished: " + nowStamp() + "\npinned: false\nlocation: \"\"\n---\n\n";
+		}
+		if (newKind === "projects") {
+			return (
+				"---\ntitle: " +
+				yq(title) +
+				"\npublished: " +
+				today() +
+				"\ndraft: true\ndescription: \"\"\ntags: []\nstatus: \"\"\nlang: \"\"\nlink: []\n---\n\n"
+			);
+		}
+		return "";
+	}
+
+	async function createFile() {
+		newErr = "";
+		const p = targetPath();
+		if (!p) {
+			newErr = newKind === "path" ? "请填完整路径" : "请填 slug";
+			return;
+		}
+		if (newKind !== "path" && !/(^|\/)[^/]+\.(md|mdx)$/.test(p)) {
+			newErr = "生成的路径不合法：" + p;
+			return;
+		}
+		if (tree.includes(p)) {
+			newErr = "文件已存在，换一个名字：" + p;
+			return;
+		}
+		newBusy = true;
+		try {
+			const content = buildTemplate();
+			// 不带 sha = 新建
+			await gh(contentsUrl(p, false), {
+				method: "PUT",
+				body: JSON.stringify({ message: "chore(admin): 新建 " + p, content: strToB64(content), branch: branch }),
+			});
+			showNew = false;
+			newSlug = "";
+			newTitle = "";
+			newPath = "";
+			await loadTree();
+			await open(p);
+			saveMsg = "已新建 " + p + "（一次 commit）→ Vercel 会自动重新构建";
+		} catch (e) {
+			newErr = e instanceof Error ? e.message : String(e);
+		} finally {
+			newBusy = false;
+		}
+	}
+
+	async function confirmDelete() {
+		const p = delPath;
+		if (!p) return;
+		delBusy = true;
+		error = "";
+		try {
+			const sha = file && file.path === p ? file.sha : (await gh(contentsUrl(p, true))).sha;
+			await gh(contentsUrl(p, false), {
+				method: "DELETE",
+				body: JSON.stringify({ message: "chore(admin): 删除 " + p, sha: sha, branch: branch }),
+			});
+			if (file && file.path === p) {
+				file = null;
+				rawText = "";
+				entries = [];
+				body = "";
+				hasFrontmatter = false;
+			}
+			// 立刻从本地列表移除，不等 tree 接口刷新（GitHub 的 tree 端有缓存，会晚几秒）
+			tree = tree.filter((x) => x !== p);
+			delPath = null;
+			showDiff = false;
+			saveMsg = "已删除 " + p + "（一次 commit）。删除也进 git 历史，可在 GitHub 的提交里恢复。";
+			await loadTree();
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		} finally {
+			delBusy = false;
+		}
+	}
+
+	function fileToB64(f: File): Promise<string> {
+		return new Promise((resolve, reject) => {
+			const r = new FileReader();
+			r.onload = () => {
+				const s = String(r.result || "");
+				resolve(s.indexOf(",") >= 0 ? s.slice(s.indexOf(",") + 1) : s);
+			};
+			r.onerror = () => reject(new Error("读取文件失败"));
+			r.readAsDataURL(f);
+		});
+	}
+
+	function openImagePicker() {
+		if (!uploadBusy) fileInputEl?.click();
+	}
+
+	async function onImagePicked(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const f = input.files && input.files[0] ? input.files[0] : null;
+		input.value = "";
+		if (!f) return;
+		uploadMsg = "";
+		const okTypes = ["image/png", "image/jpeg", "image/webp", "image/svg+xml", "image/gif"];
+		if (okTypes.indexOf(f.type) < 0) {
+			uploadMsg = "只收 png / jpg / webp / svg / gif（当前：" + (f.type || "未知") + "）";
+			return;
+		}
+		if (f.size > 5 * 1024 * 1024) {
+			uploadMsg = "图片 " + (f.size / 1024 / 1024).toFixed(1) + "MB，超过 5MB，请先压缩再传";
+			return;
+		}
+		uploadBusy = true;
+		try {
+			const dot = f.name.lastIndexOf(".");
+			const ext = (dot >= 0 ? f.name.slice(dot + 1) : "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+			const base =
+				(f.name.slice(0, dot >= 0 ? dot : f.name.length) || "image")
+					.toLowerCase()
+					.replace(/[^a-z0-9]+/g, "-")
+					.replace(/^-+|-+$/g, "")
+					.slice(0, 40) || "image";
+			const d = new Date();
+			const dest = "public/uploads/" + d.getFullYear() + "/" + pad2(d.getMonth() + 1) + "/" + base + "-" + Math.random().toString(36).slice(2, 8) + "." + ext;
+			const content = await fileToB64(f);
+			await gh(contentsUrl(dest, false), {
+				method: "PUT",
+				body: JSON.stringify({ message: "chore(admin): 上传图片 " + dest, content: content, branch: branch }),
+			});
+			const url = "/" + dest.replace(/^public\//, "");
+			insertAtCursor("![](" + url + ")");
+			uploadMsg = "已上传 " + dest + "（一次 commit），markdown 已插入光标处";
+			await loadTree();
+		} catch (err) {
+			uploadMsg = err instanceof Error ? err.message : String(err);
+		} finally {
+			uploadBusy = false;
+		}
+	}
+
+	function insertAtCursor(snippet: string) {
+		const el = mode === "raw" ? textEl : bodyEl;
+		if (!el) return;
+		const start = typeof el.selectionStart === "number" ? el.selectionStart : el.value.length;
+		const end = typeof el.selectionEnd === "number" ? el.selectionEnd : start;
+		const next = el.value.slice(0, start) + snippet + el.value.slice(end);
+		if (mode === "raw") {
+			rawText = next;
+			if (isMd) {
+				const fm = splitFrontmatter(next);
+				if (fm) {
+					entries = parseFm(fm.fm);
+					body = fm.body;
+					hasFrontmatter = true;
+				}
+			}
+		} else {
+			body = next;
+		}
+		const pos = start + snippet.length;
+		queueMicrotask(() => {
+			el.focus();
+			el.setSelectionRange(pos, pos);
+		});
+	}
+
+	type DiffRow = { t: string; text: string; al: number; bl: number };
+
+	function computeDiff(a: string, b: string): DiffRow[] {
+		const A = a.split("\n");
+		const B = b.split("\n");
+		const n = A.length;
+		const m = B.length;
+		if (n * m > 4000000) {
+			const rows: DiffRow[] = [];
+			let s = 0;
+			while (s < n && s < m && A[s] === B[s]) {
+				rows.push({ t: " ", text: A[s], al: s + 1, bl: s + 1 });
+				s++;
+			}
+			rows.push({ t: "~", text: "…文件太大（" + n + " × " + m + " 行），逐行 diff 已跳过…", al: 0, bl: 0 });
+			return rows;
+		}
+		const W = m + 1;
+		const dp = new Int32Array((n + 1) * (m + 1));
+		for (let i = n - 1; i >= 0; i--) {
+			for (let j = m - 1; j >= 0; j--) {
+				dp[i * W + j] = A[i] === B[j] ? dp[(i + 1) * W + j + 1] + 1 : Math.max(dp[(i + 1) * W + j], dp[i * W + j + 1]);
+			}
+		}
+		const rows: DiffRow[] = [];
+		let i = 0;
+		let j = 0;
+		while (i < n && j < m) {
+			if (A[i] === B[j]) {
+				rows.push({ t: " ", text: A[i], al: i + 1, bl: j + 1 });
+				i++;
+				j++;
+			} else if (dp[(i + 1) * W + j] >= dp[i * W + j + 1]) {
+				rows.push({ t: "-", text: A[i], al: i + 1, bl: 0 });
+				i++;
+			} else {
+				rows.push({ t: "+", text: B[j], al: 0, bl: j + 1 });
+				j++;
+			}
+		}
+		while (i < n) {
+			rows.push({ t: "-", text: A[i], al: i + 1, bl: 0 });
+			i++;
+		}
+		while (j < m) {
+			rows.push({ t: "+", text: B[j], al: 0, bl: j + 1 });
+			j++;
+		}
+		return rows;
+	}
+
+	const diffRows = $derived(showDiff && file ? computeDiff(file.text, currentText) : []);
+	const diffAdd = $derived(diffRows.filter((r) => r.t === "+").length);
+	const diffDel = $derived(diffRows.filter((r) => r.t === "-").length);
+
+
 	$effect(() => {
 		if (typeof window === "undefined") return;
 		const saved = sessionStorage.getItem(TOKEN_KEY);
@@ -529,11 +817,27 @@
 						{/each}
 					</div>
 					<input class="search" bind:value={query} placeholder="过滤路径…" />
-					<div class="count">{visiblePaths.length} / {tree.length} 个文件</div>
+					<div class="treeMeta">
+						<span class="count">{visiblePaths.length} / {tree.length} 个文件</span>
+						<button id="admin-new" class="btn small" onclick={() => (showNew = true)} type="button">＋ 新建</button>
+					</div>
 				</div>
 				<div class="list">
 					{#each visiblePaths as p}
-						<button class="item" data-path={p} class:active={file?.path === p} onclick={() => open(p)} type="button">{p}</button>
+						<div class="itemRow">
+							<button class="item" data-path={p} class:active={file?.path === p} onclick={() => open(p)} type="button">{p}</button>
+							<button
+								class="del"
+								data-del={p}
+								title={"删除 " + p}
+								aria-label={"删除 " + p}
+								onclick={(ev) => {
+									ev.stopPropagation();
+									delPath = p;
+								}}
+								type="button">✕</button
+							>
+						</div>
 					{/each}
 				</div>
 			</aside>
@@ -552,8 +856,18 @@
 							{#if mode === "raw"}
 								<button class="chip" class:on={showLineNumbers} onclick={() => (showLineNumbers = !showLineNumbers)} type="button">行号</button>
 							{/if}
+							<button id="admin-upload" class="chip" onclick={openImagePicker} disabled={uploadBusy} type="button">{uploadBusy ? "上传中…" : "插入图片"}</button>
+							<button id="admin-diff" class="chip" class:on={showDiff} onclick={() => (showDiff = !showDiff)} type="button">查看改动</button>
+							<input
+								bind:this={fileInputEl}
+								type="file"
+								accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"
+								onchange={onImagePicked}
+								hidden
+							/>
 						</div>
 					</div>
+					{#if uploadMsg}<p class="hint">{uploadMsg}</p>{/if}
 
 					{#if mode === "form" && isMd}
 						<div class="form">
@@ -600,7 +914,7 @@
 								{/each}
 							{/if}
 							<h3 class="sub">正文（纯文本 Markdown，原样写回）</h3>
-							<textarea id="admin-body" class="bodyArea" bind:value={body} spellcheck="false"></textarea>
+							<textarea id="admin-body" class="bodyArea" bind:this={bodyEl} bind:value={body} spellcheck="false"></textarea>
 						</div>
 					{:else}
 						<div class="rawWrap">
@@ -618,12 +932,80 @@
 						{/if}
 					{/if}
 
+					{#if showDiff}
+						<div class="diffBox" id="admin-diffbox">
+							<div class="diffHead">
+								<span>原内容 vs 新内容（逐行）</span>
+								<span class="mono">+{diffAdd} / −{diffDel}</span>
+							</div>
+							<div class="diffBody mono">
+								{#each diffRows as r, i (i)}
+									<div class="diffLine" class:add={r.t === "+"} class:del={r.t === "-"} class:lbl={r.t === "~"}>
+										<span class="ln">{r.al > 0 ? r.al : ""}</span>
+										<span class="ln">{r.bl > 0 ? r.bl : ""}</span>
+										<span class="sign">{r.t}</span>
+										<span class="txt">{r.text}</span>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
 					<div class="commit">
 						<input class="msg mono" bind:value={commitMessage} placeholder="commit message" />
 						<button class="btn ghost" onclick={() => open(file.path)} disabled={busy || !dirty} type="button">还原</button>
 						<button id="admin-save" class="btn primary" onclick={save} disabled={busy || !dirty} type="button">{busy ? "提交中…" : dirty ? "保存并提交" : "无改动"}</button>
 					</div>
 					{#if dirty}<p class="hint">保存 = 一次 commit；推送到 {branch} 后 Vercel 会自动重新构建。</p>{/if}
+				{/if}
+
+				{#if showNew}
+					<div class="overlay" onclick={() => (showNew = false)} role="presentation">
+						<div class="modal" role="dialog" aria-label="新建文件" onclick={(ev) => ev.stopPropagation()}>
+							<h3>新建文件</h3>
+							<div class="row">
+								<label
+									>类型
+									<select bind:value={newKind}>
+										{#each NEW_KINDS as k (k.id)}<option value={k.id}>{k.label}</option>{/each}
+									</select>
+								</label>
+							</div>
+							{#if newKind === "path"}
+								<div class="row">
+									<label>完整路径<input id="admin-new-path" bind:value={newPath} placeholder="src/config/xxxConfig.ts 或 docs/xxx.md" /></label>
+								</div>
+							{:else}
+								<div class="row">
+									<label>slug（文件名）<input id="admin-new-slug" bind:value={newSlug} placeholder="my-new-post" /></label>
+									<label>标题<input id="admin-new-title" bind:value={newTitle} placeholder="写进 frontmatter 的标题" /></label>
+								</div>
+							{/if}
+							<p class="note mono">将创建：{targetPath() || "（待填）"}</p>
+							{#if newKind === "path"}<p class="note">任意路径文件内容为空，创建后直接进编辑器写。</p>{/if}
+							{#if newErr}<p class="err">{newErr}</p>{/if}
+							<div class="modalActions">
+								<button class="btn ghost" onclick={() => (showNew = false)} type="button">取消</button>
+								<button id="admin-new-confirm" class="btn primary" onclick={createFile} disabled={newBusy} type="button">{newBusy ? "创建中…" : "创建并提交"}</button>
+							</div>
+						</div>
+					</div>
+				{/if}
+
+				{#if delPath}
+					<div class="overlay" onclick={() => (delPath = null)} role="presentation">
+						<div class="modal" role="dialog" aria-label="确认删除" onclick={(ev) => ev.stopPropagation()}>
+							<h3>确认删除这个文件？</h3>
+							<p class="delTarget mono">{delPath}</p>
+							<p class="note">
+								删除会直接提交一次 commit 到 <strong>{branch}</strong>，Vercel 会重新构建。删除也进 git 历史，之后可以在 GitHub 的提交里恢复。
+							</p>
+							<div class="modalActions">
+								<button class="btn ghost" onclick={() => (delPath = null)} type="button">取消</button>
+								<button id="admin-del-confirm" class="btn danger" onclick={confirmDelete} disabled={delBusy} type="button">{delBusy ? "删除中…" : "确认删除"}</button>
+							</div>
+						</div>
+					</div>
 				{/if}
 
 				{#if error}<p class="err">{error}</p>{/if}
@@ -951,7 +1333,178 @@
 		font-size: 13px;
 		margin: 10px 0 0;
 	}
+	.treeMeta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+	.btn.small {
+		padding: 3px 10px;
+		font-size: 12px;
+		border-radius: 999px;
+		background: #1b2330;
+	}
+	.itemRow {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+	.itemRow .item {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.del {
+		flex: 0 0 auto;
+		border: 0;
+		background: transparent;
+		color: #5b6b7f;
+		cursor: pointer;
+		font-size: 12px;
+		padding: 3px 6px;
+		border-radius: 6px;
+		opacity: 0;
+	}
+	.itemRow:hover .del,
+	.del:focus-visible {
+		opacity: 1;
+	}
+	.del:hover {
+		color: #ff8080;
+		background: rgba(255, 128, 128, 0.12);
+	}
+	select {
+		background: #0b0e12;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		color: var(--fg);
+		padding: 8px 10px;
+		font-size: 13px;
+		width: 100%;
+		box-sizing: border-box;
+	}
+	.overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(4, 7, 11, 0.72);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 30;
+		padding: 20px;
+	}
+	.modal {
+		width: min(560px, 100%);
+		background: var(--bg2);
+		border: 1px solid var(--line);
+		border-radius: 12px;
+		padding: 20px;
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+	}
+	.modal h3 {
+		margin: 0 0 12px;
+		font-size: 15px;
+	}
+	.modal .row {
+		display: flex;
+		gap: 10px;
+		flex-wrap: wrap;
+		margin: 10px 0;
+	}
+	.modal .row label {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		font-size: 12px;
+		color: var(--dim);
+		flex: 1 1 220px;
+	}
+	.modalActions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 8px;
+		margin-top: 16px;
+	}
+	.btn.danger {
+		background: #ff6b6b;
+		border-color: #ff6b6b;
+		color: #160707;
+		font-weight: 600;
+	}
+	.delTarget {
+		background: #0b0e12;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		padding: 8px 10px;
+		font-size: 12px;
+		color: #ffb4b4;
+		word-break: break-all;
+		margin: 6px 0 10px;
+	}
+	.diffBox {
+		margin-top: 14px;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		overflow: hidden;
+		background: #0b0e12;
+	}
+	.diffHead {
+		display: flex;
+		justify-content: space-between;
+		padding: 7px 10px;
+		font-size: 12px;
+		color: var(--dim);
+		border-bottom: 1px solid var(--line);
+		background: #10151c;
+	}
+	.diffBody {
+		max-height: 300px;
+		overflow: auto;
+		font-size: 12px;
+		line-height: 1.6;
+	}
+	.diffLine {
+		display: flex;
+		gap: 8px;
+		padding: 0 8px;
+		white-space: pre;
+	}
+	.diffLine .ln {
+		width: 34px;
+		flex: 0 0 auto;
+		text-align: right;
+		color: #46536a;
+		user-select: none;
+	}
+	.diffLine .sign {
+		width: 10px;
+		flex: 0 0 auto;
+		color: #6b7a90;
+	}
+	.diffLine .txt {
+		color: #c9d4e3;
+	}
+	.diffLine.add {
+		background: rgba(78, 255, 160, 0.07);
+	}
+	.diffLine.add .txt {
+		color: #93f0bd;
+	}
+	.diffLine.del {
+		background: rgba(255, 107, 107, 0.08);
+	}
+	.diffLine.del .txt {
+		color: #ffb4b4;
+	}
+	.diffLine.lbl .txt {
+		color: var(--dim);
+		font-style: italic;
+	}
 	@media (max-width: 860px) {
+		.treeMeta {
+			flex-wrap: wrap;
+		}
+
 		.layout {
 			grid-template-columns: 1fr;
 			height: auto;
