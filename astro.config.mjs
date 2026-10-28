@@ -108,7 +108,11 @@ const ENABLE_KEYSTASTIC = process.env.ENABLE_KEYSTASTIC === "1";
 const keystaticIntegrations = [];
 if (ENABLE_KEYSTASTIC) {
 	const { default: keystatic } = await import("@keystatic/astro");
-	keystaticIntegrations.push(keystatic());
+	// Keystatic 的后台是 React 应用（client:only="react"）；没有 React renderer 时
+	// Astro 会拿现有 renderer（这里是 Svelte）去水合 React island → 白屏 + "no export named 'jsx'"。
+	// 所以 React renderer 必须一起挂，且只在开关打开时挂，默认构建仍然没有 React。
+	const { default: react } = await import("@astrojs/react");
+	keystaticIntegrations.push(react(), keystatic());
 	console.log("[keystatic] 已启用（仅本机开发）：http://127.0.0.1:4321/keystatic");
 }
 
@@ -149,7 +153,10 @@ export default defineConfig({
 	site: siteConfig.site_url,
 
 	base: "/",
-	trailingSlash: "always",
+	// 站点线上是「带尾斜杠」的静态站；但 Keystatic 的 /api/keystatic/* 处理函数在
+	// trailingSlash: "always" 下会拿到空 params 直接 404（后台 UI 起来了、接口全 404）。
+	// 所以只有在本机开 Keystatic 时放宽为 ignore，默认构建/线上行为完全不变。
+	trailingSlash: ENABLE_KEYSTASTIC ? "ignore" : "always",
 
 	// 输出目录：默认 dist，可用 OUT_DIR 覆盖（EdgeOne / 无痛验证）
 	outDir: process.env.OUT_DIR || "dist",
@@ -486,9 +493,15 @@ export default defineConfig({
 	},
 	vite: {
 		plugins: [tailwindcss()],
+		// Keystatic 的后台是 React 应用；React 的 jsx-runtime 是 CJS，而 @keystatic 内部按 ESM
+		// 具名导入 { jsx }。不把这些 react 入口显式预打包，dev 下 /keystatic 会白屏并报
+		// "does not provide an export named 'jsx'"。默认构建不启用 Keystatic，故此项也只在开关打开时注入。
+		...(ENABLE_KEYSTASTIC
+			? { optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react-dom/client"] } }
+			: {}),
 		server: {
 			watch: {
-				ignored: ["**/package/**", "**/Firefly-docs/**"],
+				ignored: ["**/package/**", "**/Firefly-docs/**", "**/.ef-work/**", "**/.shots/**"],
 			},
 		},
 		resolve: {

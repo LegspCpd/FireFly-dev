@@ -79,7 +79,16 @@ git push dev HEAD:main && git push dev HEAD:dev/main
 - 默认构建产物里 `grep -ri keystatic dist/` = 0（本次验证见提交说明）。
 - 反证：`ENABLE_KEYSTASTIC=1 pnpm dev` 时 `/keystatic` 正常打开。
 
-## 5. GitHub 模式怎么开（本仓库不适用）
+## 4.1 本机跑起来要补的三个开关（都在 astro.config.mjs，全部包在 ENABLE_KEYSTASTIC 里）
+1. **React renderer**：Keystatic 后台是 `client:only="react"` 的 island。项目里没装 `@astrojs/react` 时，
+   Astro 会拿现有 renderer（这里是 Svelte）去水合它 → 白屏 + `does not provide an export named 'jsx'`。
+   所以开关打开时会一起 `import("@astrojs/react")` 并 `push(react(), keystatic())`。
+2. **optimizeDeps.include**：`react/jsx-runtime` 是 CJS，@keystatic 内部按 ESM 具名导入 `{ jsx }`，
+   不显式预打包会继续报同样的错。
+3. **trailingSlash**：站点线上是 `"always"`，但 Keystatic 的 `/api/keystatic/*` 在 always 下拿不到 params → 接口全 404
+   （UI 起来了但读不到内容）。所以开关打开时降为 `"ignore"`。
+
+三项都只在 `ENABLE_KEYSTASTIC=1` 时生效，默认构建的产物与线上行为一个字都没变。
 
 Keystatic 支持把内容存在 GitHub 仓库里：
 
