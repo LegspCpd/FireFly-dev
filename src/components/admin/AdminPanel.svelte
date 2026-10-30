@@ -1013,6 +1013,11 @@
 			</main>
 		</div>
 	{/if}
+
+	<footer class="foot">
+		<span>随机路径 + 前端密码都只是遮挡（前端可见、能被绕过）。</span>
+		<span class="strong">真正的锁是 PAT：没有站主的 fine-grained token，这里任何一次保存都会被 GitHub 拒绝。</span>
+	</footer>
 </div>
 
 <style>
@@ -1149,7 +1154,20 @@
 	.layout {
 		display: grid;
 		grid-template-columns: 340px minmax(0, 1fr);
-		height: calc(100vh - 49px);
+		/* 顶栏 49px + 页脚（安全边界提示）约 36px */
+		height: calc(100vh - 85px);
+	}
+	.foot {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px 14px;
+		padding: 8px 16px;
+		border-top: 1px solid var(--line);
+		color: var(--dim);
+		font-size: 12px;
+	}
+	.foot .strong {
+		color: #cfe4ff;
 	}
 	.tree {
 		border-right: 1px solid var(--line);

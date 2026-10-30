@@ -1,20 +1,48 @@
-# 站点管理面板（/admin/，纯静态 · 零服务端）
+# 站点管理面板（随机路径 + 前端密码门 · 纯静态 · 零服务端）
 
 站主 2026-10-29：「我说的是，安装了那个管理面板，然后就能在上面管理这个网站的所有东西了，而不是只能发文章」——
 所以后台不是 Astro/Keystatic 的服务端后台，而是一个**随站发布的静态页面**，用 GitHub Contents API 直接读写仓库文件。
 没有服务器、没有数据库、没有构建期密钥。
 
+站主 2026-10-30：「难道没密码吗，直接就这样暴露出来吗」——于是补了两层**遮挡**：随机路径 + 前端密码门，
+并把边界写清楚（见第 4 节）。注意是遮挡，不是鉴权：真鉴权只有 PAT 和边缘侧 Access 能做到。
+
+## 0. 入口、密码与默认值（站主自己看）
+
+| 项 | 值 | 改哪里 |
+| --- | --- | --- |
+| 入口路径 | **`/p-c8bd3a/`** | `src/config/adminConfig.ts` 的 `path`；改完重新构建，旧路径立刻 404，旧的 `/admin/` 从来就没有页面 |
+| 访问密码（明文） | **不在仓库里**（源码与 docs 都会公开，明文一进仓库就等于公开）；口令由站主自持 | 换口令：`printf '%s' '新口令' \| sha256sum` → 把哈希填进 `passwordHash` |
+| 密码提示（公开） | 密码框下面那行小字 | `passwordHint`（只有 hash 和提示会进构建产物） |
+| 关掉面板 | — | `enabled: false`：构建期连路由都不注入，产物里没有这个页面 |
+
+> ⚠️ **默认口令只在交付时的对话里给过，仓库里一律不落明文**。
+> 换法：本机 `printf '%s' '新口令' | sha256sum` → 哈希粘进 `passwordHash` → 明文自己记（别提交）。
+>
+> ```bash
+> # bash / macOS / Linux
+> printf '%s' '你的新密码' | sha256sum | cut -d' ' -f1
+> # Windows PowerShell / 任意平台有 node 时
+> node -e "process.stdout.write(require('crypto').createHash('sha256').update('你的新密码','utf8').digest('hex'))"
+> ```
+>
+> 密码请用 20 位以上（默认这枚 35 位）。原因见 4.1：hash 在产物里是公开的，短密码等于没有。
+
 ## 1. 怎么用
 
-1. 打开 **https://你的域名/admin/**（本地是 http://localhost:4321/admin/）。
-2. 页面会要求粘贴一枚 **fine-grained PAT**：
+1. 打开 **https://你的域名/p-c8bd3a/**（本地是 http://localhost:4321/p-c8bd3a/）。
+   **`/admin/` 现在是 404**——那个路径已经没有任何页面（`dist/client/admin/index.html` 不存在）。
+2. 先过密码门：输入上面那枚口令。未解锁时页面里只有一个密码框，**不会发任何 GitHub 请求**，
+   也不会读取 sessionStorage 里的旧 token。连续输错 5 次锁定 60 秒（只在前端，刷新页面一样锁着）。
+   解锁状态存 sessionStorage（`firefly-admin-unlocked`），与 token 同一生命周期：关标签即失效。
+3. 页面会要求粘贴一枚 **fine-grained PAT**：
    - GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token
    - Repository access：只选 `LegspCpd/FireFly-dev`（不要给 All repositories）
    - Permissions：**Contents: Read and write**（只要这一项；Metadata 会自动带上 Read）
    - Expiration：按需，建议 7~30 天，过期重新生成
-3. 粘贴后点「连接并列目录」。Token **只写进当前标签页的 sessionStorage**：关掉标签页即失效，
+4. 粘贴后点「连接并列目录」。Token **只写进当前标签页的 sessionStorage**：关掉标签页即失效，
    不写 cookie、不写 localStorage、不进仓库、不进构建产物。
-4. 左侧选文件 → 右侧改 → 底部「保存并提交」= 向仓库提交**一次 commit**。
+5. 左侧选文件 → 右侧改 → 底部「保存并提交」= 向仓库提交**一次 commit**。
 
 > 面板默认指向 `LegspCpd/FireFly-dev` 的 `main` 分支；Owner / Repo / Branch 三个输入框都可以改，
 > 所以临时验证可以切到一个测试分支，验证完把分支删掉，主分支持续干净。
@@ -65,20 +93,58 @@
 2. GitHub 立刻产生一次 commit；Vercel 监听到分支变动会**自动重新构建**，几十秒后线上生效。
 3. 想回滚：面板里再改回去提交一次，或者本地 `git revert <sha>`；面板每次提交的 sha 会显示在绿色提示里。
 
-## 4. 安全边界
+## 4. 安全边界（先读这一节再上线）
 
-- **仓库里没有任何 token**；构建产物里也没有（CI 可跑 `grep -rE 'ghp_|github_pat_|gho_' dist/` 校验为 0）。
-- 页面级 `noindex,nofollow,noarchive,nosnippet` + `robots.txt` 的 `Disallow: /admin/` + 不进 sitemap + 不进站内导航。
+一句话：**这个面板里没有任何一样东西能当访问控制用**。密码和随机路径都是遮挡，真正的锁是 PAT。
+
+### 4.1 前端密码 = 遮挡，不是加密，也不是鉴权
+
+- 本站是**纯静态**：没有服务端，没有任何能在服务器上执行的校验代码，任何「密码」都只能在浏览器里比对。
+- 校验方式：`crypto.subtle.digest('SHA-256', 输入)` 与 `adminConfig.passwordHash` 比对（十六进制、大小写不敏感）。
+- 因此 **hash 是公开的**：它躺在构建出来的 JS 里，谁都读得到。拿到 hash 就能离线爆破，
+  所以**密码必须长**（默认 35 位；八位字母数字在显卡面前是几分钟的事）。
+- 前端校验也**可以被绕过**（改内存、关 JS、直接打 GitHub API）——它只挡手滑的人和批量扫描的脚本。
+- 它唯一真实的好处：未解锁时页面里根本没渲染 AdminPanel，所以浏览器**一个 `api.github.com` 请求都不发**，
+  sessionStorage 里的旧 token 也不会被读出来。
+- 连续输错 5 次锁定 60 秒，只记在 sessionStorage（刷新仍在，换标签/清存储就没了）——同样只是「挡手滑」。
+
+### 4.2 随机路径 = 遮挡，而且会漏
+
+- 固定 `/admin/` 是扫描器的第一梯队；换成随机 slug（现在是 `/p-c8bd3a/`）能挡掉大部分盲扫。
+- 但它**保不了密**：`robots.txt` 里有 `Disallow: /p-c8bd3a/`（robots.txt 是公开文件，任何人都能读），
+  任何一次链接分享、浏览器历史、截图也会泄漏。**别把路径当密码用。**
+- 唯一严谨的加固是 4.4 的第 1/2 条（边缘侧鉴权），或者干脆不发布这个页面。
+
+### 4.3 真正的锁是 PAT
+
+- 面板的每一次改动都是 `PUT /repos/{owner}/{repo}/contents/{path}`，带 `Authorization: Bearer <你的 token>`。
+- 别人就算猜到了路径、绕过了密码门、点下了保存，**没有站主的 fine-grained token，GitHub 会直接 403**——一个字节也改不了。
+  访问控制发生在 GitHub 那边，不在这台静态站里。
+- 所以 token 才是权限本体：fine-grained、只授权本仓库、只开 `Contents: Read and write`、设过期时间。
+  一旦怀疑泄露 → **立刻删 token**（比改密码有用得多）。
+- **仓库和构建产物里没有任何 token**：CI 可跑 `grep -rE 'ghp_|github_pat_|gho_' dist/` 校验为 0；
+  `grep -r 'password' dist/` 只会命中代码变量名与那枚 hash，**永远不会出现明文**（明文只在本文档）。
+
+### 4.4 想要「真鉴权」怎么办（三条路，各一句）
+
+1. **Cloudflare Access（Zero Trust）**：在 CF 后台给 `/p-c8bd3a/*` 挂一条 Access 策略、只允许站主邮箱或 OTP —— 请求在 CDN 边缘就被拦下，免费额度（50 用户）对个人站够用。
+2. **Vercel 密码保护 / Deployment Protection**：平台侧口令页，最省事，但要付费套餐。
+3. **面板只在本机跑**：不发布到线上，本机 `pnpm dev` 里用（这个面板或 `ENABLE_KEYSTASTIC=1` 的 Keystatic 都行），暴露面直接归零。
+
+> 这三条都是「服务端/边缘校验」，只有这类才叫鉴权。纯前端做到头就是遮挡。
+
+### 4.5 其他已做的加固
+
+- 页面级 `noindex,nofollow,noarchive,nosnippet`；`robots.txt` 的 `Disallow` 由配置生成；不进 sitemap；不进站内导航。
 - 页面不发任何埋点、不加载评论区与 swup（独立 HTML 壳，不套 `Layout.astro`）。
-- 因为凭据在浏览器端，**面板本身不是访问控制**：它只是「谁拿到 token 谁就能改」。
-  因此 PAT 必须 fine-grained 且只授权本仓库 Contents，泄露了删 token 即可止损。
-- 有人打开 `/admin/` 但没 token 时只能看到一个连接表单，读不到仓库任何内容。
+- `adminConfig.enabled: false` 时构建期连路由都不注入，产物里不存在这个页面。
+- 有人打开这个路径但没密码：只有一个密码框；过了密码但没 token：只有一个连接表单，读不到仓库任何内容。
 
 ## 5. 和 Keystatic 的关系
 
 Keystatic 仍然保留，但**只在本机开发用**（`pnpm admin`，见 `docs/keystatic.md`）：
 它 schema-driven、体验更好，但需要 dev server，且改不了任意 TS/CSS。
-两个东西分工：**线上改内容/配置 → /admin/ 面板**；**本机大改内容 → Keystatic**。
+两个东西分工：**线上改内容/配置 → 随机路径面板（`/p-c8bd3a/`，入口见第 0 节）**；**本机大改内容 → Keystatic**。
 
 ## 6. 已知限制
 

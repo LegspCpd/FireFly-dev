@@ -57,6 +57,7 @@ export type {
 	FontDefinition,
 	FontSelectionConfig,
 } from "../types/fontConfig"; // 字体类型定义
+export { type AdminPanelConfig, adminPanelConfig } from "./adminConfig"; // 站点管理面板（随机路径 + 前端密码门禁）
 export { analyticsConfig } from "./analyticsConfig"; // 统计分析配置
 export { announcementConfig } from "./announcementConfig"; // 公告配置
 // 样式配置

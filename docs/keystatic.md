@@ -1,7 +1,7 @@
 # Keystatic（本机内容后台，默认不进构建）
 
 Keystatic 是 schema 驱动的内容后台。本站只把它当**本机开发工具**：
-线上改内容/配置请用静态面板 `/admin/`（见 `docs/admin-panel.md`）。
+线上改内容/配置请用静态面板（随机路径 + 前端密码门，入口见 `docs/admin-panel.md`）。
 
 ## 1. 怎么起
 
@@ -46,7 +46,7 @@ pnpm admin          # = cross-env ENABLE_KEYSTASTIC=1 astro dev
 `src/content/spec/{about,guestbook,friends.mdx}` 的 zod schema 是 `z.object({})`，
 文件本身**没有任何 frontmatter**（正文直接就是 `# 标题`）。Keystatic 的条目集合强制要求
 `slugField` + 至少一个字段，硬接进去会往正文前插入 `title:` 之类的键，破坏文件。
-结论：spec 不进 Keystatic，需要改就编辑文件或用 `/admin/` 的原始文本模式。
+结论：spec 不进 Keystatic，需要改就编辑文件或用静态面板的原始文本模式。
 
 ## 3. 改了之后怎么发布
 
@@ -63,7 +63,7 @@ git push dev HEAD:main && git push dev HEAD:dev/main
 
 > 注意：Keystatic 保存时会按 schema 重写整块 frontmatter，
 > 内联数组 `[日记]` 会变成块数组、可选空字段可能被补上 `""`，diff 会比手改大。
-> 这就是线上默认用 `/admin/` 面板（只重写你改过的键）的原因。
+> 这就是线上默认用静态面板（只重写你改过的键）的原因。
 
 ## 4. 为什么默认在构建里关掉
 
@@ -105,6 +105,6 @@ export default config({
 提供不了这些，所以：
 
 1. 线上不启用 Keystatic；
-2. 要远程改内容，用 `/admin/` 面板（浏览器端带自己的 PAT 调 Contents API，不需要服务端）；
+2. 要远程改内容，用静态面板（浏览器端带自己的 PAT 调 Contents API，不需要服务端；入口路径见 `docs/admin-panel.md`）；
 3. 真要 Keystatic 的 GitHub 模式，得把它跑在 Cloudflare Workers / Vercel Serverless 这类有运行时的地方，
    并配 Keystatic GitHub App（`https://keystatic.com/docs/github-mode`），本站当前架构不选这条路。

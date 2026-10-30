@@ -1,0 +1,35 @@
+---
+// 站点管理面板的页面壳（纯静态，零服务端，零构建期密钥）。
+//
+// 这个文件不在 src/pages 里：路由由 astro.config.mjs 的 firefly-admin-panel 集成按
+// src/config/adminConfig.ts 的 path 在构建期注入（例如 /p-c8bd3a/）。
+// 于是入口路径只由配置决定，旧的固定 /admin/ 不再有任何页面 —— 它就是一个 404。
+//
+// 不套 Layout：不加载统计/评论/swup，避免后台被站点脚本拖慢或埋点。
+// 搜索收录：页面级 noindex + robots.txt 里 Disallow（构建期取同一条配置）+ 不进 sitemap。
+// 门禁：AdminGate 先挡一层前端密码；密码只在前端校验 = 遮挡，不是鉴权（见 docs/admin-panel.md）。
+import AdminGate from "@/components/admin/AdminGate.svelte";
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+		<meta name="referrer" content="no-referrer" />
+		<meta name="color-scheme" content="dark" />
+		<title>站点管理面板 · Firefly</title>
+		<style is:inline>
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				background: #0d1014;
+			}
+		</style>
+	</head>
+	<body>
+		<AdminGate client:load />
+	</body>
+</html>

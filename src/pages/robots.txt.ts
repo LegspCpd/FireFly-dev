@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { adminPanelConfig } from "@/config/adminConfig";
 
 // 站点 origin 从配置派生（astro.config.mjs 的 site: siteConfig.site_url）。
 // 换域名时只改 siteConfig.site_url，这里跟着走，不再留一份写死的域名。
@@ -29,8 +30,12 @@ const rules = [
 	"Disallow: /yandex_",
 	"Disallow: /baidu_verify_",
 	"Disallow: /404",
-	"# 管理面板：纯前端后台，不收录、不入 sitemap",
-	"Disallow: /admin/",
+	// 管理面板：路径由 src/config/adminConfig.ts 的随机 slug 决定（旧的 /admin/ 规则已删除、页面也不再存在）
+	// 注意：robots.txt 是公开文件，写在这里等于把路径告诉任何来读它的人 —— 遮挡变弱，但测试要求如此，
+	// 所以「路径随机」永远只是遮挡，真正的访问控制是 PAT。详见 docs/admin-panel.md 的「安全边界」。
+	...(adminPanelConfig.enabled && adminPanelConfig.path
+		? ["Disallow: /" + adminPanelConfig.path + "/"]
+		: []),
 	"",
 	"# 屏蔽会产出重复内容的分页与筛选参数",
 	"Disallow: /*?page=",

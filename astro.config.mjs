@@ -31,6 +31,7 @@ import remarkDirective from "remark-directive"; /* Handle directives */
 import remarkMath from "remark-math";
 import remarkSectionize from "remark-sectionize";
 import {
+	adminPanelConfig,
 	commentConfig,
 	dynamicConfig,
 	expressiveCodeConfig,
@@ -206,6 +207,26 @@ export default defineConfig({
 	},
 
 	integrations: [
+		// 管理面板：路由由 src/config/adminConfig.ts 的随机 slug 决定，构建期注入（纯静态、无服务端）。
+		// 入口文件放在 src/admin/ 而不是 src/pages/，所以 /admin/ 这种固定路径根本没有页面 —— 直接 404。
+		// enabled: false 时什么都不注入，产物里不会出现这个页面。
+		{
+			name: "firefly-admin-panel",
+			hooks: {
+				"astro:config:setup": ({ injectRoute }) => {
+					if (!adminPanelConfig.enabled) {
+						console.log("[admin-panel] adminConfig.enabled = false，本次构建不生成面板页");
+						return;
+					}
+					injectRoute({
+						pattern: "/" + adminPanelConfig.path,
+						entrypoint: "src/admin/AdminPage.astro",
+						prerender: true,
+					});
+					console.log("[admin-panel] 注入静态路由 /" + adminPanelConfig.path + "/");
+				},
+			},
+		},
 		swup({
 			theme: false,
 			animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
@@ -368,7 +389,11 @@ export default defineConfig({
 				if (pathname === "/sponsor/" && !siteConfig.pages.sponsor) {
 					return false;
 				}
-				// 排除管理面板（纯前端后台，不入 sitemap）
+				// 排除管理面板（纯前端后台；路径来自 adminConfig.path，不入 sitemap）
+				if (adminPanelConfig.enabled && pathname.startsWith("/" + adminPanelConfig.path + "/")) {
+					return false;
+				}
+				// 旧的固定路径已废弃：万一还有残留页面，也不进 sitemap
 				if (pathname === "/admin/" || pathname === "/admin") {
 					return false;
 				}
